@@ -1,0 +1,30 @@
+#![feature(default_type_params, phase, unsafe_destructor)]
+#[phase(plugin, link)] extern crate log;
+
+extern crate portaudio;
+
+pub mod errors;
+pub mod types;
+pub mod sizes;
+pub mod rates;
+pub mod vm;
+pub mod opcode;
+pub mod expression;
+pub mod tickable;
+pub mod unit_factory;
+pub mod unit_definition;
+pub mod util;
+pub mod instruction;
+pub mod device;
+
+pub mod instructions {
+    pub mod unit_instruction;
+}
+
+pub mod dsp {
+    pub mod oscillators {
+        pub mod sine;
+    }
+}
+
+

@@ -1,0 +1,9 @@
+[package]
+
+name = "art"
+version = "0.0.1"
+authors = ["Joe Turner <joe@oampo.co.uk>"]
+
+[dependencies.portaudio]
+
+git = "https://github.com/mvdnes/portaudio-rs"
