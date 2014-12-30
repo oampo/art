@@ -14,8 +14,8 @@ pub mod tickable;
 pub mod unit_factory;
 pub mod unit_definition;
 pub mod util;
-pub mod instruction;
 pub mod device;
+pub mod channel_stack;
 
 pub mod instructions {
     pub mod unit_instruction;

@@ -1,7 +1,4 @@
 use portaudio;
-use portaudio::pa;
-use portaudio::device;
-use portaudio::stream;
 
 use rates::AUDIO_RATE;
 use types::ArtResult;
@@ -109,7 +106,6 @@ impl<'a> Device <'a> {
             suggested_latency: input_device_info.default_low_input_latency
         };
 
-        let mut output_device_id = self.output_device;
         let output_device_id = match self.output_device {
             id if id >= 0 => id as uint,
             _ => try!(portaudio::device::get_default_output_index())

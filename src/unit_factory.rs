@@ -4,24 +4,22 @@ use types::ArtResult;
 use errors::UndefinedUnitError;
 use tickable::{TickableBox, TickableConstructor};
 use dsp::oscillators::sine;
-use util::Ascii4;
 
 pub struct UnitFactory {
-    unit_map: HashMap<u32, TickableConstructor>
+    unit_map: HashMap<u32, TickableConstructor>,
 }
 
 impl UnitFactory {
     pub fn new() -> UnitFactory {
         let mut factory = UnitFactory {unit_map: HashMap::new()};
-        factory.register(sine::TYPE_ID.to_ascii().to_u32(),
-                         sine::Sine::new_boxed);
+        factory.register(sine::Sine::new_boxed);
         factory
     }
 
-    pub fn register(&mut self, type_id: u32,
-                    constructor: TickableConstructor) {
+    pub fn register(&mut self, constructor: TickableConstructor) {
+        let type_id = self.unit_map.len();
         debug!("Registering tickable: type_id = {}", type_id);
-        self.unit_map.insert(type_id, constructor);
+        self.unit_map.insert(type_id as u32, constructor);
     }
 
     pub fn create(&mut self, type_id: u32, input_channels: u32,

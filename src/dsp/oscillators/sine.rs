@@ -5,11 +5,11 @@ use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
 use unit_definition::UnitDefinition;
 use tickable::{Tickable, TickableBox};
-use util::Ascii4;
 use util::modulo;
 
 pub static TYPE_ID: &'static str = "sine";
 
+#[deriving(Copy)]
 pub struct Sine {
     definition: UnitDefinition,
     frequency: f32,
@@ -21,7 +21,7 @@ impl Sine {
     pub fn new(input_channels: u32, output_channels: u32) -> Sine {
         Sine {
             definition: UnitDefinition {
-                type_id: TYPE_ID.to_ascii().to_u32(),
+                type_id: TYPE_ID,
                 input_channels: input_channels,
                 output_channels: output_channels
             },

@@ -9,7 +9,7 @@ pub struct ArtError {
     detail: SendStr
 }
 
-#[deriving(Show)]
+#[deriving(Show, Copy)]
 pub enum ArtErrorKind {
     UndefinedUnit { type_id: u32 },
     UnitNotFound { unit_id: u32 },
@@ -26,11 +26,12 @@ impl ArtError {
         ArtError {
             kind: kind,
             message: msg.into_cow(),
-            detail: "".into_cow()
+            detail: detail.into_cow()
         }
     }
 }
 
+#[deriving(Copy)]
 pub struct UndefinedUnitError;
 
 impl UndefinedUnitError {
@@ -40,6 +41,7 @@ impl UndefinedUnitError {
     }
 }
 
+#[deriving(Copy)]
 pub struct UnitNotFoundError;
 
 impl UnitNotFoundError {
@@ -49,6 +51,7 @@ impl UnitNotFoundError {
     }
 }
 
+#[deriving(Copy)]
 pub struct InvalidByteCodeError;
 
 impl InvalidByteCodeError {
@@ -58,6 +61,7 @@ impl InvalidByteCodeError {
     }
 }
 
+#[deriving(Copy)]
 pub struct ExpressionNotFoundError;
 
 impl ExpressionNotFoundError {
@@ -68,6 +72,7 @@ impl ExpressionNotFoundError {
     }
 }
 
+#[deriving(Copy)]
 pub struct InvalidStackError;
 
 impl InvalidStackError {
@@ -76,6 +81,7 @@ impl InvalidStackError {
     }
 }
 
+#[deriving(Copy)]
 pub struct PortAudioError;
 
 impl PortAudioError {

@@ -1,34 +1,31 @@
-use std::int;
-use std::uint;
 use std::collections::HashMap;
-use std::collections::RingBuf;
+use std::io::{BufReader, IoError};
 
 use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
 use types::ArtResult;
-use errors::{InvalidByteCodeError, ExpressionNotFoundError, PortAudioError};
+use errors::{InvalidByteCodeError, ExpressionNotFoundError};
 use device::Device;
 use unit_factory::UnitFactory;
 use tickable::TickableBox;
 use expression::Expression;
-use opcode::Opcode;
+use opcode::{Opcode, OpcodeType};
 use util::get_int_env_aliased;
 
-pub type ByteCode = Vec<u32>;
-pub type ByteCodeReceiver = Receiver<Vec<u32>>;
+pub type ByteCodeReceiver = Receiver<Vec<u8>>;
 pub type UnitMap = HashMap<u32, TickableBox>;
-type ExpressionMap = HashMap<u32, Expression>;
+pub type ExpressionMap = HashMap<u32, Expression>;
 
-pub struct VM<'a> {
+pub struct VM {
     input_channel: ByteCodeReceiver,
     units:UnitMap,
     expressions:ExpressionMap,
     unit_factory:UnitFactory
 }
 
-impl<'a> VM<'a> {
-    pub fn new(input_channel: ByteCodeReceiver) -> VM<'a> {
+impl VM {
+    pub fn new(input_channel: ByteCodeReceiver) -> VM {
         VM {
             input_channel: input_channel,
             units: HashMap::new(),
@@ -52,24 +49,25 @@ impl<'a> VM<'a> {
         let mut device = Device::new(
             input_device, output_device, input_channels, output_channels,
         );
-        let (exit_signal_tx, exit_signal_rx) :
+
+        let (exit_channel_sender, exit_channel_receiver):
                 (SyncSender<()>, Receiver<()>) = sync_channel(1);
-        let stream = try!(
+
+        try!(
             device.open(|input_block: &[f32], output_block: &mut[f32],
                          time_info: StreamTimeInfo,
                          flags: StreamCallbackFlags| {
-                self.tick();
-                StreamCallbackResult::Continue
+                self.tick()
             })
         );
 
         try!(device.start());
-        exit_signal_rx.recv();
+
+        exit_channel_receiver.recv();
         Ok(())
     }
 
     fn tick(&mut self) -> StreamCallbackResult {
-        println!("Tick");
         self.process_queue();
         self.execute_expressions();
         StreamCallbackResult::Continue
@@ -80,35 +78,79 @@ impl<'a> VM<'a> {
             let result = self.input_channel.try_recv();
             match result {
                 Ok(byte_code) => {
-                    let result = self.process_byte_code(byte_code);
+                    let result = self.process_byte_code(byte_code.as_slice());
                     result.unwrap_or_else(|error| error!("{}", error));
                 },
-                Err(error) => { return; }
+                Err(_) => { return; }
             }
             return;
         }
     }
 
-    fn process_byte_code(&mut self, byte_code: Vec<u32>) -> ArtResult<()> {
-        match byte_code.as_slice() {
-            [opcode, instructions..]
-                    if opcode == Opcode::Expression as u32 => {
-                self.add_expression(instructions)
+    fn parse_opcode(&self, reader: &mut BufReader)
+            -> Result<Opcode, IoError> {
+        let opcode_value = try!(reader.read_be_u32());
+        // TODO: Handle properly
+        let opcode_type: OpcodeType = FromPrimitive::from_u32(opcode_value).unwrap();
+
+        match opcode_type {
+            OpcodeType::Expression => {
+                let id = try!(reader.read_be_u32());
+                let mut opcodes = Vec::new();
+
+                while !reader.eof() {
+                    let opcode = try!(self.parse_opcode(reader));
+                    opcodes.push(opcode);
+                }
+
+                Ok(
+                    Opcode::Expression {
+                        id: id,
+                        opcodes: opcodes
+                    }
+                )
             },
-            [opcode, id, type_id, input_channels, output_channels]
-                    if opcode == Opcode::CreateUnit as u32 => {
-                self.create_unit(id, type_id, input_channels,
-                                 output_channels)
-            },
-            _ => {
-                Err(InvalidByteCodeError::new())
+
+            OpcodeType::CreateUnit => {
+                let id = try!(reader.read_be_u32());
+                let type_id = try!(reader.read_be_u32());
+                let input_channels = try!(reader.read_be_u32());
+                let output_channels = try!(reader.read_be_u32());
+                Ok(
+                    Opcode::CreateUnit {
+                        id: id,
+                        type_id: type_id,
+                        input_channels: input_channels,
+                        output_channels: output_channels
+                    }
+                )
             }
+            _ => panic!("OpcodeType without matching Opcode")
         }
     }
 
-    fn add_expression(&mut self, byte_code: &[u32]) -> ArtResult<()> {
-        let id = byte_code[0];
-        let expression = try!(Expression::new(byte_code));
+
+    fn process_byte_code(&mut self, byte_code: &[u8]) -> ArtResult<()> {
+        let mut reader = BufReader::new(byte_code);
+        let opcode = try!(
+            self.parse_opcode(&mut reader).map_err(|_| InvalidByteCodeError::new())
+        );
+
+        match opcode {
+            Opcode::Expression { id, opcodes } => {
+                self.add_expression(id, opcodes)
+            },
+
+            Opcode::CreateUnit { id, type_id, input_channels, output_channels } => {
+                self.create_unit(id, type_id, input_channels, output_channels)
+            },
+            _ => Err(InvalidByteCodeError::new())
+        }
+    }
+
+    fn add_expression(&mut self, id: u32, opcodes: Vec<Opcode>)
+            -> ArtResult<()> {
+        let expression = Expression::new(opcodes);
         self.expressions.insert(id, expression);
         Ok(())
     }
