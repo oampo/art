@@ -6,7 +6,10 @@ pub enum OpcodeType {
     Play,
     Unit,
     Parameter,
-    Sample
+    Sample,
+    DAC,
+    ADC,
+    Unknown
 }
 
 pub enum Opcode {
@@ -16,7 +19,11 @@ pub enum Opcode {
         input_channels: u32,
         output_channels: u32
     },
-    SetParameter,
+    SetParameter {
+        unit_id: u32,
+        parameter_id: u32,
+        value: f32
+    },
     Expression {
         id: u32,
         opcodes: Vec<Opcode>
@@ -27,6 +34,15 @@ pub enum Opcode {
     Unit {
         id: u32
     },
-    Parameter,
-    Sample
+    Parameter {
+        unit_id: u32,
+        parameter_id: u32
+    },
+    Sample {
+        value: f32
+    },
+    DAC,
+    ADC,
+    Unknown
 }
+

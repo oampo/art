@@ -9,6 +9,7 @@ pub mod sizes;
 pub mod rates;
 pub mod vm;
 pub mod opcode;
+pub mod opcode_reader;
 pub mod expression;
 pub mod tickable;
 pub mod unit_factory;

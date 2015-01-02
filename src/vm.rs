@@ -11,6 +11,7 @@ use unit_factory::UnitFactory;
 use tickable::TickableBox;
 use expression::Expression;
 use opcode::{Opcode, OpcodeType};
+use opcode_reader::OpcodeReader;
 use util::get_int_env_aliased;
 
 pub type ByteCodeReceiver = Receiver<Vec<u8>>;
@@ -87,53 +88,10 @@ impl VM {
         }
     }
 
-    fn parse_opcode(&self, reader: &mut BufReader)
-            -> Result<Opcode, IoError> {
-        let opcode_value = try!(reader.read_be_u32());
-        // TODO: Handle properly
-        let opcode_type: OpcodeType = FromPrimitive::from_u32(opcode_value).unwrap();
-
-        match opcode_type {
-            OpcodeType::Expression => {
-                let id = try!(reader.read_be_u32());
-                let mut opcodes = Vec::new();
-
-                while !reader.eof() {
-                    let opcode = try!(self.parse_opcode(reader));
-                    opcodes.push(opcode);
-                }
-
-                Ok(
-                    Opcode::Expression {
-                        id: id,
-                        opcodes: opcodes
-                    }
-                )
-            },
-
-            OpcodeType::CreateUnit => {
-                let id = try!(reader.read_be_u32());
-                let type_id = try!(reader.read_be_u32());
-                let input_channels = try!(reader.read_be_u32());
-                let output_channels = try!(reader.read_be_u32());
-                Ok(
-                    Opcode::CreateUnit {
-                        id: id,
-                        type_id: type_id,
-                        input_channels: input_channels,
-                        output_channels: output_channels
-                    }
-                )
-            }
-            _ => panic!("OpcodeType without matching Opcode")
-        }
-    }
-
-
     fn process_byte_code(&mut self, byte_code: &[u8]) -> ArtResult<()> {
         let mut reader = BufReader::new(byte_code);
         let opcode = try!(
-            self.parse_opcode(&mut reader).map_err(|_| InvalidByteCodeError::new())
+            reader.read_opcode().map_err(|_| InvalidByteCodeError::new())
         );
 
         match opcode {
@@ -144,7 +102,9 @@ impl VM {
             Opcode::CreateUnit { id, type_id, input_channels, output_channels } => {
                 self.create_unit(id, type_id, input_channels, output_channels)
             },
-            _ => Err(InvalidByteCodeError::new())
+
+            Opcode::Unknown => Err(InvalidByteCodeError::new()),
+            _ => unimplemented!()
         }
     }
 
