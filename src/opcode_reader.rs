@@ -86,6 +86,7 @@ pub trait OpcodeReader: Reader {
         let mut opcodes = Vec::new();
 
         loop {
+            // TODO: Can this logic be simplified?
             let opcode_type_result = self.read_opcode_type();
 
             match opcode_type_result {
