@@ -1,7 +1,6 @@
 use types::ArtResult;
-use errors::{UnitNotFoundError, InvalidStackError};
+use errors::{UnitNotFoundError};
 use vm::UnitMap;
-use sizes::BLOCK_SIZE;
 use channel_stack::ChannelStack;
 
 #[deriving(Copy)]
@@ -23,33 +22,18 @@ impl UnitInstruction {
         let mut end = 0u;
 
         if input_channels != 0u32 {
-            // If we have input channels, then there should be something already
-            // on the channels stack
-            let channels_top = try!(
-                channels.stack.pop().ok_or(InvalidStackError::new())
-            );
-
-            // The number of channels at the top of the stack should be the
-            // number of input channels of the unit
-            if channels_top != input_channels {
-                return Err(InvalidStackError::new());
-            }
-
-            end = channels.position as uint * BLOCK_SIZE;
-            channels.position -= input_channels;
-            start = channels.position as uint * BLOCK_SIZE;
+            // If we have input channels, then the number of channels at the
+            // top of the stack should be the number of input channels of the
+            // unit
+            end = channels.position;
+            try!(channels.pop_expect(input_channels));
+            start = channels.position;
         }
 
 
-        if output_channels > input_channels {
-            let current = channels.data.len();
-            end += (output_channels - input_channels) as uint * BLOCK_SIZE;
-            if current < end {
-                // Not enough channels allocated, so grow the vector
-                channels.data.grow((end - current), 0f32);
-            }
-            channels.stack.push(output_channels);
-            channels.position += output_channels;
+        if output_channels != 0u32 {
+            channels.push(output_channels);
+            end = channels.position;
         }
 
         let mut slice = channels.data.slice_mut(start, end);
