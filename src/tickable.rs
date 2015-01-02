@@ -1,15 +1,13 @@
-use unit_definition::UnitDefinition;
+use channel_layout::ChannelLayout;
 
 pub trait Tickable {
     fn tick(&mut self, block: &mut[f32]);
-    fn get_definition(&self) -> &UnitDefinition;
-
+    fn get_channel_layout(&self) -> &ChannelLayout;
     fn get_input_channels(&self) -> u32 {
-        self.get_definition().input_channels
+        self.get_channel_layout().input
     }
-
     fn get_output_channels(&self) -> u32 {
-        self.get_definition().output_channels
+        self.get_channel_layout().output
     }
 }
 

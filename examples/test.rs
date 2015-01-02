@@ -12,7 +12,6 @@ fn main() {
     let (tx, rx) = channel();
 
     let mut vm: VM = VM::new(rx);
-    let device = vm.run().unwrap();
-    std::io::stdin().read_line();
+    vm.run();
     Device::uninit();
 }

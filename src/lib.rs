@@ -13,7 +13,7 @@ pub mod opcode_reader;
 pub mod expression;
 pub mod tickable;
 pub mod unit_factory;
-pub mod unit_definition;
+pub mod channel_layout;
 pub mod util;
 pub mod device;
 pub mod channel_stack;

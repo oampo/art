@@ -3,15 +3,13 @@ use std::f32::consts::PI_2;
 
 use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
-use unit_definition::UnitDefinition;
+use channel_layout::ChannelLayout;
 use tickable::{Tickable, TickableBox};
 use util::modulo;
 
-pub static TYPE_ID: &'static str = "sine";
-
 #[deriving(Copy)]
 pub struct Sine {
-    definition: UnitDefinition,
+    layout: ChannelLayout,
     frequency: f32,
     phase: f32,
     position: f32
@@ -20,10 +18,9 @@ pub struct Sine {
 impl Sine {
     pub fn new(input_channels: u32, output_channels: u32) -> Sine {
         Sine {
-            definition: UnitDefinition {
-                type_id: TYPE_ID,
-                input_channels: input_channels,
-                output_channels: output_channels
+            layout: ChannelLayout {
+                input: input_channels,
+                output: output_channels
             },
             frequency: 440.0f32,
             phase: 0.0f32,
@@ -39,17 +36,18 @@ impl Sine {
 
 impl Tickable for Sine {
     fn tick(&mut self, block: &mut[f32]) {
+        let channels = self.get_output_channels() as uint;
         for i in range(0, BLOCK_SIZE) {
             let value = (self.position + self.phase).sin();
-            for j in range(0, self.get_output_channels()) {
-                block[i + j as uint * BLOCK_SIZE] = value;
+            for j in range(0, channels) {
+                block[i * channels + j] = value;
             }
             self.position += self.frequency * PI_2 * AUDIO_RATE_INVERSE;
             self.position = modulo(self.position, PI_2);
         }
     }
 
-    fn get_definition(&self) -> &UnitDefinition {
-        return &self.definition;
+    fn get_channel_layout(&self) -> &ChannelLayout {
+        &self.layout
     }
 }
