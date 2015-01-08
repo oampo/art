@@ -1,4 +1,5 @@
 use std::io::{IoError, IoErrorKind, BufReader};
+use std::num::FromPrimitive;
 
 use opcode::{OpcodeType, Opcode};
 

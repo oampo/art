@@ -1,5 +1,5 @@
-#![feature(default_type_params, phase, unsafe_destructor)]
-#[phase(plugin, link)] extern crate log;
+#![feature(unsafe_destructor)]
+#[macro_use] extern crate log;
 
 extern crate portaudio;
 
@@ -8,6 +8,7 @@ pub mod types;
 pub mod sizes;
 pub mod rates;
 pub mod vm;
+pub mod vm_options;
 pub mod opcode;
 pub mod opcode_reader;
 pub mod expression;
@@ -19,7 +20,8 @@ pub mod device;
 pub mod channel_stack;
 
 pub mod instructions {
-    pub mod unit_instruction;
+    pub mod unit;
+    pub mod dac;
 }
 
 pub mod dsp {

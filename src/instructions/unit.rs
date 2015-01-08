@@ -3,7 +3,7 @@ use errors::{UnitNotFoundError};
 use vm::UnitMap;
 use channel_stack::ChannelStack;
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct UnitInstruction;
 
 impl UnitInstruction {

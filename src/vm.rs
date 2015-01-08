@@ -1,24 +1,26 @@
 use std::collections::HashMap;
 use std::io::{BufReader, IoError};
+use std::sync::mpsc::{SyncSender, Receiver, sync_channel};
 
-use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
+use portaudio::stream::{StreamCallback, StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
 use types::ArtResult;
 use errors::{InvalidByteCodeError, ExpressionNotFoundError};
+use vm_options::VMOptions;
 use device::Device;
 use unit_factory::UnitFactory;
 use tickable::TickableBox;
 use expression::Expression;
 use opcode::{Opcode, OpcodeType};
 use opcode_reader::OpcodeReader;
-use util::get_int_env_aliased;
 
 pub type ByteCodeReceiver = Receiver<Vec<u8>>;
 pub type UnitMap = HashMap<u32, TickableBox>;
 pub type ExpressionMap = HashMap<u32, Expression>;
 
 pub struct VM {
+    options: VMOptions,
     input_channel: ByteCodeReceiver,
     units:UnitMap,
     expressions:ExpressionMap,
@@ -26,8 +28,9 @@ pub struct VM {
 }
 
 impl VM {
-    pub fn new(input_channel: ByteCodeReceiver) -> VM {
+    pub fn new(options: VMOptions, input_channel: ByteCodeReceiver) -> VM {
         VM {
+            options: options,
             input_channel: input_channel,
             units: HashMap::new(),
             expressions: HashMap::new(),
@@ -36,30 +39,27 @@ impl VM {
     }
 
     pub fn run(&mut self) -> ArtResult<()> {
-        let input_device = get_int_env_aliased("ART_INPUT_DEVICE",
-                                               "ART_DEVICE").unwrap_or(-1);
-        let output_device = get_int_env_aliased("ART_OUTPUT_DEVICE",
-                                                "ART_DEVICE").unwrap_or(-1);
-        let input_channels : uint = get_int_env_aliased(
-            "ART_INPUT_CHANNELS", "ART_CHANNELS"
-        ).unwrap_or(0) as uint;
-        let output_channels : uint = get_int_env_aliased(
-            "ART_OUTPUT_CHANNELS", "ART_CHANNELS"
-        ).unwrap_or(1) as uint;
+        let input_device = self.options.input_device;
+        let output_device = self.options.output_device;
+        let input_channels = self.options.input_channels;
+        let output_channels = self.options.output_channels;
 
         let mut device = Device::new(
-            input_device, output_device, input_channels, output_channels,
+            input_device, output_device,
+            input_channels as uint, output_channels as uint,
         );
 
         let (exit_channel_sender, exit_channel_receiver):
                 (SyncSender<()>, Receiver<()>) = sync_channel(1);
 
         try!(
-            device.open(|input_block: &[f32], output_block: &mut[f32],
-                         time_info: StreamTimeInfo,
-                         flags: StreamCallbackFlags| {
-                self.tick()
-            })
+            device.open(
+                box |&mut:input_block: &[f32], output_block: &mut[f32],
+                     time_info: StreamTimeInfo,
+                     flags: StreamCallbackFlags| {
+                    self.tick()
+                }
+            )
         );
 
         try!(device.start());

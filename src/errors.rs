@@ -1,15 +1,16 @@
-use std::str::SendStr;
+use std::string::CowString;
+use std::borrow::IntoCow;
 
 use portaudio::pa::PaError;
 
-#[deriving(Show)]
+#[derive(Show)]
 pub struct ArtError {
     kind: ArtErrorKind,
-    message: SendStr,
-    detail: SendStr
+    message: CowString<'static>,
+    detail: CowString<'static>
 }
 
-#[deriving(Show, Copy)]
+#[derive(Show, Copy)]
 pub enum ArtErrorKind {
     UndefinedUnit { type_id: u32 },
     UnitNotFound { unit_id: u32 },
@@ -31,7 +32,7 @@ impl ArtError {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct UndefinedUnitError;
 
 impl UndefinedUnitError {
@@ -41,7 +42,7 @@ impl UndefinedUnitError {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct UnitNotFoundError;
 
 impl UnitNotFoundError {
@@ -51,7 +52,7 @@ impl UnitNotFoundError {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct InvalidByteCodeError;
 
 impl InvalidByteCodeError {
@@ -61,7 +62,7 @@ impl InvalidByteCodeError {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct ExpressionNotFoundError;
 
 impl ExpressionNotFoundError {
@@ -72,7 +73,7 @@ impl ExpressionNotFoundError {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct InvalidStackError;
 
 impl InvalidStackError {
@@ -81,7 +82,7 @@ impl InvalidStackError {
     }
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct PortAudioError;
 
 impl PortAudioError {

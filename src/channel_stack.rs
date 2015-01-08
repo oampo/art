@@ -22,7 +22,7 @@ impl ChannelStack {
         let new_position = self.position + channels as uint * BLOCK_SIZE;
         if current_length < new_position {
             // Not enough channels allocated, so grow the vector
-            self.data.grow((new_position - current_length), 0f32);
+            self.data.resize(new_position, 0f32);
         }
         self.stack.push(channels);
         self.position = new_position;

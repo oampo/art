@@ -1,6 +1,7 @@
 use portaudio;
 
 use rates::AUDIO_RATE;
+use sizes::BLOCK_SIZE;
 use types::ArtResult;
 use errors::PortAudioError;
 
@@ -138,7 +139,7 @@ impl<'a> Device <'a> {
                 input_parameters,
                 output_parameters,
                 AUDIO_RATE as f64,
-                portaudio::stream::FRAMES_PER_BUFFER_UNSPECIFIED,
+                BLOCK_SIZE as u64,
                 portaudio::stream::StreamFlags::empty(),
                 Some(callback)
             )

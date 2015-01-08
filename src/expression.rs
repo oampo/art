@@ -3,7 +3,7 @@ use errors::{InvalidByteCodeError};
 use vm::UnitMap;
 use opcode::Opcode;
 use channel_stack::ChannelStack;
-use instructions::unit_instruction::UnitInstruction;
+use instructions::unit::UnitInstruction;
 
 pub struct Expression {
     opcodes: Vec<Opcode>,

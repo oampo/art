@@ -1,4 +1,4 @@
-use std::num::FloatMath;
+use std::num::Float;
 use std::f32::consts::PI_2;
 
 use sizes::BLOCK_SIZE;
@@ -7,7 +7,7 @@ use channel_layout::ChannelLayout;
 use tickable::{Tickable, TickableBox};
 use util::modulo;
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Sine {
     layout: ChannelLayout,
     frequency: f32,

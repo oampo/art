@@ -1,4 +1,4 @@
-#[deriving(FromPrimitive, Copy)]
+#[derive(FromPrimitive, Copy)]
 pub enum OpcodeType {
     CreateUnit,
     SetParameter,
