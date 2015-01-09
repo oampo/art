@@ -1,6 +1,5 @@
-use types::ArtResult;
-use errors::{UnitNotFoundError};
-use vm::UnitMap;
+use types::{ArtResult, UnitMap};
+use errors::UnitNotFoundError;
 use channel_stack::ChannelStack;
 
 #[derive(Copy)]

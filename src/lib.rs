@@ -1,4 +1,4 @@
-#![feature(unsafe_destructor)]
+#![feature(unsafe_destructor, unboxed_closures)]
 #[macro_use] extern crate log;
 
 extern crate portaudio;
@@ -8,6 +8,7 @@ pub mod types;
 pub mod sizes;
 pub mod rates;
 pub mod vm;
+pub mod vm_inner;
 pub mod vm_options;
 pub mod opcode;
 pub mod opcode_reader;

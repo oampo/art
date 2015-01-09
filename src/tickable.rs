@@ -11,5 +11,3 @@ pub trait Tickable {
     }
 }
 
-pub type TickableBox = Box<Tickable + 'static>;
-pub type TickableConstructor = fn(u32, u32) -> TickableBox;

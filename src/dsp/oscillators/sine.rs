@@ -1,10 +1,11 @@
 use std::num::Float;
 use std::f32::consts::PI_2;
 
+use types::Unit;
 use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
 use channel_layout::ChannelLayout;
-use tickable::{Tickable, TickableBox};
+use tickable::Tickable;
 use util::modulo;
 
 #[derive(Copy)]
@@ -29,7 +30,7 @@ impl Sine {
     }
 
     pub fn new_boxed(input_channels: u32,
-                     output_channels: u32) -> TickableBox {
+                     output_channels: u32) -> Unit {
         box Sine::new(input_channels, output_channels)
     }
 }

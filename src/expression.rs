@@ -1,6 +1,5 @@
-use types::ArtResult;
+use types::{UnitMap, ArtResult};
 use errors::{InvalidByteCodeError};
-use vm::UnitMap;
 use opcode::Opcode;
 use channel_stack::ChannelStack;
 use instructions::unit::UnitInstruction;

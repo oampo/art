@@ -46,7 +46,8 @@ impl<'a> Device <'a> {
             )
         );
 
-        info!("{} devices available:", count);
+        println!("{} devices available:", count);
+        println!("");
 
         for i in range(0, count) {
             let device_info = try!(
@@ -57,12 +58,14 @@ impl<'a> Device <'a> {
                 )
             );
 
-            info!("{}: {}", i, device_info.name);
+            println!("{}: {} [I: {}, O: {}]", i, device_info.name,
+                     device_info.max_input_channels,
+                     device_info.max_output_channels);
         }
         Ok(())
     }
 
-    pub fn open(&mut self, callback: Callback<'a>) -> ArtResult<()> {
+    pub fn open(&mut self, callback: &'a mut Callback<'a>) -> ArtResult<()> {
         self.stream = Some(
             try!(
                 self._open(callback).map_err(|err| {
@@ -71,6 +74,10 @@ impl<'a> Device <'a> {
             )
         );
         Ok(())
+    }
+
+    pub fn is_open(&self) -> bool {
+        self.stream.is_some()
     }
 
     pub fn start(&mut self) -> ArtResult<()> {
@@ -87,7 +94,7 @@ impl<'a> Device <'a> {
         Ok(())
     }
 
-    fn _open(&self, callback: Callback<'a>)
+    fn _open(&self, callback: &'a mut Callback<'a>)
             -> Result<Stream<'a>, portaudio::pa::PaError> {
         // Currently pa-rs requires both input and output
         let input_device_id = match self.input_device {
