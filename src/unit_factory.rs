@@ -11,7 +11,7 @@ pub struct UnitFactory {
 impl UnitFactory {
     pub fn new() -> UnitFactory {
         let mut factory = UnitFactory {unit_map: HashMap::new()};
-        factory.register(sine::Sine::new_boxed);
+        factory.register(sine::Sine::new);
         factory
     }
 

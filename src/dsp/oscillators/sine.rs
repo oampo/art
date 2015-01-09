@@ -17,21 +17,16 @@ pub struct Sine {
 }
 
 impl Sine {
-    pub fn new(input_channels: u32, output_channels: u32) -> Sine {
-        Sine {
+    pub fn new(input_channels: u32, output_channels: u32) -> Unit {
+        box Sine {
             layout: ChannelLayout {
                 input: input_channels,
                 output: output_channels
             },
-            frequency: 440.0f32,
-            phase: 0.0f32,
-            position: 0.0f32
+            frequency: 440.0,
+            phase: 0.0,
+            position: 0.0
         }
-    }
-
-    pub fn new_boxed(input_channels: u32,
-                     output_channels: u32) -> Unit {
-        box Sine::new(input_channels, output_channels)
     }
 }
 
