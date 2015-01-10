@@ -18,6 +18,7 @@ pub enum ArtErrorKind {
     UndefinedUnit { type_id: u32 },
     UnitNotFound { unit_id: u32 },
     ExpressionNotFound { expression_id: u32 },
+    InvalidChannelCount,
     InvalidByteCode,
     InvalidStack,
     PortAudio { error: PaError }
@@ -83,6 +84,17 @@ impl ExpressionNotFoundError {
         ArtError::new(ArtErrorKind::ExpressionNotFound {
                           expression_id: expression_id
                       }, "Expression not found", "")
+    }
+}
+
+
+#[derive(Copy)]
+pub struct InvalidChannelCountError;
+
+impl InvalidChannelCountError {
+    pub fn new() -> ArtError {
+        ArtError::new(ArtErrorKind::InvalidChannelCount,
+                      "Invalid channel count", "")
     }
 }
 

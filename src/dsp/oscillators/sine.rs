@@ -1,12 +1,23 @@
 use std::num::Float;
 use std::f32::consts::PI_2;
+use std::u32;
 
 use unit::Unit;
+use unit_definition::{UnitDefinition, UnitKind};
 use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
 use channel_layout::ChannelLayout;
 use parameter::Parameter;
 use util::modulo;
+
+pub static SINE_DEFINITION: UnitDefinition = UnitDefinition {
+    name: "Sine",
+    kind: UnitKind::Source,
+    min_input_channels: 0,
+    max_input_channels: 0,
+    min_output_channels: 1,
+    max_output_channels: u32::MAX
+};
 
 #[derive(Copy)]
 pub struct Sine {
