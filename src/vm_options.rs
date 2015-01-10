@@ -1,6 +1,6 @@
 use std::default::Default;
 
-use device_id::DeviceId;
+use device::DeviceId;
 
 #[derive(Copy)]
 pub struct VMOptions {

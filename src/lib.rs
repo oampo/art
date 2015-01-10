@@ -21,7 +21,6 @@ pub mod opcode;
 pub mod opcode_reader;
 
 pub mod device;
-pub mod device_id;
 pub mod unit_factory;
 
 pub mod expression;

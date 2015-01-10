@@ -4,10 +4,21 @@ use rates::AUDIO_RATE;
 use sizes::BLOCK_SIZE;
 use types::ArtResult;
 use errors::PortAudioError;
-use device_id::DeviceId;
 
 pub type Stream<'a> = portaudio::stream::Stream<'a, f32, f32>;
 pub type Callback<'a> = portaudio::stream::StreamCallback<'a, f32, f32>;
+
+#[derive(Copy)]
+pub enum DeviceId {
+    Id(u32),
+    Default
+}
+
+impl DeviceId {
+    pub fn from_option(id: Option<u32>) -> DeviceId {
+        id.map_or(DeviceId::Default, |id| DeviceId::Id(id))
+    }
+}
 
 pub struct Device<'a> {
     input_device: DeviceId,
