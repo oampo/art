@@ -1,5 +1,27 @@
-use channel_layout::ChannelLayout;
 use parameter::Parameter;
+
+#[derive(Copy)]
+pub enum UnitKind {
+    Source,
+    Processor,
+    Sink
+}
+
+#[derive(Copy)]
+pub struct UnitDefinition {
+    pub name: &'static str,
+    pub kind: UnitKind,
+    pub min_input_channels: u32,
+    pub max_input_channels: u32,
+    pub min_output_channels: u32,
+    pub max_output_channels: u32
+}
+
+#[derive(Copy)]
+pub struct ChannelLayout {
+    pub input: u32,
+    pub output: u32
+}
 
 pub trait Unit {
     fn tick(&mut self, block: &mut[f32]);

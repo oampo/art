@@ -2,11 +2,9 @@ use std::num::Float;
 use std::f32::consts::PI_2;
 use std::u32;
 
-use unit::Unit;
-use unit_definition::{UnitDefinition, UnitKind};
+use unit::{Unit, UnitDefinition, UnitKind, ChannelLayout};
 use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
-use channel_layout::ChannelLayout;
 use parameter::Parameter;
 use util::modulo;
 

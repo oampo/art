@@ -28,9 +28,6 @@ pub mod expression;
 pub mod unit;
 pub mod parameter;
 
-pub mod channel_layout;
-pub mod unit_definition;
-
 pub mod channel_stack;
 pub mod util;
 

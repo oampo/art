@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use unit::Unit;
-use unit_definition::UnitDefinition;
+use unit::{Unit, UnitDefinition};
 use types::{ArtResult, UnitTypeId, UnitConstructor};
 use errors::{UndefinedUnitError, InvalidChannelCountError};
 use dsp::oscillators::sine;
