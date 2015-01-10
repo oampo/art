@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use types::{ArtResult, Unit, UnitTypeId, UnitConstructor};
+use unit::Unit;
+use types::{ArtResult, UnitTypeId, UnitConstructor};
 use errors::UndefinedUnitError;
 use dsp::oscillators::sine;
 
@@ -11,19 +12,19 @@ pub struct UnitFactory {
 impl UnitFactory {
     pub fn new() -> UnitFactory {
         let mut factory = UnitFactory {unit_map: HashMap::new()};
-        factory.register(sine::Sine::new);
+        factory.register(sine::Sine::as_unit);
         factory
     }
 
     pub fn register(&mut self, constructor: UnitConstructor) {
         let type_id = self.unit_map.len();
-        debug!("Registering tickable: type_id = {}", type_id);
+        debug!("Registering unit: type_id = {}", type_id);
         self.unit_map.insert(type_id as u32, constructor);
     }
 
     pub fn create(&mut self, type_id: u32, input_channels: u32,
-                  output_channels: u32) -> ArtResult<Unit> {
-        debug!("Creating tickable: type_id = {}, \
+                  output_channels: u32) -> ArtResult<Box<Unit + 'static>> {
+        debug!("Creating unit: type_id = {}, \
                 input_channels = {}, output_channels = {}",
                type_id, input_channels, output_channels);
 

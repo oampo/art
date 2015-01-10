@@ -3,6 +3,7 @@ use errors::{InvalidByteCodeError};
 use opcode::Opcode;
 use channel_stack::ChannelStack;
 use instructions::unit::UnitInstruction;
+use instructions::dac::DACInstruction;
 
 pub struct Expression {
     opcodes: Vec<Opcode>,
@@ -17,11 +18,15 @@ impl Expression {
         }
     }
 
-    pub fn execute(&mut self, units: &mut UnitMap) -> ArtResult<()> {
+    pub fn execute(&mut self, units: &mut UnitMap, adc_block: &[f32],
+                   dac_block: &mut [f32]) -> ArtResult<()> {
         for opcode in self.opcodes.iter() {
             match opcode {
                 &Opcode::Unit { id } => {
                     try!(UnitInstruction::run(id, units, &mut self.channels))
+                },
+                &Opcode::DAC => {
+                    try!(DACInstruction::run(&mut self.channels, dac_block));
                 },
                 _ => return Err(InvalidByteCodeError::new())
             }

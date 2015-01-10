@@ -17,8 +17,8 @@ impl UnitInstruction {
         let input_channels = unit.get_input_channels();
         let output_channels = unit.get_output_channels();
 
-        let mut start = 0u;
-        let mut end = 0u;
+        let mut start = 0us;
+        let mut end = 0us;
 
         if input_channels != 0u32 {
             // If we have input channels, then the number of channels at the
@@ -29,14 +29,15 @@ impl UnitInstruction {
             start = channels.position;
         }
 
-
         if output_channels != 0u32 {
             channels.push(output_channels);
             end = channels.position;
         }
 
         let mut slice = channels.data.slice_mut(start, end);
+        unit.enter();
         unit.tick(slice);
+        unit.leave();
 
         Ok(())
     }

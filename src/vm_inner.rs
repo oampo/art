@@ -5,9 +5,9 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
 use types::{ArtResult, ByteCodeReceiver, UnitMap, ExpressionMap};
-use errors::{InvalidByteCodeError, ExpressionNotFoundError};
+use errors::{InvalidByteCodeError, ExpressionNotFoundError,
+             UnimplementedOpcodeError};
 use unit_factory::UnitFactory;
-use tickable::Tickable;
 use expression::Expression;
 use opcode::Opcode;
 use opcode_reader::OpcodeReader;
@@ -29,10 +29,10 @@ impl VMInner {
         }
     }
 
-    fn tick(&mut self) -> StreamCallbackResult {
-        println!("Tick");
+    fn tick(&mut self, adc_block: &[f32], dac_block: &mut [f32])
+            -> StreamCallbackResult {
         self.process_queue();
-        self.execute_expressions();
+        self.execute_expressions(adc_block, dac_block);
         StreamCallbackResult::Continue
     }
 
@@ -42,7 +42,7 @@ impl VMInner {
             match result {
                 Ok(byte_code) => {
                     let result = self.process_byte_code(byte_code.as_slice());
-                    result.unwrap_or_else(|error| error!("{}", error));
+                    result.unwrap_or_else(|error| error!("{:?}", error));
                 },
                 Err(_) => { return; }
             }
@@ -66,7 +66,7 @@ impl VMInner {
             },
 
             Opcode::Unknown => Err(InvalidByteCodeError::new()),
-            _ => unimplemented!()
+            _ => Err(UnimplementedOpcodeError::new(opcode))
         }
     }
 
@@ -82,11 +82,12 @@ impl VMInner {
         expression.ok_or(ExpressionNotFoundError::new(id))
     }
 
-    fn execute_expressions(&mut self) {
+    fn execute_expressions(&mut self, adc_block: &[f32],
+                                      dac_block: &mut [f32]) {
         let units = &mut self.units;
         for (_, expression) in self.expressions.iter_mut() {
-            let result = expression.execute(units);
-            result.unwrap_or_else(|error| error!("{}", error));
+            let result = expression.execute(units, adc_block, dac_block);
+            result.unwrap_or_else(|error| error!("{:?}", error));
         }
     }
 
@@ -104,11 +105,12 @@ impl<'a, 'b> FnMut<
     (&'a [f32], &'b mut [f32], StreamTimeInfo, StreamCallbackFlags),
     (StreamCallbackResult)
 > for VMInner {
-    extern "rust-call" fn call_mut(&mut self, _: (&[f32], &mut [f32],
-                                                  StreamTimeInfo,
-                                                  StreamCallbackFlags))
+    extern "rust-call" fn call_mut(&mut self, args: (&[f32], &mut [f32],
+                                                     StreamTimeInfo,
+                                                     StreamCallbackFlags))
             -> StreamCallbackResult {
-        self.tick()
+        let (adc_block, dac_block, _, _) = args;
+        self.tick(adc_block, dac_block)
     }
 }
 

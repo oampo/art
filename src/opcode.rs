@@ -1,4 +1,4 @@
-#[derive(FromPrimitive, Copy)]
+#[derive(FromPrimitive, Copy, Show)]
 pub enum OpcodeType {
     CreateUnit,
     SetParameter,
@@ -12,6 +12,7 @@ pub enum OpcodeType {
     Unknown
 }
 
+#[derive(Show)]
 pub enum Opcode {
     CreateUnit {
         id: u32,

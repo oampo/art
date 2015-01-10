@@ -14,8 +14,8 @@ impl<'a> VM<'a> {
         VM {
             inner: VMInner::new(input_channel),
             device:  Device::new(options.input_device, options.output_device,
-                                 options.input_channels as uint,
-                                 options.output_channels as uint)
+                                 options.input_channels,
+                                 options.output_channels)
         }
     }
 

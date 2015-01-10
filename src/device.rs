@@ -4,21 +4,22 @@ use rates::AUDIO_RATE;
 use sizes::BLOCK_SIZE;
 use types::ArtResult;
 use errors::PortAudioError;
+use device_id::DeviceId;
 
 pub type Stream<'a> = portaudio::stream::Stream<'a, f32, f32>;
 pub type Callback<'a> = portaudio::stream::StreamCallback<'a, f32, f32>;
 
 pub struct Device<'a> {
-    input_device: int,
-    output_device: int,
-    input_channels: uint,
-    output_channels: uint,
+    input_device: DeviceId,
+    output_device: DeviceId,
+    input_channels: u32,
+    output_channels: u32,
     stream: Option<Stream<'a>>
 }
 
 impl<'a> Device <'a> {
-    pub fn new(input_device: int, output_device: int, input_channels: uint,
-               output_channels: uint) -> Device<'a> {
+    pub fn new(input_device: DeviceId, output_device: DeviceId,
+               input_channels: u32, output_channels: u32) -> Device<'a> {
         Device {
             input_device: input_device,
             output_device: output_device,
@@ -98,29 +99,33 @@ impl<'a> Device <'a> {
             -> Result<Stream<'a>, portaudio::pa::PaError> {
         // Currently pa-rs requires both input and output
         let input_device_id = match self.input_device {
-            id if id >= 0 =>  id as uint,
-            _ => try!(portaudio::device::get_default_input_index())
+            DeviceId::Id(id) =>  id,
+            DeviceId::Default => {
+                try!(portaudio::device::get_default_input_index())
+            }
         };
 
         let input_device_info = try!(
-            portaudio::device::get_info(input_device_id as uint).ok_or(
+            portaudio::device::get_info(input_device_id).ok_or(
                 portaudio::pa::PaError::InvalidDevice
             )
         );
 
         let input_parameters = portaudio::stream::StreamParameters {
-            device: input_device_id as uint,
+            device: input_device_id,
             channel_count: self.input_channels,
             suggested_latency: input_device_info.default_low_input_latency
         };
 
         let output_device_id = match self.output_device {
-            id if id >= 0 => id as uint,
-            _ => try!(portaudio::device::get_default_output_index())
+            DeviceId::Id(id) => id,
+            DeviceId::Default => {
+                try!(portaudio::device::get_default_output_index())
+            }
         };
 
         let output_device_info = try!(
-            portaudio::device::get_info(output_device_id as uint).ok_or(
+            portaudio::device::get_info(output_device_id).ok_or(
                 portaudio::pa::PaError::InvalidDevice
             )
         );
@@ -132,7 +137,7 @@ impl<'a> Device <'a> {
 
 
         let output_parameters = portaudio::stream::StreamParameters {
-            device: output_device_id as uint,
+            device: output_device_id,
             channel_count: self.output_channels,
             suggested_latency: output_device_info.default_low_input_latency
         };

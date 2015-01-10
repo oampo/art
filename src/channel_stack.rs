@@ -2,10 +2,11 @@ use types::ArtResult;
 use errors::InvalidStackError;
 use sizes::BLOCK_SIZE;
 
+#[derive(Show)]
 pub struct ChannelStack {
     pub data: Vec<f32>,
     pub stack: Vec<u32>,
-    pub position: uint
+    pub position: usize
 }
 
 impl ChannelStack {
@@ -19,7 +20,7 @@ impl ChannelStack {
 
     pub fn push(&mut self, channels: u32) {
         let current_length = self.data.len();
-        let new_position = self.position + channels as uint * BLOCK_SIZE;
+        let new_position = self.position + channels as usize * BLOCK_SIZE;
         if current_length < new_position {
             // Not enough channels allocated, so grow the vector
             self.data.resize(new_position, 0f32);
@@ -33,7 +34,7 @@ impl ChannelStack {
             self.stack.pop().ok_or(InvalidStackError::new())
         );
 
-        self.position -= channels as uint * BLOCK_SIZE;
+        self.position -= channels as usize * BLOCK_SIZE;
         Ok(channels)
     }
 

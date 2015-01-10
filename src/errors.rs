@@ -3,6 +3,8 @@ use std::borrow::IntoCow;
 
 use portaudio::pa::PaError;
 
+use opcode::Opcode;
+
 #[derive(Show)]
 pub struct ArtError {
     kind: ArtErrorKind,
@@ -10,8 +12,9 @@ pub struct ArtError {
     detail: CowString<'static>
 }
 
-#[derive(Show, Copy)]
+#[derive(Show)]
 pub enum ArtErrorKind {
+    UnimplementedOpcode { opcode: Opcode },
     UndefinedUnit { type_id: u32 },
     UnitNotFound { unit_id: u32 },
     ExpressionNotFound { expression_id: u32 },
@@ -29,6 +32,16 @@ impl ArtError {
             message: msg.into_cow(),
             detail: detail.into_cow()
         }
+    }
+}
+
+#[derive(Copy)]
+pub struct UnimplementedOpcodeError;
+
+impl UnimplementedOpcodeError {
+    pub fn new(opcode:Opcode) -> ArtError {
+        ArtError::new(ArtErrorKind::UnimplementedOpcode { opcode: opcode },
+                      "Opcode is unimplemented", "")
     }
 }
 
