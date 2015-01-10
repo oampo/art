@@ -44,10 +44,10 @@ impl UnitFactory {
             self.unit_map.get(&type_id).ok_or(UndefinedUnitError::new(type_id))
         );
 
-        if (input_channels < item.definition.min_input_channels ||
-            input_channels > item.definition.max_input_channels ||
-            output_channels < item.definition.min_output_channels ||
-            output_channels > item.definition.max_output_channels) {
+        if input_channels < item.definition.min_input_channels ||
+           input_channels > item.definition.max_input_channels ||
+           output_channels < item.definition.min_output_channels ||
+           output_channels > item.definition.max_output_channels {
             return Err(InvalidChannelCountError::new());
         }
 
