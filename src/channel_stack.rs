@@ -1,5 +1,5 @@
 use types::ArtResult;
-use errors::InvalidStackError;
+use errors::{ChannelStackFullError, InvalidStackError};
 use sizes::BLOCK_SIZE;
 
 #[derive(Show)]
@@ -10,23 +10,30 @@ pub struct ChannelStack {
 }
 
 impl ChannelStack {
-    pub fn new() -> ChannelStack {
-        ChannelStack {
-            data: Vec::new(),
-            stack: Vec::new(),
+    pub fn new(size: u32) -> ChannelStack {
+        let mut stack = ChannelStack {
+            data: Vec::with_capacity(size as usize * BLOCK_SIZE),
+            stack: Vec::with_capacity(size as usize),
             position: 0
-        }
+        };
+
+        stack.data.resize(size as usize * BLOCK_SIZE, 0f32);
+        stack
     }
 
-    pub fn push(&mut self, channels: u32) {
-        let current_length = self.data.len();
+    pub fn push(&mut self, channels: u32) -> ArtResult<()> {
         let new_position = self.position + channels as usize * BLOCK_SIZE;
-        if current_length < new_position {
-            // Not enough channels allocated, so grow the vector
-            self.data.resize(new_position, 0f32);
+
+        if new_position > self.data.capacity() {
+            return Err(ChannelStackFullError::new());
         }
+
+        // Check for full data stack should prevent needing to reallocate
+        // the channel history stack
+        assert!(self.stack.len() < self.stack.capacity());
         self.stack.push(channels);
         self.position = new_position;
+        Ok(())
     }
 
     pub fn pop(&mut self) -> ArtResult<u32> {

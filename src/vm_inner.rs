@@ -11,12 +11,14 @@ use unit_factory::UnitFactory;
 use expression::Expression;
 use opcode::Opcode;
 use opcode_reader::OpcodeReader;
+use channel_stack::ChannelStack;
 
 pub struct VMInner {
     input_channel: ByteCodeReceiver,
     units: UnitMap,
     expressions: ExpressionMap,
-    unit_factory: UnitFactory
+    unit_factory: UnitFactory,
+    channel_stack: ChannelStack
 }
 
 impl VMInner {
@@ -25,7 +27,9 @@ impl VMInner {
             input_channel: input_channel,
             units: HashMap::new(),
             expressions: HashMap::new(),
-            unit_factory: UnitFactory::new()
+            unit_factory: UnitFactory::new(),
+            // TODO: Make num channels into option
+            channel_stack: ChannelStack::new(16)
         }
     }
 
@@ -85,8 +89,9 @@ impl VMInner {
     fn execute_expressions(&mut self, adc_block: &[f32],
                                       dac_block: &mut [f32]) {
         let units = &mut self.units;
+        let channel_stack = &mut self.channel_stack;
         for (_, expression) in self.expressions.iter_mut() {
-            let result = expression.execute(units, adc_block, dac_block);
+            let result = expression.execute(channel_stack, units, adc_block, dac_block);
             result.unwrap_or_else(|error| error!("{:?}", error));
         }
     }

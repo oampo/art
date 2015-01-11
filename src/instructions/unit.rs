@@ -6,7 +6,7 @@ use channel_stack::ChannelStack;
 pub struct UnitInstruction;
 
 impl UnitInstruction {
-    pub fn run(id: u32, units: &mut UnitMap, channels: &mut ChannelStack)
+    pub fn run(channels: &mut ChannelStack, id: u32, units: &mut UnitMap)
             -> ArtResult<()> {
         let mut unit = try!(
             units.get_mut(&id).ok_or(
@@ -30,7 +30,7 @@ impl UnitInstruction {
         }
 
         if output_channels != 0u32 {
-            channels.push(output_channels);
+            try!(channels.push(output_channels));
             end = channels.position;
         }
 
