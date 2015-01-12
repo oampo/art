@@ -18,7 +18,7 @@ pub static SINE_DEFINITION: UnitDefinition = UnitDefinition {
     max_output_channels: u32::MAX
 };
 
-#[derive(Copy])
+#[derive(Copy)]
 pub struct Sine;
 
 impl Sine {
