@@ -29,7 +29,7 @@ pub struct VM<'a> {
 }
 
 impl<'a> VM<'a> {
-    pub fn new(options: VMOptions, input_channel: ByteCodeReceiver)
+    pub fn new(options: &VMOptions, input_channel: ByteCodeReceiver)
             -> VM<'a> {
         VM {
             inner: VMInner::new(input_channel),
