@@ -14,8 +14,8 @@ impl UnitInstruction {
             )
         );
 
-        let input_channels = unit.get_input_channels();
-        let output_channels = unit.get_output_channels();
+        let input_channels = unit.layout.input;
+        let output_channels = unit.layout.output;
 
         let mut start = 0us;
         let mut end = 0us;
@@ -34,10 +34,13 @@ impl UnitInstruction {
             end = channels.position;
         }
 
-        let mut slice = channels.data.slice_mut(start, end);
-        unit.enter();
-        unit.tick(slice);
-        unit.leave();
+        let (left, right) = channels.data.split_at_mut(end);
+        let mut slice = left.slice_from_mut(start);
+
+        try!(
+            (unit.tick)(slice, &unit.layout, &mut unit.data,
+                        right)
+        );
 
         Ok(())
     }

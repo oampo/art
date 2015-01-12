@@ -9,10 +9,10 @@ use errors::ArtError;
 pub type ByteCode = Vec<u8>;
 pub type ByteCodeReceiver = Receiver<ByteCode>;
 
-pub type UnitConstructor = fn(u32, u32) -> Box<Unit + 'static>;
+pub type UnitConstructor = fn(u32, u32) -> Unit;
 pub type UnitId = u32;
 pub type UnitTypeId = u32;
-pub type UnitMap = HashMap<UnitId, Box<Unit + 'static>>;
+pub type UnitMap = HashMap<UnitId, Unit>;
 
 pub type ExpressionId = u32;
 pub type ExpressionMap = HashMap<ExpressionId, Expression>;

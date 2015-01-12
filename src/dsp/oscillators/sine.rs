@@ -1,8 +1,9 @@
+use types::ArtResult;
 use std::num::Float;
 use std::f32::consts::PI_2;
 use std::u32;
 
-use unit::{Unit, UnitDefinition, UnitKind, ChannelLayout};
+use unit::{Unit, UnitDefinition, UnitKind, UnitData, ChannelLayout};
 use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
 use parameter::Parameter;
@@ -17,55 +18,42 @@ pub static SINE_DEFINITION: UnitDefinition = UnitDefinition {
     max_output_channels: u32::MAX
 };
 
-#[derive(Copy)]
-pub struct Sine {
-    layout: ChannelLayout,
-    position: f32,
-    parameters: [Parameter; 2]
-}
+#[derive(Copy])
+pub struct Sine;
 
 impl Sine {
-    pub fn new(input_channels: u32, output_channels: u32) -> Sine {
-        Sine {
-            layout: ChannelLayout {
-                input: input_channels,
-                output: output_channels
+    pub fn new(input_channels: u32, output_channels: u32) -> Unit {
+        Unit::new(
+            input_channels,
+            output_channels,
+            UnitData::Sine {
+                position: 0.0,
+                parameters: [Parameter::new(440.0), Parameter::new(0.0)],
             },
-            parameters: [Parameter::new(440.0), Parameter::new(0.0)],
-            position: 0.0,
-        }
+            Sine::tick
+        )
     }
 
-    pub fn as_unit(input_channels: u32, output_channels: u32)
-            -> Box<Unit + 'static> {
-        Box::new(Sine::new(input_channels, output_channels))
-    }
-}
+    fn tick(block: &mut[f32], layout: &ChannelLayout, data: &mut UnitData,
+            stack: &mut [f32]) -> ArtResult<()> {
+        if let &mut UnitData::Sine {ref mut position,
+                                    ref mut parameters} = data {
 
-impl Unit for Sine {
-    fn tick(&mut self, block: &mut[f32]) {
-        let channels = self.get_output_channels() as usize;
+            let (left, right) = parameters.split_at_mut(1);
+            let (frequency, stack) = try!(left[0].get(stack));
+            let (phase, _) = try!(right[0].get(stack));
+            let channels = layout.output as usize;
 
-        let (l, r) = self.parameters.split_at_mut(1);
-        let frequency = &mut l[0];
-        let phase = &mut r[0];
-
-        for i in range(0, BLOCK_SIZE) {
-            let value = (self.position + phase.get(i)).sin();
-            for j in range(0, channels) {
-                block[i * channels + j] = value;
+            for i in range(0, BLOCK_SIZE) {
+                let value = (*position + phase[i]).sin();
+                for j in range(0, channels) {
+                    block[i * channels + j] = value;
+                }
+                *position += frequency[i] * PI_2 * AUDIO_RATE_INVERSE;
+                *position = modulo(*position, PI_2);
             }
-            self.position += frequency.get(i) * PI_2 * AUDIO_RATE_INVERSE;
-            self.position = modulo(self.position, PI_2);
         }
-    }
-
-    fn get_channel_layout(&self) -> &ChannelLayout {
-        &self.layout
-    }
-
-    fn get_parameters(&mut self) -> &mut [Parameter] {
-        &mut self.parameters
+        Ok(())
     }
 }
 

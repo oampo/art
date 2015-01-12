@@ -20,7 +20,7 @@ pub enum ArtErrorKind {
     ExpressionNotFound { expression_id: u32 },
     InvalidChannelCount,
     InvalidByteCode,
-    ChannelStackFull,
+    StackFull,
     InvalidStack,
     PortAudio { error: PaError }
 }
@@ -100,11 +100,11 @@ impl InvalidChannelCountError {
 }
 
 #[derive(Copy)]
-pub struct ChannelStackFullError;
+pub struct StackFullError;
 
-impl ChannelStackFullError {
+impl StackFullError {
     pub fn new() -> ArtError {
-        ArtError::new(ArtErrorKind::ChannelStackFull, "Invalid stack", "")
+        ArtError::new(ArtErrorKind::StackFull, "Full stack", "")
     }
 }
 

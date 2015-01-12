@@ -1,3 +1,4 @@
+use types::ArtResult;
 use parameter::Parameter;
 
 #[derive(Copy)]
@@ -23,31 +24,37 @@ pub struct ChannelLayout {
     pub output: u32
 }
 
-pub trait Unit {
-    fn tick(&mut self, block: &mut[f32]);
+pub type TickFunction = fn(
+    block: &mut[f32], channels: &ChannelLayout, data: &mut UnitData,
+    parameter_stack: &mut [f32]
+) -> ArtResult<()>;
 
-    fn get_channel_layout(&self) -> &ChannelLayout;
+pub struct Unit {
+    pub layout: ChannelLayout,
+    pub data: UnitData,
+    pub tick: TickFunction
+}
 
-    fn get_input_channels(&self) -> u32 {
-        self.get_channel_layout().input
-    }
-
-    fn get_output_channels(&self) -> u32 {
-        self.get_channel_layout().output
-    }
-
-    fn get_parameters(&mut self) -> &mut [Parameter];
-
-    fn enter(&mut self) {
-        for parameter in self.get_parameters().iter_mut() {
-            parameter.enter();
+impl Unit {
+    pub fn new(input_channels: u32, output_channels: u32, data: UnitData,
+               tick: TickFunction) -> Unit {
+        Unit {
+            layout: ChannelLayout {
+                input: input_channels,
+                output: output_channels,
+            },
+            data: data,
+            tick: tick
         }
     }
+}
 
-    fn leave(&mut self) {
-        for parameter in self.get_parameters().iter_mut() {
-            parameter.leave();
-        }
-    }
+pub enum UnitData {
+    Sine {
+        position: f32,
+        parameters: [Parameter; 2]
+    },
+    // Stops irrefutable if-let error.  Remove when another unit is introduced.
+    Unknown
 }
 
