@@ -34,13 +34,17 @@ impl UnitInstruction {
             end = channels.position;
         }
 
-        let (left, right) = channels.data.split_at_mut(end);
-        let mut slice = left.slice_from_mut(start);
+        // Split the stack into the unit half, and half which the unit
+        // can use for whatever
+        let (unit_stack, stack) = channels.data.split_at_mut(end);
+        let mut block = unit_stack.slice_from_mut(start);
 
+        unit.enter();
         try!(
-            (unit.tick)(slice, &unit.layout, &mut unit.data,
-                        right)
+            (unit.tick)(block, &unit.layout, &mut unit.data,
+                        stack)
         );
+        unit.leave();
 
         Ok(())
     }

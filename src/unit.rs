@@ -47,8 +47,21 @@ impl Unit {
             tick: tick
         }
     }
+
+    pub fn enter(&mut self) {
+        for parameter in self.data.get_parameters().iter_mut() {
+            parameter.enter();
+        }
+    }
+
+    pub fn leave(&mut self) {
+        for parameter in self.data.get_parameters().iter_mut() {
+            parameter.leave();
+        }
+    }
 }
 
+#[derive(Copy)]
 pub enum UnitData {
     Sine {
         position: f32,
@@ -56,5 +69,14 @@ pub enum UnitData {
     },
     // Stops irrefutable if-let error.  Remove when another unit is introduced.
     Unknown
+}
+
+impl UnitData {
+    fn get_parameters(&mut self) -> &mut [Parameter] {
+        match *self {
+            UnitData::Sine {ref mut parameters, ..} => parameters.as_mut_slice(),
+            UnitData::Unknown => unimplemented!()
+        }
+    }
 }
 

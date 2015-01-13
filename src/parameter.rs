@@ -1,5 +1,7 @@
 use sizes::{BLOCK_SIZE, BLOCK_SIZE_INVERSE};
 use types::ArtResult;
+use util::CheckedSplitAt;
+use errors::StackFullError;
 
 #[derive(Copy)]
 pub struct Parameter {
@@ -19,15 +21,24 @@ impl Parameter {
         self.value = value;
     }
 
-    pub fn get<'a>(&'a mut self, stack: &'a mut[f32])
+    pub fn get<'a>(&'a self, stack: &'a mut[f32])
             -> ArtResult<(&mut [f32], &mut [f32])> {
-        self.last_value = self.value;
-        let (chock, stack) = stack.split_at_mut(BLOCK_SIZE);
+        let (chock, stack) = try!(
+            stack.checked_split_at_mut(BLOCK_SIZE).ok_or(StackFullError::new())
+        );
+
         let delta = (self.value - self.last_value) * BLOCK_SIZE_INVERSE;
         for i in range(0, BLOCK_SIZE) {
             chock[i] = self.last_value + i as f32 * delta;
         }
-        self.last_value = self.value;
+
         Ok((chock, stack))
+    }
+
+    pub fn enter(&mut self) {
+    }
+
+    pub fn leave(&mut self) {
+        self.last_value = self.value;
     }
 }

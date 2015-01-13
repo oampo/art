@@ -39,9 +39,9 @@ impl Sine {
         if let &mut UnitData::Sine {ref mut position,
                                     ref mut parameters} = data {
 
-            let (left, right) = parameters.split_at_mut(1);
-            let (frequency, stack) = try!(left[0].get(stack));
-            let (phase, _) = try!(right[0].get(stack));
+            let (frequency, stack) = try!(parameters[0].get(stack));
+            let (phase, _) = try!(parameters[1].get(stack));
+
             let channels = layout.output as usize;
 
             for i in range(0, BLOCK_SIZE) {
