@@ -22,7 +22,7 @@ pub enum Opcode {
     },
     SetParameter {
         unit_id: u32,
-        parameter_id: u32,
+        id: u32,
         value: f32
     },
     Expression {
@@ -37,7 +37,7 @@ pub enum Opcode {
     },
     Parameter {
         unit_id: u32,
-        parameter_id: u32
+        id: u32
     },
     Sample {
         value: f32

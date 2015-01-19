@@ -71,12 +71,12 @@ pub trait OpcodeReader: Reader {
 
     fn read_set_parameter(&mut self) -> Result<Opcode, IoError> {
         let unit_id = try!(self.read_be_u32());
-        let parameter_id = try!(self.read_be_u32());
+        let id = try!(self.read_be_u32());
         let value = try!(self.read_be_f32());
         Ok(
             Opcode::SetParameter {
                 unit_id: unit_id,
-                parameter_id: parameter_id,
+                id: id,
                 value: value
             }
         )
@@ -132,11 +132,11 @@ pub trait OpcodeReader: Reader {
 
     fn read_parameter(&mut self) -> Result<Opcode, IoError> {
         let unit_id = try!(self.read_be_u32());
-        let parameter_id = try!(self.read_be_u32());
+        let id = try!(self.read_be_u32());
         Ok(
             Opcode::Parameter {
                 unit_id: unit_id,
-                parameter_id: parameter_id
+                id: id
             }
         )
     }

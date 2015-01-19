@@ -72,7 +72,7 @@ pub enum UnitData {
 }
 
 impl UnitData {
-    fn get_parameters(&mut self) -> &mut [Parameter] {
+    pub fn get_parameters(&mut self) -> &mut [Parameter] {
         match *self {
             UnitData::Sine {ref mut parameters, ..} => parameters.as_mut_slice(),
             UnitData::Unknown => unimplemented!()

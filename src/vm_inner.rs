@@ -12,13 +12,15 @@ use expression::Expression;
 use opcode::Opcode;
 use opcode_reader::OpcodeReader;
 use channel_stack::ChannelStack;
+use graph::Graph;
 
 pub struct VMInner {
     input_channel: ByteCodeReceiver,
     units: UnitMap,
     expressions: ExpressionMap,
     unit_factory: UnitFactory,
-    channel_stack: ChannelStack
+    channel_stack: ChannelStack,
+    graph: Graph
 }
 
 impl VMInner {
@@ -29,7 +31,8 @@ impl VMInner {
             expressions: HashMap::new(),
             unit_factory: UnitFactory::new(),
             // TODO: Make num channels into option
-            channel_stack: ChannelStack::new(16)
+            channel_stack: ChannelStack::new(16),
+            graph: Graph::new(16, 16)
         }
     }
 
@@ -88,12 +91,24 @@ impl VMInner {
 
     fn execute_expressions(&mut self, adc_block: &[f32],
                                       dac_block: &mut [f32]) {
+        // TODO: Cache result, and dirty check edges
+        // Reset the incoming edges
+        for (_, expression) in self.expressions.iter_mut() {
+            expression.incoming_edges = 0;
+        }
+
+        self.graph.topological_sort(&mut self.expressions);
+
+
+
+/*
         let units = &mut self.units;
         let channel_stack = &mut self.channel_stack;
         for (_, expression) in self.expressions.iter_mut() {
             let result = expression.execute(channel_stack, units, adc_block, dac_block);
             result.unwrap_or_else(|error| error!("{:?}", error));
         }
+        */
     }
 
     fn create_unit(&mut self, id: u32, type_id: u32, input_channels: u32,
