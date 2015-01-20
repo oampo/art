@@ -5,24 +5,41 @@ use channel_stack::ChannelStack;
 use instructions::unit::UnitInstruction;
 use instructions::dac::DACInstruction;
 use instructions::parameter::ParameterInstruction;
-use graph::Node;
+use graph::{Graph, Node};
 
 pub struct Expression {
+    id: u32,
     opcodes: Vec<Opcode>,
     incoming_edges: u32
 }
 
 impl Expression {
-    pub fn new(opcodes: Vec<Opcode>) -> Expression {
+    pub fn new(id: u32, opcodes: Vec<Opcode>) -> Expression {
         Expression {
+            id: id,
             opcodes: opcodes,
             incoming_edges: 0
         }
     }
 
-    pub fn execute(&self, channels: &mut ChannelStack,
-                   units: &mut UnitMap, adc_block: &[f32],
-                   dac_block: &mut [f32]) -> ArtResult<()> {
+    pub fn link(&self, units: &UnitMap, graph: &mut Graph) -> ArtResult<()> {
+        for opcode in self.opcodes.iter() {
+            match opcode {
+                &Opcode::Parameter { unit_id, .. } => {
+                    try!(
+                        ParameterInstruction::link(unit_id, self.id, units,
+                                                   graph)
+                    )
+                },
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+
+    pub fn run(&self, channels: &mut ChannelStack,
+               units: &mut UnitMap, adc_block: &[f32],
+               dac_block: &mut [f32]) -> ArtResult<()> {
         for opcode in self.opcodes.iter() {
             match opcode {
                 &Opcode::Unit { id } => {

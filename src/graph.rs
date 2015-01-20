@@ -5,6 +5,15 @@ struct Edge {
     to: u32
 }
 
+impl Edge {
+    fn new(from: u32, to: u32) -> Edge {
+        Edge {
+            from: from,
+            to: to
+        }
+    }
+}
+
 pub trait Node {
     fn get_edge_count(&self) -> u32;
     fn reset_edge_count(&mut self);
@@ -37,6 +46,14 @@ impl Graph {
         }
     }
 
+    pub fn add_edge(&mut self, from: u32, to: u32) {
+        self.edges.push(Edge::new(from, to));
+    }
+
+    pub fn clear(&mut self) {
+        self.edges.clear();
+    }
+
     pub fn topological_sort(&mut self, map: &mut ExpressionMap,
                             nodes: &mut [u32]) {
         assert!(nodes.len() == map.len());
@@ -66,14 +83,6 @@ impl Graph {
             len -= 1;
             nodes.swap(index, len);
         }
-    }
-
-    // Should be called in a cleanup step
-    fn remove_dangling_edges(&mut self, map: &ExpressionMap) {
-        self.edges.retain(|&: edge|
-            map.contains_key(&edge.to) &&
-            map.contains_key(&edge.from)
-        );
     }
 
     fn update_edge_counts(&self, map: &mut ExpressionMap) {

@@ -17,6 +17,7 @@ pub enum ArtErrorKind {
     UnimplementedOpcode { opcode: Opcode },
     UndefinedUnit { type_id: u32 },
     UnitNotFound { unit_id: u32 },
+    UnownedUnit { unit_id: u32 },
     ParameterNotFound { unit_id: u32, id: u32 },
     ExpressionNotFound { expression_id: u32 },
     InvalidChannelCount,
@@ -65,6 +66,17 @@ impl UnitNotFoundError {
     pub fn new(unit_id: u32) -> ArtError {
         ArtError::new(ArtErrorKind::UnitNotFound { unit_id: unit_id },
                       "Unit not found", "")
+    }
+}
+
+
+#[derive(Copy)]
+pub struct UnownedUnitError;
+
+impl UnownedUnitError {
+    pub fn new(unit_id: u32) -> ArtError {
+        ArtError::new(ArtErrorKind::UnownedUnit { unit_id: unit_id },
+                      "Unowned unit", "")
     }
 }
 

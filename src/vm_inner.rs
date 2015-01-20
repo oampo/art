@@ -40,7 +40,10 @@ impl VMInner {
     fn tick(&mut self, adc_block: &[f32], dac_block: &mut [f32])
             -> StreamCallbackResult {
         self.process_queue();
-        self.execute_expressions(adc_block, dac_block);
+        self.link_expressions();
+        self.sort_expressions();
+        self.run_expressions(adc_block, dac_block);
+        self.cleanup();
         StreamCallbackResult::Continue
     }
 
@@ -80,14 +83,18 @@ impl VMInner {
 
     fn add_expression(&mut self, id: u32, opcodes: Vec<Opcode>)
             -> ArtResult<()> {
-        let expression = Expression::new(opcodes);
+        let expression = Expression::new(id, opcodes);
         self.expressions.insert(id, expression);
         Ok(())
     }
 
-    fn execute_expressions(&mut self, adc_block: &[f32],
-                                      dac_block: &mut [f32]) {
-        // TODO: Cache result, and dirty check edges
+    fn link_expressions(&mut self) {
+        for (_, expression) in self.expressions.iter_mut() {
+            expression.link(&self.units, &mut self.graph);
+        }
+    }
+
+    fn sort_expressions(&mut self) {
         self.expression_ids.clear();
 
         for (id, expression) in self.expressions.iter_mut() {
@@ -97,14 +104,21 @@ impl VMInner {
 
         self.graph.topological_sort(&mut self.expressions,
                                     self.expression_ids.as_mut_slice());
+    }
 
+    fn run_expressions(&mut self, adc_block: &[f32],
+                                      dac_block: &mut [f32]) {
         for id in self.expression_ids.iter() {
             let expression = self.expressions.get_mut(id).unwrap();
-            let result = expression.execute(&mut self.channel_stack,
-                                            &mut self.units,
-                                            adc_block, dac_block);
+            let result = expression.run(&mut self.channel_stack,
+                                        &mut self.units,
+                                        adc_block, dac_block);
             result.unwrap_or_else(|error| error!("{:?}", error));
         }
+    }
+
+    fn cleanup(&mut self) {
+        self.graph.clear();
     }
 
     fn create_unit(&mut self, id: u32, type_id: u32, input_channels: u32,

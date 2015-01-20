@@ -33,7 +33,8 @@ pub type TickFunction = fn(
 pub struct Unit {
     pub layout: ChannelLayout,
     pub data: UnitData,
-    pub tick: TickFunction
+    pub tick: TickFunction,
+    pub owner: Option<u32>
 }
 
 impl Unit {
@@ -45,7 +46,8 @@ impl Unit {
                 output: output_channels,
             },
             data: data,
-            tick: tick
+            tick: tick,
+            owner: None
         }
     }
 
