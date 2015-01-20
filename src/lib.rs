@@ -32,6 +32,10 @@ pub mod channel_stack;
 pub mod util;
 
 pub mod instructions {
+    pub mod control {
+        pub mod create_unit;
+        pub mod add_expression;
+    }
     pub mod dsp {
         pub mod unit;
         pub mod dac;

@@ -1,3 +1,4 @@
+use std::mem;
 use std::collections::HashMap;
 use std::io::BufReader;
 
@@ -5,7 +6,8 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
 use types::{ArtResult, ByteCodeReceiver, UnitMap, ExpressionMap};
-use errors::{InvalidByteCodeError, UnimplementedOpcodeError};
+use errors::{InvalidByteCodeError, UnimplementedOpcodeError,
+             ExpressionNotFoundError};
 use unit_factory::UnitFactory;
 use expression::Expression;
 use opcode::{Opcode, ControlOpcode, DspOpcode};
@@ -13,14 +15,20 @@ use opcode_reader::OpcodeReader;
 use channel_stack::ChannelStack;
 use graph::{Graph, Node};
 
+use instructions::control::create_unit::CreateUnit;
+use instructions::control::add_expression::AddExpression;
+use instructions::dsp::unit::Unit;
+use instructions::dsp::dac::Dac;
+use instructions::dsp::parameter::Parameter;
+
 pub struct VMInner {
     input_channel: ByteCodeReceiver,
-    units: UnitMap,
-    expressions: ExpressionMap,
-    unit_factory: UnitFactory,
-    channel_stack: ChannelStack,
+    pub units: UnitMap,
+    pub expressions: ExpressionMap,
+    pub unit_factory: UnitFactory,
+    pub channel_stack: ChannelStack,
     expression_ids: Vec<u32>,
-    graph: Graph
+    pub graph: Graph
 }
 
 impl VMInner {
@@ -40,7 +48,7 @@ impl VMInner {
     fn tick(&mut self, adc_block: &[f32], dac_block: &mut [f32])
             -> StreamCallbackResult {
         self.process_queue();
-        self.link_expressions();
+//        self.link_expressions();
         self.sort_expressions();
         self.run_expressions(adc_block, dac_block);
         self.cleanup();
@@ -70,7 +78,7 @@ impl VMInner {
         );
 
         match opcode {
-            ControlOpcode::Expression { id, opcodes } => {
+            ControlOpcode::AddExpression { id, opcodes } => {
                 self.add_expression(id, opcodes)
             },
 
@@ -84,17 +92,44 @@ impl VMInner {
         }
     }
 
-    fn add_expression(&mut self, id: u32, opcodes: Vec<DspOpcode>)
-            -> ArtResult<()> {
-        let expression = Expression::new(id, opcodes);
-        self.expressions.insert(id, expression);
+    fn link_expressions(&mut self) {
+        let mut expression_ids = Vec::<u32>::with_capacity(0);
+        mem::swap(&mut self.expression_ids, &mut expression_ids);
+        for &id in expression_ids.iter() {
+            let result = self.link_expression(id);
+            result.unwrap_or_else(|error| error!("{:?}", error));
+        }
+        mem::swap(&mut self.expression_ids, &mut expression_ids);
+    }
+
+    fn swap_opcodes(&mut self, expression_id: u32,
+                   opcodes: &mut Vec<DspOpcode>) -> ArtResult<()> {
+        let expression = try!(
+            self.expressions.get_mut(&expression_id).ok_or(
+                ExpressionNotFoundError::new(expression_id)
+            )
+        );
+        mem::swap(opcodes, &mut expression.opcodes);
         Ok(())
     }
 
-    fn link_expressions(&mut self) {
-        for (_, expression) in self.expressions.iter_mut() {
-            expression.link(&self.units, &mut self.graph);
+    fn link_expression(&mut self, expression_id: u32) -> ArtResult<()> {
+        let mut opcodes = Vec::with_capacity(0);
+        try!(self.swap_opcodes(expression_id, &mut opcodes));
+
+        for opcode in opcodes.iter() {
+            match opcode {
+                &DspOpcode::Parameter { unit_id, id } => {
+                    try!(
+                        self.link_parameter(unit_id, id, expression_id)
+                    )
+                },
+                _ => {}
+            }
         }
+
+        try!(self.swap_opcodes(expression_id, &mut opcodes));
+        Ok(())
     }
 
     fn sort_expressions(&mut self) {
@@ -109,30 +144,45 @@ impl VMInner {
                                     self.expression_ids.as_mut_slice());
     }
 
-    fn run_expressions(&mut self, adc_block: &[f32],
-                                      dac_block: &mut [f32]) {
-        for id in self.expression_ids.iter() {
-            let expression = self.expressions.get_mut(id).unwrap();
-            let result = expression.run(&mut self.channel_stack,
-                                        &mut self.units,
-                                        adc_block, dac_block);
+    fn run_expressions(&mut self, adc_block: &[f32], dac_block: &mut [f32]) {
+        let mut expression_ids = Vec::<u32>::with_capacity(0);
+        mem::swap(&mut self.expression_ids, &mut expression_ids);
+        for id in expression_ids.iter() {
+            let result = self.run_expression(*id, adc_block, dac_block);
             result.unwrap_or_else(|error| error!("{:?}", error));
         }
+        mem::swap(&mut self.expression_ids, &mut expression_ids);
+    }
+
+    fn run_expression(&mut self, id: u32, adc_block: &[f32],
+                      dac_block: &mut[f32]) -> ArtResult<()> {
+        let mut opcodes = Vec::with_capacity(0);
+        self.swap_opcodes(id, &mut opcodes);
+
+        for opcode in opcodes.iter() {
+            match opcode {
+                &DspOpcode::Unit { id } => {
+                    try!(self.tick_unit(id))
+                },
+                &DspOpcode::Dac => {
+                    try!(self.tick_dac(dac_block));
+                },
+                &DspOpcode::Parameter { unit_id, id } => {
+                    try!(self.tick_parameter(unit_id, id));
+                }
+                _ => return Err(InvalidByteCodeError::new())
+            }
+        }
+
+        self.swap_opcodes(id, &mut opcodes);
+        Ok(())
     }
 
     fn cleanup(&mut self) {
         self.graph.clear();
     }
-
-    fn create_unit(&mut self, id: u32, type_id: u32, input_channels: u32,
-                   output_channels: u32) -> ArtResult<()> {
-        let unit = try!(
-            self.unit_factory.create(type_id, input_channels, output_channels)
-        );
-        self.units.insert(id, unit);
-        Ok(())
-    }
 }
+
 
 impl<'a, 'b> FnMut<
     (&'a [f32], &'b mut [f32], StreamTimeInfo, StreamCallbackFlags),

@@ -27,7 +27,7 @@ pub trait OpcodeReader: Reader {
             OpcodeType::SetParameter => {
                 self.read_set_parameter()
             },
-            OpcodeType::Expression => {
+            OpcodeType::AddExpression => {
                 self.read_expression()
             },
             OpcodeType::Play => {
@@ -114,7 +114,7 @@ pub trait OpcodeReader: Reader {
         }
 
         Ok(
-            ControlOpcode::Expression {
+            ControlOpcode::AddExpression {
                 id: id,
                 opcodes: opcodes
             }

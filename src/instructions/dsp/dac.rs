@@ -1,18 +1,19 @@
 use types::ArtResult;
 use sizes::BLOCK_SIZE;
+use vm_inner::VMInner;
 use channel_stack::ChannelStack;
 
-#[derive(Copy)]
-pub struct DacInstruction;
+pub trait Dac {
+    fn tick_dac(&mut self, block: &mut[f32]) -> ArtResult<()>;
+}
 
-impl DacInstruction {
-    pub fn run(channels: &mut ChannelStack, block: &mut[f32])
-            -> ArtResult<()> {
-        let end = channels.position;
-        try!(channels.pop_expect((block.len() / BLOCK_SIZE) as u32));
-        let start = channels.position;
+impl Dac for VMInner {
+    fn tick_dac(&mut self, block: &mut[f32]) -> ArtResult<()> {
+        let end = self.channel_stack.position;
+        try!(self.channel_stack.pop_expect((block.len() / BLOCK_SIZE) as u32));
+        let start = self.channel_stack.position;
 
-        let slice = channels.data.slice_mut(start, end);
+        let slice = self.channel_stack.data.slice_mut(start, end);
 
         assert!(slice.len() == block.len());
 

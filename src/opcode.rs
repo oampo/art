@@ -2,7 +2,7 @@
 pub enum OpcodeType {
     CreateUnit,
     SetParameter,
-    Expression,
+    AddExpression,
     Play,
     Unit,
     Parameter,
@@ -25,7 +25,7 @@ pub enum ControlOpcode {
         id: u32,
         value: f32
     },
-    Expression {
+    AddExpression {
         id: u32,
         opcodes: Vec<DspOpcode>
     },
