@@ -3,9 +3,9 @@ use sizes::BLOCK_SIZE;
 use channel_stack::ChannelStack;
 
 #[derive(Copy)]
-pub struct DACInstruction;
+pub struct DacInstruction;
 
-impl DACInstruction {
+impl DacInstruction {
     pub fn run(channels: &mut ChannelStack, block: &mut[f32])
             -> ArtResult<()> {
         let end = channels.position;

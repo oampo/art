@@ -3,7 +3,7 @@ use errors::{InvalidByteCodeError};
 use opcode::DspOpcode;
 use channel_stack::ChannelStack;
 use instructions::dsp::unit::UnitInstruction;
-use instructions::dsp::dac::DACInstruction;
+use instructions::dsp::dac::DacInstruction;
 use instructions::dsp::parameter::ParameterInstruction;
 use graph::{Graph, Node};
 
@@ -46,7 +46,7 @@ impl Expression {
                     try!(UnitInstruction::run(channels, id, units))
                 },
                 &DspOpcode::Dac => {
-                    try!(DACInstruction::run(channels, dac_block));
+                    try!(DacInstruction::run(channels, dac_block));
                 },
                 &DspOpcode::Parameter { unit_id, id } => {
                     try!(ParameterInstruction::run(unit_id, id, units));
