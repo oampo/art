@@ -5,10 +5,11 @@ use channel_stack::ChannelStack;
 use instructions::unit::UnitInstruction;
 use instructions::dac::DACInstruction;
 use instructions::parameter::ParameterInstruction;
+use graph::Node;
 
 pub struct Expression {
     opcodes: Vec<Opcode>,
-    pub incoming_edges: u32
+    incoming_edges: u32
 }
 
 impl Expression {
@@ -37,5 +38,23 @@ impl Expression {
             }
         }
         Ok(())
+    }
+}
+
+impl Node for Expression {
+    fn get_edge_count(&self) -> u32 {
+        self.incoming_edges
+    }
+
+    fn reset_edge_count(&mut self) {
+        self.incoming_edges = 0;
+    }
+
+    fn increment_edge_count(&mut self) {
+        self.incoming_edges += 1;
+    }
+
+    fn decrement_edge_count(&mut self) {
+        self.incoming_edges -= 1;
     }
 }

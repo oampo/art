@@ -1,90 +1,85 @@
-use std::hash::{Hash, Hasher, Writer};
-use std::collections::HashSet;
-
 use types::ExpressionMap;
-use util::HashSetRetain;
 
-#[derive(PartialEq, Eq)]
 struct Edge {
     from: u32,
     to: u32
 }
 
-impl<H: Hasher + Writer> Hash<H> for Edge {
-    fn hash(&self, state: &mut H) {
-        self.from.hash(state);
-        self.to.hash(state);
+pub trait Node {
+    fn get_edge_count(&self) -> u32;
+    fn reset_edge_count(&mut self);
+    fn increment_edge_count(&mut self);
+    fn decrement_edge_count(&mut self);
+}
+
+pub trait NodeList {
+    fn find_zero_order(&self, map: &ExpressionMap) -> Option<(usize, u32)>;
+}
+
+impl NodeList for [u32] {
+    fn find_zero_order(&self, map: &ExpressionMap) -> Option<(usize, u32)> {
+        self.iter().enumerate().find(|&: &(_, id) | {
+            let node = map.get(id).unwrap();
+            node.get_edge_count() == 0
+        }).map(|(index, &id)| (index, id))
     }
 }
 
 pub struct Graph {
-    edges: HashSet<Edge>
+    // HashSet with retain would be nicer
+    edges: Vec<Edge>
 }
 
 impl Graph {
-    pub fn new(node_capacity:u32, edge_capacity: u32) -> Graph {
+    pub fn new(edge_capacity: u32) -> Graph {
         Graph {
-            edges: HashSet::with_capacity(edge_capacity as usize)
+            edges:Vec::with_capacity(edge_capacity as usize)
         }
     }
 
-    pub fn topological_sort(&mut self, expressions: &mut ExpressionMap, nodes: &mut [u32]) {
-        assert(nodes.len() == expressions.len());
+    pub fn topological_sort(&mut self, map: &mut ExpressionMap,
+                            nodes: &mut [u32]) {
+        assert!(nodes.len() == map.len());
+        self.update_edge_counts(map);
 
-        self.remove_dangling_edges(expressions);
-        self.update_edge_counts(expressions);
-        self.set_node_ids(expressions, nodes);
+        let mut len = nodes.len();
 
-        while nodes.len() > 0 {
-            let node_option = self.find_zero_order_node(expressions, nodes);
-            match node_option {
-                Some((index, node)) => {
-                    for edge in self.edges.iter() {
-                        if edge.to == node {
-                            expressions.get_mut(&edge.from).unwrap().incoming_edges -= 1;
-                        }
-                    }
-                    // Move the node to the start
-                    nodes.swap(index, 0);
-                    position += 1;
-                    nodes = nodes.slice_from_mut(1);
-                },
-                None => return
+        while len > 0 {
+            let node_option = nodes.slice_to(len - 1).find_zero_order(
+                map
+            );
+
+            if node_option.is_none() {
+                return;
             }
+
+
+            let (index, node) = node_option.unwrap();
+
+            for edge in self.edges.iter() {
+                if edge.to == node {
+                    let node = map.get_mut(&edge.from).unwrap();
+                    node.decrement_edge_count();
+                }
+            }
+
+            len -= 1;
+            nodes.swap(index, len);
         }
     }
 
-    fn remove_dangling_edges(&mut self, expressions: &ExpressionMap) {
+    // Should be called in a cleanup step
+    fn remove_dangling_edges(&mut self, map: &ExpressionMap) {
         self.edges.retain(|&: edge|
-            expressions.contains_key(&edge.to) &&
-            expressions.contains_key(&edge.from)
+            map.contains_key(&edge.to) &&
+            map.contains_key(&edge.from)
         );
     }
 
-    fn zero_edge_counts(&self, expressions: &mut ExpressionMap) {
-        for (_, expression) in expressions.iter_mut() {
-            expression.incoming_edges = 0;
-        }
-    }
-
-    fn update_edge_counts(&self, expressions: &mut ExpressionMap) {
-        self.zero_edge_counts(expressions);
+    fn update_edge_counts(&self, map: &mut ExpressionMap) {
         for edge in self.edges.iter() {
-            let expression = expressions.get_mut(&edge.to).unwrap();
-            expression.incoming_edges += 1;
+            let node = map.get_mut(&edge.to).unwrap();
+            node.increment_edge_count();
         }
-    }
-
-    fn set_node_ids(&self, expressions: &ExpressionMap, nodes: &mut[u32]) {
-        for (id, _) in expressions.iter() {
-            nodes[i] = *id;
-        }
-    }
-
-    fn find_zero_order_node(&self, expressions: &ExpressionMap, nodes: &[u32])
-            -> Option<usize, u32> {
-        nodes.iter().enumerate().find(|&: (index, id) |
-            expressions.get(*id).unwrap().incoming_edges == 0
-        ).map(|(index, &id)| (index, id))
     }
 }

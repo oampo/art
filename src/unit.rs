@@ -29,6 +29,7 @@ pub type TickFunction = fn(
     parameter_stack: &mut [f32]
 ) -> ArtResult<()>;
 
+#[derive(Copy)]
 pub struct Unit {
     pub layout: ChannelLayout,
     pub data: UnitData,

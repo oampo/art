@@ -5,14 +5,13 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
 use types::{ArtResult, ByteCodeReceiver, UnitMap, ExpressionMap};
-use errors::{InvalidByteCodeError, ExpressionNotFoundError,
-             UnimplementedOpcodeError};
+use errors::{InvalidByteCodeError, UnimplementedOpcodeError};
 use unit_factory::UnitFactory;
 use expression::Expression;
 use opcode::Opcode;
 use opcode_reader::OpcodeReader;
 use channel_stack::ChannelStack;
-use graph::Graph;
+use graph::{Graph, Node};
 
 pub struct VMInner {
     input_channel: ByteCodeReceiver,
@@ -20,19 +19,21 @@ pub struct VMInner {
     expressions: ExpressionMap,
     unit_factory: UnitFactory,
     channel_stack: ChannelStack,
+    expression_ids: Vec<u32>,
     graph: Graph
 }
 
 impl VMInner {
     pub fn new(input_channel: ByteCodeReceiver) -> VMInner {
+        // TODO: Make sizes options
         VMInner {
             input_channel: input_channel,
             units: HashMap::new(),
             expressions: HashMap::new(),
             unit_factory: UnitFactory::new(),
-            // TODO: Make num channels into option
             channel_stack: ChannelStack::new(16),
-            graph: Graph::new(16, 16)
+            expression_ids: Vec::with_capacity(32),
+            graph: Graph::new(16)
         }
     }
 
@@ -84,31 +85,26 @@ impl VMInner {
         Ok(())
     }
 
-    fn remove_expression(&mut self, id: u32) -> ArtResult<(Expression)> {
-        let expression = self.expressions.remove(&id);
-        expression.ok_or(ExpressionNotFoundError::new(id))
-    }
-
     fn execute_expressions(&mut self, adc_block: &[f32],
                                       dac_block: &mut [f32]) {
         // TODO: Cache result, and dirty check edges
-        // Reset the incoming edges
-        for (_, expression) in self.expressions.iter_mut() {
-            expression.incoming_edges = 0;
+        self.expression_ids.clear();
+
+        for (id, expression) in self.expressions.iter_mut() {
+            self.expression_ids.push(*id);
+            expression.reset_edge_count();
         }
 
-        self.graph.topological_sort(&mut self.expressions);
+        self.graph.topological_sort(&mut self.expressions,
+                                    self.expression_ids.as_mut_slice());
 
-
-
-/*
-        let units = &mut self.units;
-        let channel_stack = &mut self.channel_stack;
-        for (_, expression) in self.expressions.iter_mut() {
-            let result = expression.execute(channel_stack, units, adc_block, dac_block);
+        for id in self.expression_ids.iter() {
+            let expression = self.expressions.get_mut(id).unwrap();
+            let result = expression.execute(&mut self.channel_stack,
+                                            &mut self.units,
+                                            adc_block, dac_block);
             result.unwrap_or_else(|error| error!("{:?}", error));
         }
-        */
     }
 
     fn create_unit(&mut self, id: u32, type_id: u32, input_channels: u32,
