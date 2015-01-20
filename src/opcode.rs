@@ -7,13 +7,13 @@ pub enum OpcodeType {
     Unit,
     Parameter,
     Sample,
-    DAC,
-    ADC,
+    Dac,
+    Adc,
     Unknown
 }
 
 #[derive(Show)]
-pub enum Opcode {
+pub enum ControlOpcode {
     CreateUnit {
         id: u32,
         type_id: u32,
@@ -27,11 +27,16 @@ pub enum Opcode {
     },
     Expression {
         id: u32,
-        opcodes: Vec<Opcode>
+        opcodes: Vec<DspOpcode>
     },
     Play {
         id: u32
     },
+    Unknown
+}
+
+#[derive(Show)]
+pub enum DspOpcode {
     Unit {
         id: u32
     },
@@ -42,8 +47,14 @@ pub enum Opcode {
     Sample {
         value: f32
     },
-    DAC,
-    ADC,
+    Dac,
+    Adc,
     Unknown
+}
+
+#[derive(Show)]
+pub enum Opcode {
+    Control(ControlOpcode),
+    Dsp(DspOpcode)
 }
 

@@ -1,6 +1,6 @@
 use types::{UnitMap, ArtResult};
 use errors::{InvalidByteCodeError};
-use opcode::Opcode;
+use opcode::DspOpcode;
 use channel_stack::ChannelStack;
 use instructions::unit::UnitInstruction;
 use instructions::dac::DACInstruction;
@@ -9,12 +9,12 @@ use graph::{Graph, Node};
 
 pub struct Expression {
     id: u32,
-    opcodes: Vec<Opcode>,
+    opcodes: Vec<DspOpcode>,
     incoming_edges: u32
 }
 
 impl Expression {
-    pub fn new(id: u32, opcodes: Vec<Opcode>) -> Expression {
+    pub fn new(id: u32, opcodes: Vec<DspOpcode>) -> Expression {
         Expression {
             id: id,
             opcodes: opcodes,
@@ -25,7 +25,7 @@ impl Expression {
     pub fn link(&self, units: &UnitMap, graph: &mut Graph) -> ArtResult<()> {
         for opcode in self.opcodes.iter() {
             match opcode {
-                &Opcode::Parameter { unit_id, .. } => {
+                &DspOpcode::Parameter { unit_id, .. } => {
                     try!(
                         ParameterInstruction::link(unit_id, self.id, units,
                                                    graph)
@@ -42,13 +42,13 @@ impl Expression {
                dac_block: &mut [f32]) -> ArtResult<()> {
         for opcode in self.opcodes.iter() {
             match opcode {
-                &Opcode::Unit { id } => {
+                &DspOpcode::Unit { id } => {
                     try!(UnitInstruction::run(channels, id, units))
                 },
-                &Opcode::DAC => {
+                &DspOpcode::Dac => {
                     try!(DACInstruction::run(channels, dac_block));
                 },
-                &Opcode::Parameter { unit_id, id } => {
+                &DspOpcode::Parameter { unit_id, id } => {
                     try!(ParameterInstruction::run(unit_id, id, units));
                 }
                 _ => return Err(InvalidByteCodeError::new())

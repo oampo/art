@@ -1,12 +1,12 @@
 use std::io::{IoError, IoErrorKind, BufReader};
 use std::num::FromPrimitive;
 
-use opcode::{OpcodeType, Opcode};
+use opcode::{OpcodeType, ControlOpcode, DspOpcode};
 
 pub trait OpcodeReader: Reader {
-    fn read_opcode(&mut self) -> Result<Opcode, IoError> {
+    fn read_control_opcode(&mut self) -> Result<ControlOpcode, IoError> {
         let opcode_type = try!(self.read_opcode_type());
-        self.read_opcode_parameters(opcode_type)
+        self.read_control_opcode_parameters(opcode_type)
     }
 
     fn read_opcode_type(&mut self) -> Result<OpcodeType, IoError> {
@@ -18,8 +18,8 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_opcode_parameters(&mut self, opcode_type: OpcodeType)
-            -> Result<Opcode, IoError> {
+    fn read_control_opcode_parameters(&mut self, opcode_type: OpcodeType)
+            -> Result<ControlOpcode, IoError> {
         match opcode_type {
             OpcodeType::CreateUnit => {
                 self.read_create_unit()
@@ -33,6 +33,15 @@ pub trait OpcodeReader: Reader {
             OpcodeType::Play => {
                 self.read_play()
             },
+            _ => {
+                Ok(ControlOpcode::Unknown)
+            }
+        }
+    }
+
+    fn read_dsp_opcode_parameters(&mut self, opcode_type: OpcodeType)
+            -> Result<DspOpcode, IoError> {
+        match opcode_type {
             OpcodeType::Unit => {
                 self.read_unit()
             },
@@ -42,25 +51,25 @@ pub trait OpcodeReader: Reader {
             OpcodeType::Sample => {
                 self.read_sample()
             },
-            OpcodeType::DAC => {
-                Ok(Opcode::DAC)
-            }
-            OpcodeType::ADC => {
-                Ok(Opcode::ADC)
-            }
-            OpcodeType::Unknown => {
-                Ok(Opcode::Unknown)
+            OpcodeType::Dac => {
+                Ok(DspOpcode::Dac)
+            },
+            OpcodeType::Adc => {
+                Ok(DspOpcode::Adc)
+            },
+            _ => {
+                Ok(DspOpcode::Unknown)
             }
         }
     }
 
-    fn read_create_unit(&mut self) -> Result<Opcode, IoError> {
+    fn read_create_unit(&mut self) -> Result<ControlOpcode, IoError> {
         let id = try!(self.read_be_u32());
         let type_id = try!(self.read_be_u32());
         let input_channels = try!(self.read_be_u32());
         let output_channels = try!(self.read_be_u32());
         Ok(
-            Opcode::CreateUnit {
+            ControlOpcode::CreateUnit {
                 id: id,
                 type_id: type_id,
                 input_channels: input_channels,
@@ -69,12 +78,12 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_set_parameter(&mut self) -> Result<Opcode, IoError> {
+    fn read_set_parameter(&mut self) -> Result<ControlOpcode, IoError> {
         let unit_id = try!(self.read_be_u32());
         let id = try!(self.read_be_u32());
         let value = try!(self.read_be_f32());
         Ok(
-            Opcode::SetParameter {
+            ControlOpcode::SetParameter {
                 unit_id: unit_id,
                 id: id,
                 value: value
@@ -82,7 +91,7 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_expression(&mut self) -> Result<Opcode, IoError> {
+    fn read_expression(&mut self) -> Result<ControlOpcode, IoError> {
         let id = try!(self.read_be_u32());
         let mut opcodes = Vec::new();
 
@@ -92,7 +101,7 @@ pub trait OpcodeReader: Reader {
 
             match opcode_type_result {
                 Ok(opcode_type) => {
-                    let opcode = try!(self.read_opcode_parameters(opcode_type));
+                    let opcode = try!(self.read_dsp_opcode_parameters(opcode_type));
                     opcodes.push(opcode);
                 },
                 Err(error) => {
@@ -105,46 +114,46 @@ pub trait OpcodeReader: Reader {
         }
 
         Ok(
-            Opcode::Expression {
+            ControlOpcode::Expression {
                 id: id,
                 opcodes: opcodes
             }
         )
     }
 
-    fn read_play(&mut self) -> Result<Opcode, IoError> {
+    fn read_play(&mut self) -> Result<ControlOpcode, IoError> {
         let id = try!(self.read_be_u32());
         Ok(
-            Opcode::Play {
+            ControlOpcode::Play {
                 id: id
             }
         )
     }
 
-    fn read_unit(&mut self) -> Result<Opcode, IoError> {
+    fn read_unit(&mut self) -> Result<DspOpcode, IoError> {
         let id = try!(self.read_be_u32());
         Ok(
-            Opcode::Unit {
+            DspOpcode::Unit {
                 id: id
             }
         )
     }
 
-    fn read_parameter(&mut self) -> Result<Opcode, IoError> {
+    fn read_parameter(&mut self) -> Result<DspOpcode, IoError> {
         let unit_id = try!(self.read_be_u32());
         let id = try!(self.read_be_u32());
         Ok(
-            Opcode::Parameter {
+            DspOpcode::Parameter {
                 unit_id: unit_id,
                 id: id
             }
         )
     }
 
-    fn read_sample(&mut self) -> Result<Opcode, IoError> {
+    fn read_sample(&mut self) -> Result<DspOpcode, IoError> {
         let value = try!(self.read_be_f32());
         Ok(
-            Opcode::Sample {
+            DspOpcode::Sample {
                 value: value
             }
         )

@@ -8,7 +8,7 @@ use types::{ArtResult, ByteCodeReceiver, UnitMap, ExpressionMap};
 use errors::{InvalidByteCodeError, UnimplementedOpcodeError};
 use unit_factory::UnitFactory;
 use expression::Expression;
-use opcode::Opcode;
+use opcode::{Opcode, ControlOpcode, DspOpcode};
 use opcode_reader::OpcodeReader;
 use channel_stack::ChannelStack;
 use graph::{Graph, Node};
@@ -64,24 +64,27 @@ impl VMInner {
     fn process_byte_code(&mut self, byte_code: &[u8]) -> ArtResult<()> {
         let mut reader = BufReader::new(byte_code);
         let opcode = try!(
-            reader.read_opcode().map_err(|_| InvalidByteCodeError::new())
+            reader.read_control_opcode().map_err(|_|
+                InvalidByteCodeError::new()
+            )
         );
 
         match opcode {
-            Opcode::Expression { id, opcodes } => {
+            ControlOpcode::Expression { id, opcodes } => {
                 self.add_expression(id, opcodes)
             },
 
-            Opcode::CreateUnit { id, type_id, input_channels, output_channels } => {
+            ControlOpcode::CreateUnit { id, type_id, input_channels,
+                                        output_channels } => {
                 self.create_unit(id, type_id, input_channels, output_channels)
             },
 
-            Opcode::Unknown => Err(InvalidByteCodeError::new()),
-            _ => Err(UnimplementedOpcodeError::new(opcode))
+            ControlOpcode::Unknown => Err(InvalidByteCodeError::new()),
+            _ => Err(UnimplementedOpcodeError::new(Opcode::Control(opcode)))
         }
     }
 
-    fn add_expression(&mut self, id: u32, opcodes: Vec<Opcode>)
+    fn add_expression(&mut self, id: u32, opcodes: Vec<DspOpcode>)
             -> ArtResult<()> {
         let expression = Expression::new(id, opcodes);
         self.expressions.insert(id, expression);
