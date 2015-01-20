@@ -32,9 +32,11 @@ pub mod channel_stack;
 pub mod util;
 
 pub mod instructions {
-    pub mod unit;
-    pub mod dac;
-    pub mod parameter;
+    pub mod dsp {
+        pub mod unit;
+        pub mod dac;
+        pub mod parameter;
+    }
 }
 
 pub mod dsp {

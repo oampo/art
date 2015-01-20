@@ -2,9 +2,9 @@ use types::{UnitMap, ArtResult};
 use errors::{InvalidByteCodeError};
 use opcode::DspOpcode;
 use channel_stack::ChannelStack;
-use instructions::unit::UnitInstruction;
-use instructions::dac::DACInstruction;
-use instructions::parameter::ParameterInstruction;
+use instructions::dsp::unit::UnitInstruction;
+use instructions::dsp::dac::DACInstruction;
+use instructions::dsp::parameter::ParameterInstruction;
 use graph::{Graph, Node};
 
 pub struct Expression {
