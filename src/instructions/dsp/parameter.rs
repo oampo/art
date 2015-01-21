@@ -30,7 +30,7 @@ impl Parameter for VMInner {
             )
         );
 
-        let mut parameter = try!(
+        let parameter = try!(
             unit.data.get_parameters().get(id as usize).ok_or(
                 ParameterNotFoundError::new(unit_id, id)
             )

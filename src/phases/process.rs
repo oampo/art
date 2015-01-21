@@ -9,6 +9,7 @@ use opcode_reader::OpcodeReader;
 
 use instructions::control::create_unit::CreateUnit;
 use instructions::control::add_expression::AddExpression;
+use instructions::control::set_parameter::SetParameter;
 
 pub trait Process {
     fn process(&mut self);
@@ -40,6 +41,10 @@ impl Process for VMInner {
         match opcode {
             ControlOpcode::AddExpression { expression_id, opcodes } => {
                 self.add_expression(expression_id, opcodes)
+            },
+
+            ControlOpcode::SetParameter { unit_id, parameter_id, value } => {
+                self.set_parameter(unit_id, parameter_id, value)
             },
 
             ControlOpcode::CreateUnit { unit_id, type_id, input_channels,

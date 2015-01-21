@@ -42,6 +42,7 @@ pub mod phases {
 pub mod instructions {
     pub mod control {
         pub mod create_unit;
+        pub mod set_parameter;
         pub mod add_expression;
     }
     pub mod dsp {
