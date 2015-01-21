@@ -4,7 +4,7 @@ use types::ArtResult;
 use errors::{InvalidByteCodeError, UnimplementedOpcodeError};
 
 use vm_inner::VMInner;
-use opcode::{Opcode, ControlOpcode, DspOpcode};
+use opcode::{Opcode, ControlOpcode};
 use opcode_reader::OpcodeReader;
 
 use instructions::control::create_unit::CreateUnit;

@@ -1,7 +1,6 @@
-use types::{ArtResult, UnitMap};
+use types::ArtResult;
 use errors::{UnitNotFoundError, UnownedUnitError, ParameterNotFoundError};
 use vm_inner::VMInner;
-use graph::Graph;
 
 pub trait Parameter {
     fn link_parameter(&mut self, unit_id: u32, id: u32, owner_id: u32)

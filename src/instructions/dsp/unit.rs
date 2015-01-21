@@ -1,7 +1,6 @@
-use types::{ArtResult, UnitMap};
+use types::ArtResult;
 use errors::UnitNotFoundError;
 use vm_inner::VMInner;
-use channel_stack::ChannelStack;
 
 pub trait Unit {
     fn tick_unit(&mut self, id: u32) -> ArtResult<()>;

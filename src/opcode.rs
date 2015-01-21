@@ -35,7 +35,7 @@ pub enum ControlOpcode {
     Unknown
 }
 
-#[derive(Show)]
+#[derive(Copy, Show)]
 pub enum DspOpcode {
     Unit {
         id: u32

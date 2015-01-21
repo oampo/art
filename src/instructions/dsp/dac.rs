@@ -1,7 +1,6 @@
 use types::ArtResult;
 use sizes::BLOCK_SIZE;
 use vm_inner::VMInner;
-use channel_stack::ChannelStack;
 
 pub trait Dac {
     fn tick_dac(&mut self, block: &mut[f32]) -> ArtResult<()>;

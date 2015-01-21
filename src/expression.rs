@@ -1,8 +1,5 @@
-use types::{UnitMap, ArtResult};
-use errors::{InvalidByteCodeError};
 use opcode::DspOpcode;
-use channel_stack::ChannelStack;
-use graph::{Graph, Node};
+use graph::Node;
 
 pub struct Expression {
     pub opcodes: Vec<DspOpcode>,

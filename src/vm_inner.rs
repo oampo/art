@@ -1,30 +1,18 @@
-use std::mem;
 use std::collections::HashMap;
-use std::io::BufReader;
 
 use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
-use types::{ArtResult, ByteCodeReceiver, UnitMap, ExpressionMap};
-use errors::{InvalidByteCodeError, UnimplementedOpcodeError,
-             ExpressionNotFoundError};
+use types::{ByteCodeReceiver, UnitMap, ExpressionMap};
 use unit_factory::UnitFactory;
-use expression::Expression;
-use opcode::{Opcode, ControlOpcode, DspOpcode};
-use opcode_reader::OpcodeReader;
 use channel_stack::ChannelStack;
-use graph::{Graph, Node};
+use graph::Graph;
 
 use phases::process::Process;
 use phases::link::Link;
 use phases::sort::Sort;
 use phases::run::Run;
 use phases::clean::Clean;
-
-
-use instructions::dsp::unit::Unit;
-use instructions::dsp::dac::Dac;
-use instructions::dsp::parameter::Parameter;
 
 pub struct VMInner {
     pub input_channel: ByteCodeReceiver,
