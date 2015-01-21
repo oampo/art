@@ -102,22 +102,22 @@ impl VMInner {
         mem::swap(&mut self.expression_ids, &mut expression_ids);
     }
 
-    fn swap_opcodes(&mut self, expression_id: u32,
-                   opcodes: &mut Vec<DspOpcode>) -> ArtResult<()> {
-        let expression = try!(
-            self.expressions.get_mut(&expression_id).ok_or(
-                ExpressionNotFoundError::new(expression_id)
+    fn swap_expression(&mut self, id: u32,
+                       expression: &mut Expression) -> ArtResult<()> {
+        let expression_b = try!(
+            self.expressions.get_mut(&id).ok_or(
+                ExpressionNotFoundError::new(id)
             )
         );
-        mem::swap(opcodes, &mut expression.opcodes);
+        mem::swap(expression, expression_b);
         Ok(())
     }
 
     fn link_expression(&mut self, expression_id: u32) -> ArtResult<()> {
-        let mut opcodes = Vec::with_capacity(0);
-        try!(self.swap_opcodes(expression_id, &mut opcodes));
+        let mut expression = Expression::new(Vec::with_capacity(0));
+        try!(self.swap_expression(expression_id, &mut expression));
 
-        for opcode in opcodes.iter() {
+        for opcode in expression.opcodes.iter() {
             match opcode {
                 &DspOpcode::Parameter { unit_id, id } => {
                     try!(
@@ -128,7 +128,7 @@ impl VMInner {
             }
         }
 
-        try!(self.swap_opcodes(expression_id, &mut opcodes));
+        try!(self.swap_expression(expression_id, &mut expression));
         Ok(())
     }
 
@@ -156,10 +156,10 @@ impl VMInner {
 
     fn run_expression(&mut self, id: u32, adc_block: &[f32],
                       dac_block: &mut[f32]) -> ArtResult<()> {
-        let mut opcodes = Vec::with_capacity(0);
-        self.swap_opcodes(id, &mut opcodes);
+        let mut expression = Expression::new(Vec::with_capacity(0));
+        self.swap_expression(id, &mut expression);
 
-        for opcode in opcodes.iter() {
+        for opcode in expression.opcodes.iter() {
             match opcode {
                 &DspOpcode::Unit { id } => {
                     try!(self.tick_unit(id))
@@ -174,7 +174,7 @@ impl VMInner {
             }
         }
 
-        self.swap_opcodes(id, &mut opcodes);
+        self.swap_expression(id, &mut expression);
         Ok(())
     }
 
