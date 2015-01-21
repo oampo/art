@@ -64,13 +64,13 @@ pub trait OpcodeReader: Reader {
     }
 
     fn read_create_unit(&mut self) -> Result<ControlOpcode, IoError> {
-        let id = try!(self.read_be_u32());
+        let unit_id = try!(self.read_be_u32());
         let type_id = try!(self.read_be_u32());
         let input_channels = try!(self.read_be_u32());
         let output_channels = try!(self.read_be_u32());
         Ok(
             ControlOpcode::CreateUnit {
-                id: id,
+                unit_id: unit_id,
                 type_id: type_id,
                 input_channels: input_channels,
                 output_channels: output_channels
@@ -80,19 +80,19 @@ pub trait OpcodeReader: Reader {
 
     fn read_set_parameter(&mut self) -> Result<ControlOpcode, IoError> {
         let unit_id = try!(self.read_be_u32());
-        let id = try!(self.read_be_u32());
+        let parameter_id = try!(self.read_be_u32());
         let value = try!(self.read_be_f32());
         Ok(
             ControlOpcode::SetParameter {
                 unit_id: unit_id,
-                id: id,
+                parameter_id: parameter_id,
                 value: value
             }
         )
     }
 
     fn read_expression(&mut self) -> Result<ControlOpcode, IoError> {
-        let id = try!(self.read_be_u32());
+        let expression_id = try!(self.read_be_u32());
         let mut opcodes = Vec::new();
 
         loop {
@@ -115,37 +115,37 @@ pub trait OpcodeReader: Reader {
 
         Ok(
             ControlOpcode::AddExpression {
-                id: id,
+                expression_id: expression_id,
                 opcodes: opcodes
             }
         )
     }
 
     fn read_play(&mut self) -> Result<ControlOpcode, IoError> {
-        let id = try!(self.read_be_u32());
+        let expression_id = try!(self.read_be_u32());
         Ok(
             ControlOpcode::Play {
-                id: id
+                expression_id: expression_id
             }
         )
     }
 
     fn read_unit(&mut self) -> Result<DspOpcode, IoError> {
-        let id = try!(self.read_be_u32());
+        let unit_id = try!(self.read_be_u32());
         Ok(
             DspOpcode::Unit {
-                id: id
+                unit_id: unit_id
             }
         )
     }
 
     fn read_parameter(&mut self) -> Result<DspOpcode, IoError> {
         let unit_id = try!(self.read_be_u32());
-        let id = try!(self.read_be_u32());
+        let parameter_id = try!(self.read_be_u32());
         Ok(
             DspOpcode::Parameter {
                 unit_id: unit_id,
-                id: id
+                parameter_id: parameter_id
             }
         )
     }

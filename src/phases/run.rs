@@ -37,14 +37,14 @@ impl Run for VMInner {
 
         for opcode in expression.opcodes.iter() {
             match opcode {
-                &DspOpcode::Unit { id } => {
-                    try!(self.tick_unit(id))
+                &DspOpcode::Unit { unit_id } => {
+                    try!(self.tick_unit(unit_id))
                 },
                 &DspOpcode::Dac => {
                     try!(self.tick_dac(dac_block));
                 },
-                &DspOpcode::Parameter { unit_id, id } => {
-                    try!(self.tick_parameter(unit_id, id));
+                &DspOpcode::Parameter { unit_id, parameter_id } => {
+                    try!(self.tick_parameter(unit_id, parameter_id));
                 }
                 _ => return Err(InvalidByteCodeError::new())
             }

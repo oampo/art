@@ -31,9 +31,10 @@ impl Link for VMInner {
 
         for opcode in expression.opcodes.iter() {
             match opcode {
-                &DspOpcode::Parameter { unit_id, id } => {
+                &DspOpcode::Parameter { unit_id, parameter_id } => {
                     try!(
-                        self.link_parameter(unit_id, id, expression_id)
+                        self.link_parameter(unit_id, parameter_id,
+                                            expression_id)
                     )
                 },
                 _ => {}

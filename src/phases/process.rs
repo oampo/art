@@ -38,13 +38,14 @@ impl Process for VMInner {
         );
 
         match opcode {
-            ControlOpcode::AddExpression { id, opcodes } => {
-                self.add_expression(id, opcodes)
+            ControlOpcode::AddExpression { expression_id, opcodes } => {
+                self.add_expression(expression_id, opcodes)
             },
 
-            ControlOpcode::CreateUnit { id, type_id, input_channels,
+            ControlOpcode::CreateUnit { unit_id, type_id, input_channels,
                                         output_channels } => {
-                self.create_unit(id, type_id, input_channels, output_channels)
+                self.create_unit(unit_id, type_id, input_channels,
+                                 output_channels)
             },
 
             ControlOpcode::Unknown => Err(InvalidByteCodeError::new()),
