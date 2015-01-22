@@ -11,6 +11,8 @@ pub trait SetParameter {
 impl SetParameter for VMInner {
     fn set_parameter(&mut self, unit_id: u32, parameter_id: u32, value: f32)
             -> ArtResult<()> {
+        debug!("Setting parameter: unit_id={}, parameter_id={}, value={}",
+               unit_id, parameter_id, value);
         let mut unit = try!(
             self.units.get_mut(&unit_id).ok_or(
                 UnitNotFoundError::new(unit_id)
@@ -23,7 +25,7 @@ impl SetParameter for VMInner {
             )
         );
 
-        parameter.set(value);
+        parameter.value = value;
 
         Ok(())
     }

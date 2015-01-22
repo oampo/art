@@ -1,44 +1,33 @@
 use sizes::{BLOCK_SIZE, BLOCK_SIZE_INVERSE};
-use types::ArtResult;
-use util::CheckedSplitAt;
-use errors::StackFullError;
+
+use bus_manager::BusManager;
 
 #[derive(Copy)]
 pub struct Parameter {
-    value: f32,
-    last_value: f32
+    pub value: f32,
+    last_value: f32,
+    pub bus: Option<usize>
 }
 
 impl Parameter {
     pub fn new(value: f32) -> Parameter {
         Parameter {
             value: value,
-            last_value: value
+            last_value: value,
+            bus: None
         }
     }
 
-    pub fn set(&mut self, value: f32) {
-        self.value = value;
-    }
-
-    pub fn get<'a>(&'a self, stack: &'a mut[f32])
-            -> ArtResult<(&mut [f32], &mut [f32])> {
-        let (chock, stack) = try!(
-            stack.checked_split_at_mut(BLOCK_SIZE).ok_or(StackFullError::new())
-        );
-
-        let delta = (self.value - self.last_value) * BLOCK_SIZE_INVERSE;
-        for i in range(0, BLOCK_SIZE) {
-            chock[i] = self.last_value + i as f32 * delta;
+    pub fn get(&mut self, values: &mut[f32], busses: &mut BusManager) {
+        match self.bus {
+            Some(id) => busses.get(id, values),
+            None => {
+                let delta = (self.value - self.last_value) * BLOCK_SIZE_INVERSE;
+                for i in range(0, BLOCK_SIZE) {
+                    values[i] = self.last_value + i as f32 * delta;
+                }
+            }
         }
-
-        Ok((chock, stack))
-    }
-
-    pub fn enter(&mut self) {
-    }
-
-    pub fn leave(&mut self) {
-        self.last_value = self.value;
+        self.last_value = values[BLOCK_SIZE - 1];
     }
 }

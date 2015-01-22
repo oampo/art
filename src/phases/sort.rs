@@ -8,10 +8,8 @@ pub trait Sort {
 
 impl Sort for VMInner {
     fn sort(&mut self) {
-        self.expression_ids.clear();
-
-        for (id, expression) in self.expressions.iter_mut() {
-            self.expression_ids.push(*id);
+        debug!("Starting sort phase");
+        for (_, expression) in self.expressions.iter_mut() {
             expression.reset_edge_count();
         }
 

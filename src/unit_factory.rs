@@ -36,10 +36,6 @@ impl UnitFactory {
 
     pub fn create(&mut self, type_id: u32, input_channels: u32,
                   output_channels: u32) -> ArtResult<Unit> {
-        debug!("Creating unit: type_id = {}, \
-                input_channels = {}, output_channels = {}",
-               type_id, input_channels, output_channels);
-
         let item = try!(
             self.unit_map.get(&type_id).ok_or(UndefinedUnitError::new(type_id))
         );

@@ -21,6 +21,7 @@ pub trait Run {
 
 impl Run for VMInner {
     fn run(&mut self, adc_block: &[f32], dac_block: &mut [f32]) {
+        debug!("Starting run phase");
         let mut expression_ids = Vec::<u32>::with_capacity(0);
         mem::swap(&mut self.expression_ids, &mut expression_ids);
         for id in expression_ids.iter() {

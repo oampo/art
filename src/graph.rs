@@ -1,5 +1,6 @@
 use types::ExpressionMap;
 
+#[derive(Show)]
 struct Edge {
     from: u32,
     to: u32
@@ -60,9 +61,9 @@ impl Graph {
         self.update_edge_counts(map);
 
         let mut len = nodes.len();
-
-        while len > 0 {
-            let node_option = nodes.slice_to(len - 1).find_zero_order(
+        let mut start = 0;
+        while start < len {
+            let node_option = nodes.slice_from(start).find_zero_order(
                 map
             );
 
@@ -70,18 +71,17 @@ impl Graph {
                 return;
             }
 
-
             let (index, node) = node_option.unwrap();
 
             for edge in self.edges.iter() {
-                if edge.to == node {
-                    let node = map.get_mut(&edge.from).unwrap();
+                if edge.from == node {
+                    let node = map.get_mut(&edge.to).unwrap();
                     node.decrement_edge_count();
                 }
             }
 
-            len -= 1;
-            nodes.swap(index, len);
+            nodes.swap(start + index, start);
+            start += 1;
         }
     }
 

@@ -18,6 +18,7 @@ pub trait Process {
 
 impl Process for VMInner {
     fn process(&mut self) {
+        debug!("Starting process phase");
         loop {
             let result = self.input_channel.try_recv();
             match result {

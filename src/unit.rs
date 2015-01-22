@@ -1,5 +1,6 @@
 use types::ArtResult;
 use parameter::Parameter;
+use bus_manager::BusManager;
 
 #[derive(Copy)]
 pub enum UnitKind {
@@ -26,7 +27,7 @@ pub struct ChannelLayout {
 
 pub type TickFunction = fn(
     block: &mut[f32], channels: &ChannelLayout, data: &mut UnitData,
-    parameter_stack: &mut [f32]
+    stack: &mut [f32], busses: &mut BusManager
 ) -> ArtResult<()>;
 
 #[derive(Copy)]
@@ -48,18 +49,6 @@ impl Unit {
             data: data,
             tick: tick,
             owner: None
-        }
-    }
-
-    pub fn enter(&mut self) {
-        for parameter in self.data.get_parameters().iter_mut() {
-            parameter.enter();
-        }
-    }
-
-    pub fn leave(&mut self) {
-        for parameter in self.data.get_parameters().iter_mut() {
-            parameter.leave();
         }
     }
 }

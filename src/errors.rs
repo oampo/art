@@ -20,6 +20,7 @@ pub enum ArtErrorKind {
     UnownedUnit { unit_id: u32 },
     ParameterNotFound { unit_id: u32, id: u32 },
     ExpressionNotFound { expression_id: u32 },
+    UnlinkedParameter { unit_id: u32, parameter_id: u32 },
     InvalidChannelCount,
     InvalidByteCode,
     StackFull,
@@ -89,6 +90,18 @@ impl ParameterNotFoundError {
                         unit_id: unit_id,
                         id: id
                       }, "Parameter not found", "")
+    }
+}
+
+#[derive(Copy)]
+pub struct UnlinkedParameterError;
+
+impl UnlinkedParameterError {
+    pub fn new(unit_id: u32, parameter_id: u32) -> ArtError {
+        ArtError::new(ArtErrorKind::UnlinkedParameter {
+                        unit_id: unit_id,
+                        parameter_id: parameter_id
+                      }, "Unlinked Parameter", "")
     }
 }
 

@@ -9,6 +9,9 @@ pub trait CreateUnit {
 impl CreateUnit for VMInner {
     fn create_unit(&mut self, id: u32, type_id: u32, input_channels: u32,
                    output_channels: u32) -> ArtResult<()> {
+        debug!("Creating unit: id={}, type_id={}, input_channels={},
+                output_channel={}", id, type_id, input_channels,
+                output_channels);
         let unit = try!(
             self.unit_factory.create(type_id, input_channels, output_channels)
         );

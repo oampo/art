@@ -4,11 +4,14 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
 use types::{ByteCodeReceiver, UnitMap, ExpressionMap};
+use sizes::BLOCK_SIZE;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
+use bus_manager::BusManager;
 
 use phases::process::Process;
+use phases::init::Init;
 use phases::link::Link;
 use phases::sort::Sort;
 use phases::run::Run;
@@ -21,7 +24,8 @@ pub struct VMInner {
     pub unit_factory: UnitFactory,
     pub channel_stack: ChannelStack,
     pub expression_ids: Vec<u32>,
-    pub graph: Graph
+    pub graph: Graph,
+    pub busses: BusManager
 }
 
 impl VMInner {
@@ -34,13 +38,15 @@ impl VMInner {
             unit_factory: UnitFactory::new(),
             channel_stack: ChannelStack::new(16),
             expression_ids: Vec::with_capacity(32),
-            graph: Graph::new(16)
+            graph: Graph::new(16),
+            busses: BusManager::new(16, BLOCK_SIZE)
         }
     }
 
     fn tick(&mut self, adc_block: &[f32], dac_block: &mut [f32])
             -> StreamCallbackResult {
         self.process();
+        self.init();
         self.link();
         self.sort();
         self.run(adc_block, dac_block);

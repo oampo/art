@@ -21,6 +21,7 @@ pub mod opcode_reader;
 
 pub mod device;
 pub mod unit_factory;
+pub mod bus_manager;
 
 pub mod expression;
 pub mod unit;
@@ -33,6 +34,7 @@ pub mod util;
 
 pub mod phases {
     pub mod process;
+    pub mod init;
     pub mod link;
     pub mod sort;
     pub mod run;
