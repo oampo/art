@@ -7,13 +7,13 @@ use vm_inner::VMInner;
 use channel_stack::ChannelStack;
 
 pub trait Unit {
-    fn init_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()>;
+    fn verify_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()>;
     fn tick_unit(&mut self, unit_id: u32, stack: &mut ChannelStack,
                  busses: &mut ChannelStack) -> ArtResult<()>;
 }
 
 impl Unit for VMInner {
-    fn init_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()> {
+    fn verify_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()> {
         let unit = try!(
             self.units.get_mut(&unit_id).ok_or(
                 ArtError::UnitNotFound {

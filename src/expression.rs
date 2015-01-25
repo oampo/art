@@ -1,16 +1,26 @@
 use opcode::DspOpcode;
 use graph::Node;
 
+#[derive(Copy)]
+pub enum ExpressionState {
+    Verify,
+    Link,
+    Run,
+    Free
+}
+
 pub struct Expression {
     pub opcodes: Vec<DspOpcode>,
-    incoming_edges: u32
+    incoming_edges: u32,
+    pub state: ExpressionState
 }
 
 impl Expression {
     pub fn new(opcodes: Vec<DspOpcode>) -> Expression {
         Expression {
             opcodes: opcodes,
-            incoming_edges: 0
+            incoming_edges: 0,
+            state: ExpressionState::Verify
         }
     }
 }

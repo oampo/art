@@ -33,7 +33,7 @@ pub mod util;
 
 pub mod phases {
     pub mod process;
-    pub mod init;
+    pub mod verify;
     pub mod link;
     pub mod sort;
     pub mod run;
