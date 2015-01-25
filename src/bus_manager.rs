@@ -19,11 +19,11 @@ impl BusManager {
     }
 
     pub fn get(&self, index: usize, values: &mut[f32]) {
-        values.clone_from_slice(self.data.slice_from(index * self.channel_size));
+        values.clone_from_slice(&self.data[index * self.channel_size..]);
     }
 
     pub fn set(&mut self, index: usize, values: &[f32]) {
-        self.data.slice_from_mut(index * self.channel_size).clone_from_slice(values);
+        (&mut self.data[index * self.channel_size..]).clone_from_slice(values);
     }
 
     pub fn clear(&mut self) {

@@ -1,6 +1,5 @@
 use types::ArtResult;
-use errors::{UnitNotFoundError, UnownedUnitError, ParameterNotFoundError,
-             UnlinkedParameterError};
+use errors::ArtError;
 use vm_inner::VMInner;
 
 pub trait Parameter {
@@ -15,17 +14,26 @@ impl Parameter for VMInner {
             -> ArtResult<()> {
         let mut unit = try!(
             self.units.get_mut(&unit_id).ok_or(
-                UnitNotFoundError::new(unit_id)
+                ArtError::UnitNotFound {
+                    unit_id: unit_id
+                }
             )
         );
 
         let parameter = try!(
             unit.data.get_parameters().get_mut(parameter_id as usize).ok_or(
-                ParameterNotFoundError::new(unit_id, parameter_id)
+                ArtError::ParameterNotFound {
+                    unit_id: unit_id,
+                    parameter_id: parameter_id
+                }
             )
         );
 
-        let to_id = try!(unit.owner.ok_or(UnownedUnitError::new(unit_id)));
+        let to_id = try!(unit.owner.ok_or(
+            ArtError::UnownedUnit {
+                unit_id: unit_id
+            }
+        ));
 
         let bus_id = self.busses.reserve(1us);
         parameter.bus = Some(bus_id);
@@ -39,19 +47,27 @@ impl Parameter for VMInner {
             -> ArtResult<()> {
         let mut unit = try!(
             self.units.get_mut(&unit_id).ok_or(
-                UnitNotFoundError::new(unit_id)
+                ArtError::UnitNotFound {
+                    unit_id: unit_id
+                }
             )
         );
 
         let parameter = try!(
             unit.data.get_parameters().get(parameter_id as usize).ok_or(
-                ParameterNotFoundError::new(unit_id, parameter_id)
+                ArtError::ParameterNotFound {
+                    unit_id: unit_id,
+                    parameter_id: parameter_id
+                }
             )
         );
 
         let bus_id = try!(
             parameter.bus.ok_or(
-                UnlinkedParameterError::new(unit_id, parameter_id)
+                ArtError::UnlinkedParameter {
+                    unit_id: unit_id,
+                    parameter_id: parameter_id
+                }
             )
         );
 
@@ -60,7 +76,7 @@ impl Parameter for VMInner {
         try!(self.channel_stack.pop_expect(1));
         let start = self.channel_stack.position;
 
-        self.busses.set(bus_id, self.channel_stack.data.slice(start, end));
+        self.busses.set(bus_id, &self.channel_stack.data[start..end]);
         Ok(())
     }
 }

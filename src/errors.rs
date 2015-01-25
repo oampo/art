@@ -1,166 +1,120 @@
-use std::string::CowString;
-use std::borrow::IntoCow;
+use std::error::{Error, FromError};
+use std::io::IoError;
+use std::fmt;
 
 use portaudio::pa::PaError;
 
 use opcode::Opcode;
 
-#[derive(Show)]
-pub struct ArtError {
-    kind: ArtErrorKind,
-    message: CowString<'static>,
-    detail: CowString<'static>
-}
-
-#[derive(Show)]
-pub enum ArtErrorKind {
+pub enum ArtError {
     UnimplementedOpcode { opcode: Opcode },
     UndefinedUnit { type_id: u32 },
     UnitNotFound { unit_id: u32 },
     UnownedUnit { unit_id: u32 },
-    ParameterNotFound { unit_id: u32, id: u32 },
+    ParameterNotFound { unit_id: u32, parameter_id: u32 },
     ExpressionNotFound { expression_id: u32 },
     UnlinkedParameter { unit_id: u32, parameter_id: u32 },
     InvalidChannelCount,
-    InvalidByteCode,
+    InvalidByteCode { error: Option<IoError> },
     StackFull,
     InvalidStack,
     PortAudio { error: PaError }
 }
 
 impl ArtError {
-    pub fn new<T: IntoCow<'static, String, str>>(kind: ArtErrorKind, msg: T,
-                                           detail: T)
-            -> ArtError {
-        ArtError {
-            kind: kind,
-            message: msg.into_cow(),
-            detail: detail.into_cow()
+    fn detail(&self) -> Option<String> {
+        match *self {
+            ArtError::UnimplementedOpcode { ref opcode } => {
+                // FIXME: Add Display trait to opcode
+                Some(format!("opcode={:?}", opcode))
+            },
+            ArtError::UndefinedUnit { type_id } => {
+                Some(format!("type_id={}", type_id))
+            },
+            ArtError::UnitNotFound { unit_id } => {
+                Some(format!("unit_id={}", unit_id))
+            },
+            ArtError::UnownedUnit { unit_id } => {
+                Some(format!("unit_id={}", unit_id))
+            },
+            ArtError::ParameterNotFound { unit_id, parameter_id } => {
+                Some(format!("unit_id={}, parameter_id={}",
+                             unit_id, parameter_id))
+            },
+            ArtError::ExpressionNotFound { expression_id } => {
+                Some(format!("expression_id={}", expression_id))
+            },
+            ArtError::UnlinkedParameter { unit_id, parameter_id } => {
+                Some(format!("unit_id={}, parameter_id={}",
+                             unit_id, parameter_id))
+            },
+            ArtError::InvalidByteCode { ref error } => {
+                match error {
+                    &Some(ref e) => Some(format!("error={}", e)),
+                    &None => None
+                }
+            },
+            // FIXME: Make PaError impl String
+//            ArtError::PortAudio { error } => {
+//                Some(format!("error={}", error))
+//            },
+            _ => None
         }
     }
 }
 
-#[derive(Copy)]
-pub struct UnimplementedOpcodeError;
+impl Error for ArtError {
+    fn description(&self) -> &str {
+        match *self {
+            ArtError::UnimplementedOpcode { .. } => "Unimplemented opcode",
+            ArtError::UndefinedUnit { .. } => "Undefined unit",
+            ArtError::UnitNotFound { .. } => "Unit not found",
+            ArtError::UnownedUnit { .. } => "Unowned unit",
+            ArtError::ParameterNotFound { .. } => "Parameter not found",
+            ArtError::ExpressionNotFound { .. } => "Expression not found",
+            ArtError::UnlinkedParameter { .. } => "Unlinked parameter",
+            ArtError::InvalidChannelCount => "Invalid channel count",
+            ArtError::InvalidByteCode { .. } => "Invalid byte code",
+            ArtError::StackFull => "Stack full",
+            ArtError::InvalidStack => "Invalid stack",
+            ArtError::PortAudio { .. } => "PortAudio error"
+        }
+    }
 
-impl UnimplementedOpcodeError {
-    pub fn new(opcode:Opcode) -> ArtError {
-        ArtError::new(ArtErrorKind::UnimplementedOpcode { opcode: opcode },
-                      "Opcode is unimplemented", "")
+    fn cause(&self) -> Option<&Error> {
+        match *self {
+            ArtError::InvalidByteCode { ref error } => {
+                match error {
+                    &Some(ref e) => Some(e as &Error),
+                    &None => None
+                }
+            },
+            // FIXME: Make PaError impl Error
+            //ArtError::PortAudio { error } => Some(&error as &Error),
+            _ => None
+        }
     }
 }
 
-#[derive(Copy)]
-pub struct UndefinedUnitError;
-
-impl UndefinedUnitError {
-    pub fn new(type_id: u32) -> ArtError {
-        ArtError::new(ArtErrorKind::UndefinedUnit { type_id: type_id },
-                      "Unit is undefined", "")
+impl FromError<PaError> for ArtError {
+    fn from_error(error: PaError) -> ArtError {
+        ArtError::PortAudio { error: error }
     }
 }
 
-#[derive(Copy)]
-pub struct UnitNotFoundError;
-
-impl UnitNotFoundError {
-    pub fn new(unit_id: u32) -> ArtError {
-        ArtError::new(ArtErrorKind::UnitNotFound { unit_id: unit_id },
-                      "Unit not found", "")
+impl FromError<IoError> for ArtError {
+    fn from_error(error: IoError) -> ArtError {
+        ArtError::InvalidByteCode { error: Some(error) }
     }
 }
 
-
-#[derive(Copy)]
-pub struct UnownedUnitError;
-
-impl UnownedUnitError {
-    pub fn new(unit_id: u32) -> ArtError {
-        ArtError::new(ArtErrorKind::UnownedUnit { unit_id: unit_id },
-                      "Unowned unit", "")
-    }
-}
-
-#[derive(Copy)]
-pub struct ParameterNotFoundError;
-
-impl ParameterNotFoundError {
-    pub fn new(unit_id: u32, id: u32) -> ArtError {
-        ArtError::new(ArtErrorKind::ParameterNotFound {
-                        unit_id: unit_id,
-                        id: id
-                      }, "Parameter not found", "")
-    }
-}
-
-#[derive(Copy)]
-pub struct UnlinkedParameterError;
-
-impl UnlinkedParameterError {
-    pub fn new(unit_id: u32, parameter_id: u32) -> ArtError {
-        ArtError::new(ArtErrorKind::UnlinkedParameter {
-                        unit_id: unit_id,
-                        parameter_id: parameter_id
-                      }, "Unlinked Parameter", "")
-    }
-}
-
-#[derive(Copy)]
-pub struct InvalidByteCodeError;
-
-impl InvalidByteCodeError {
-    pub fn new() -> ArtError {
-        ArtError::new(ArtErrorKind::InvalidByteCode,
-                      "Invalid bytecode", "")
-    }
-}
-
-#[derive(Copy)]
-pub struct ExpressionNotFoundError;
-
-impl ExpressionNotFoundError {
-    pub fn new(expression_id: u32) -> ArtError {
-        ArtError::new(ArtErrorKind::ExpressionNotFound {
-                          expression_id: expression_id
-                      }, "Expression not found", "")
-    }
-}
-
-
-#[derive(Copy)]
-pub struct InvalidChannelCountError;
-
-impl InvalidChannelCountError {
-    pub fn new() -> ArtError {
-        ArtError::new(ArtErrorKind::InvalidChannelCount,
-                      "Invalid channel count", "")
-    }
-}
-
-#[derive(Copy)]
-pub struct StackFullError;
-
-impl StackFullError {
-    pub fn new() -> ArtError {
-        ArtError::new(ArtErrorKind::StackFull, "Full stack", "")
-    }
-}
-
-#[derive(Copy)]
-pub struct InvalidStackError;
-
-impl InvalidStackError {
-    pub fn new() -> ArtError {
-        ArtError::new(ArtErrorKind::InvalidStack, "Invalid stack", "")
-    }
-}
-
-#[derive(Copy)]
-pub struct PortAudioError;
-
-impl PortAudioError {
-    pub fn new(error: PaError) -> ArtError {
-        ArtError::new(ArtErrorKind::PortAudio { error : error },
-                      "PortAudio error", "")
+impl fmt::Display for ArtError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let _ = write!(f, "{}", self.description());
+        if let Some(detail) = self.detail() {
+            let _ = write!(f, ": {}", detail);
+        }
+        let _ = write!(f, "\n");
+        Ok(())
     }
 }

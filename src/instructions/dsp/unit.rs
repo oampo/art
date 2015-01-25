@@ -1,17 +1,19 @@
 use types::ArtResult;
-use errors::UnitNotFoundError;
+use errors::ArtError;
 use vm_inner::VMInner;
 
 pub trait Unit {
-    fn init_unit(&mut self, id: u32, owner_id: u32) -> ArtResult<()>;
-    fn tick_unit(&mut self, id: u32) -> ArtResult<()>;
+    fn init_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()>;
+    fn tick_unit(&mut self, unit_id: u32) -> ArtResult<()>;
 }
 
 impl Unit for VMInner {
-    fn init_unit(&mut self, id: u32, owner_id: u32) -> ArtResult<()> {
+    fn init_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()> {
         let unit = try!(
-            self.units.get_mut(&id).ok_or(
-                UnitNotFoundError::new(id)
+            self.units.get_mut(&unit_id).ok_or(
+                ArtError::UnitNotFound {
+                    unit_id: unit_id
+                }
             )
         );
 
@@ -19,10 +21,12 @@ impl Unit for VMInner {
         Ok(())
     }
 
-    fn tick_unit(&mut self, id: u32) -> ArtResult<()> {
+    fn tick_unit(&mut self, unit_id: u32) -> ArtResult<()> {
         let mut unit = try!(
-            self.units.get_mut(&id).ok_or(
-                UnitNotFoundError::new(id)
+            self.units.get_mut(&unit_id).ok_or(
+                ArtError::UnitNotFound {
+                    unit_id: unit_id
+                }
             )
         );
 
@@ -49,7 +53,7 @@ impl Unit for VMInner {
         // Split the stack into the unit half, and half which the unit
         // can use for whatever
         let (unit_stack, stack) = self.channel_stack.data.split_at_mut(end);
-        let mut block = unit_stack.slice_from_mut(start);
+        let mut block = &mut unit_stack[start..];
 
         try!(
             (unit.tick)(block, &unit.layout, &mut unit.data,

@@ -12,7 +12,7 @@ impl Dac for VMInner {
         try!(self.channel_stack.pop_expect((block.len() / BLOCK_SIZE) as u32));
         let start = self.channel_stack.position;
 
-        let slice = self.channel_stack.data.slice_mut(start, end);
+        let slice = &self.channel_stack.data[start..end];
 
         assert!(slice.len() == block.len());
 

@@ -1,7 +1,7 @@
 use std::io::BufReader;
 
 use types::ArtResult;
-use errors::{InvalidByteCodeError, UnimplementedOpcodeError};
+use errors::ArtError;
 
 use vm_inner::VMInner;
 use opcode::{Opcode, ControlOpcode};
@@ -24,7 +24,7 @@ impl Process for VMInner {
             match result {
                 Ok(byte_code) => {
                     let result = self.process_byte_code(byte_code.as_slice());
-                    result.unwrap_or_else(|error| error!("{:?}", error));
+                    result.unwrap_or_else(|error| error!("{}", error));
                 },
                 Err(_) => { return; }
             }
@@ -34,9 +34,7 @@ impl Process for VMInner {
     fn process_byte_code(&mut self, byte_code: &[u8]) -> ArtResult<()> {
         let mut reader = BufReader::new(byte_code);
         let opcode = try!(
-            reader.read_control_opcode().map_err(|_|
-                InvalidByteCodeError::new()
-            )
+            reader.read_control_opcode()
         );
 
         match opcode {
@@ -53,9 +51,9 @@ impl Process for VMInner {
                 self.create_unit(unit_id, type_id, input_channels,
                                  output_channels)
             },
-
-            ControlOpcode::Unknown => Err(InvalidByteCodeError::new()),
-            _ => Err(UnimplementedOpcodeError::new(Opcode::Control(opcode)))
+            _ => Err(ArtError::UnimplementedOpcode {
+                opcode: Opcode::Control(opcode)
+            })
         }
     }
 }

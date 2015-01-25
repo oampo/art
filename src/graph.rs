@@ -60,10 +60,10 @@ impl Graph {
         assert!(nodes.len() == map.len());
         self.update_edge_counts(map);
 
-        let mut len = nodes.len();
+        let len = nodes.len();
         let mut start = 0;
         while start < len {
-            let node_option = nodes.slice_from(start).find_zero_order(
+            let node_option = &nodes[start..].find_zero_order(
                 map
             );
 

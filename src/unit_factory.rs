@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use unit::{Unit, UnitDefinition};
 use types::{ArtResult, UnitTypeId, UnitConstructor};
-use errors::{UndefinedUnitError, InvalidChannelCountError};
+use errors::ArtError;
 use dsp::oscillators::sine;
 
 struct UnitFactoryItem {
@@ -37,14 +37,18 @@ impl UnitFactory {
     pub fn create(&mut self, type_id: u32, input_channels: u32,
                   output_channels: u32) -> ArtResult<Unit> {
         let item = try!(
-            self.unit_map.get(&type_id).ok_or(UndefinedUnitError::new(type_id))
+            self.unit_map.get(&type_id).ok_or(
+                ArtError::UndefinedUnit {
+                    type_id: type_id
+                }
+            )
         );
 
         if input_channels < item.definition.min_input_channels ||
            input_channels > item.definition.max_input_channels ||
            output_channels < item.definition.min_output_channels ||
            output_channels > item.definition.max_output_channels {
-            return Err(InvalidChannelCountError::new());
+            return Err(ArtError::InvalidChannelCount);
         }
 
         Ok((item.constructor)(input_channels, output_channels))

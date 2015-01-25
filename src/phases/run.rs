@@ -1,10 +1,10 @@
 use std::mem;
 
 use types::ArtResult;
-use errors::InvalidByteCodeError;
+use errors::ArtError;
 
 use vm_inner::VMInner;
-use opcode::DspOpcode;
+use opcode::{DspOpcode, Opcode};
 use expression::Expression;
 
 use instructions::dsp::unit::Unit;
@@ -26,7 +26,7 @@ impl Run for VMInner {
         mem::swap(&mut self.expression_ids, &mut expression_ids);
         for id in expression_ids.iter() {
             let result = self.run_expression(*id, adc_block, dac_block);
-            result.unwrap_or_else(|error| error!("{:?}", error));
+            result.unwrap_or_else(|error| error!("{}", error));
         }
         mem::swap(&mut self.expression_ids, &mut expression_ids);
     }
@@ -46,8 +46,15 @@ impl Run for VMInner {
                 },
                 &DspOpcode::Parameter { unit_id, parameter_id } => {
                     try!(self.tick_parameter(unit_id, parameter_id));
+                },
+                &DspOpcode::Unknown => {
+                    return Err(ArtError::InvalidByteCode { error: None });
+                },
+                _ => {
+                    return Err(ArtError::UnimplementedOpcode {
+                        opcode: Opcode::Dsp(*opcode)
+                    });
                 }
-                _ => return Err(InvalidByteCodeError::new())
             }
         }
 

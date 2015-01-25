@@ -3,7 +3,6 @@ use portaudio;
 use rates::AUDIO_RATE;
 use sizes::BLOCK_SIZE;
 use types::ArtResult;
-use errors::PortAudioError;
 
 pub type Stream<'a> = portaudio::stream::Stream<'a, f32, f32>;
 pub type Callback<'a> = portaudio::stream::StreamCallback<'a, f32, f32>;
@@ -42,49 +41,32 @@ impl<'a> Device <'a> {
 
     pub fn init() -> ArtResult<()> {
         info!("Initializing PortAudio");
-        portaudio::initialize().map_err(|err| PortAudioError::new(err))
+        try!(portaudio::initialize());
+        Ok(())
     }
 
     pub fn uninit() -> ArtResult<()> {
         info!("Terminating PortAudio");
-        portaudio::terminate().map_err(|err| PortAudioError::new(err))
+        try!(portaudio::terminate());
+        Ok(())
     }
 
 
     pub fn list() -> ArtResult<()> {
         let count = try!(
-            portaudio::device::get_count().map_err(
-                |err| PortAudioError::new(err)
-            )
+            portaudio::device::get_count()
         );
 
         println!("{} devices available:", count);
         println!("");
 
         for i in range(0, count) {
-            let device_info = try!(
-                portaudio::device::get_info(i).ok_or(
-                    PortAudioError::new(
-                        portaudio::pa::PaError::InvalidDevice
-                    )
-                )
-            );
-
-            println!("{}: {} [I: {}, O: {}]", i, device_info.name,
-                     device_info.max_input_channels,
-                     device_info.max_output_channels);
+            if let Some(device_info) = portaudio::device::get_info(i) {
+                println!("{}: {} [I: {}, O: {}]", i, device_info.name,
+                         device_info.max_input_channels,
+                         device_info.max_output_channels);
+            }
         }
-        Ok(())
-    }
-
-    pub fn open(&mut self, callback: &'a mut Callback<'a>) -> ArtResult<()> {
-        self.stream = Some(
-            try!(
-                self._open(callback).map_err(|err| {
-                    PortAudioError::new(err)
-                })
-            )
-        );
         Ok(())
     }
 
@@ -94,20 +76,13 @@ impl<'a> Device <'a> {
 
     pub fn start(&mut self) -> ArtResult<()> {
         let stream = try!(
-            self.stream.as_mut().ok_or(
-                PortAudioError::new(portaudio::pa::PaError::BadStreamPtr)
-            )
+            self.stream.as_mut().ok_or(portaudio::pa::PaError::BadStreamPtr)
         );
-        try!(
-            stream.start().map_err(|err| {
-                PortAudioError::new(err)
-            })
-        );
+        try!(stream.start());
         Ok(())
     }
 
-    fn _open(&self, callback: &'a mut Callback<'a>)
-            -> Result<Stream<'a>, portaudio::pa::PaError> {
+    pub fn open(&mut self, callback: &'a mut Callback<'a>) -> ArtResult<()> {
         // Currently pa-rs requires both input and output
         let input_device_id = match self.input_device {
             DeviceId::Id(id) =>  id,
@@ -157,17 +132,19 @@ impl<'a> Device <'a> {
                                                     output_parameters,
                                                     AUDIO_RATE as f64));
 
-        let stream = try!(
-            portaudio::stream::Stream::open(
-                input_parameters,
-                output_parameters,
-                AUDIO_RATE as f64,
-                BLOCK_SIZE as u64,
-                portaudio::stream::StreamFlags::empty(),
-                Some(callback)
+        self.stream = Some(
+            try!(
+                portaudio::stream::Stream::open(
+                    input_parameters,
+                    output_parameters,
+                    AUDIO_RATE as f64,
+                    BLOCK_SIZE as u64,
+                    portaudio::stream::StreamFlags::empty(),
+                    Some(callback)
+                )
             )
         );
-        Ok(stream)
+        Ok(())
     }
 }
 

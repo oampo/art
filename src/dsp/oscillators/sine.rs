@@ -5,7 +5,7 @@ use std::u32;
 
 use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
-use errors::StackFullError;
+use errors::ArtError;
 
 use unit::{Unit, UnitDefinition, UnitKind, UnitData, ChannelLayout};
 use parameter::Parameter;
@@ -44,14 +44,14 @@ impl Sine {
                                     ref mut parameters} = data {
             let (frequency, stack) = try!(
                 stack.checked_split_at_mut(BLOCK_SIZE).ok_or(
-                    StackFullError::new()
+                    ArtError::StackFull
                 )
             );
             parameters[0].get(frequency, busses);
 
             let (phase, _) = try!(
                 stack.checked_split_at_mut(BLOCK_SIZE).ok_or(
-                    StackFullError::new()
+                    ArtError::StackFull
                 )
             );
             parameters[1].get(phase, busses);

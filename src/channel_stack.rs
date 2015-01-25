@@ -1,5 +1,5 @@
 use types::ArtResult;
-use errors::{StackFullError, InvalidStackError};
+use errors::ArtError;
 use sizes::BLOCK_SIZE;
 
 #[derive(Show)]
@@ -25,7 +25,7 @@ impl ChannelStack {
         let new_position = self.position + channels as usize * BLOCK_SIZE;
 
         if new_position > self.data.len() {
-            return Err(StackFullError::new());
+            return Err(ArtError::StackFull);
         }
 
         // Check for full data stack should prevent needing to reallocate
@@ -38,7 +38,7 @@ impl ChannelStack {
 
     pub fn pop(&mut self) -> ArtResult<u32> {
         let channels = try!(
-            self.stack.pop().ok_or(InvalidStackError::new())
+            self.stack.pop().ok_or(ArtError::InvalidStack)
         );
 
         self.position -= channels as usize * BLOCK_SIZE;
@@ -52,6 +52,6 @@ impl ChannelStack {
             return Ok(channels);
         }
 
-        Err(InvalidStackError::new())
+        Err(ArtError::InvalidStack)
     }
 }

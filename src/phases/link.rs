@@ -29,7 +29,7 @@ impl Link for VMInner {
 
         for &id in expression_ids.iter() {
             let result = self.link_expression(id);
-            result.unwrap_or_else(|error| error!("{:?}", error));
+            result.unwrap_or_else(|error| error!("{}", error));
         }
 
         mem::swap(&mut self.expression_ids, &mut expression_ids);
