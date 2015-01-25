@@ -7,7 +7,6 @@ pub trait Clean {
 impl Clean for VMInner {
     fn clean(&mut self) {
         debug!("Starting clean phase");
-        self.busses.clear();
         self.graph.clear();
     }
 }

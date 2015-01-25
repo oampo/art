@@ -4,18 +4,21 @@ use types::ArtResult;
 
 use vm_inner::VMInner;
 use expression::Expression;
+use channel_stack::ChannelStack;
 use opcode::DspOpcode;
-use util::SwapExpression;
 
 use instructions::dsp::parameter::Parameter;
 
+use util::SwapExpression;
+
 pub trait Link {
-    fn link(&mut self);
-    fn link_expression(&mut self, expression_id: u32) -> ArtResult<()>;
+    fn link(&mut self, busses: &mut ChannelStack);
+    fn link_expression(&mut self, expression_id: u32,
+                       busses: &mut ChannelStack) -> ArtResult<()>;
 }
 
 impl Link for VMInner {
-    fn link(&mut self) {
+    fn link(&mut self, busses: &mut ChannelStack) {
         debug!("Starting link phase");
 
         // Set the expression IDs
@@ -28,14 +31,15 @@ impl Link for VMInner {
         mem::swap(&mut self.expression_ids, &mut expression_ids);
 
         for &id in expression_ids.iter() {
-            let result = self.link_expression(id);
+            let result = self.link_expression(id, busses);
             result.unwrap_or_else(|error| error!("{}", error));
         }
 
         mem::swap(&mut self.expression_ids, &mut expression_ids);
     }
 
-    fn link_expression(&mut self, expression_id: u32) -> ArtResult<()> {
+    fn link_expression(&mut self, expression_id: u32,
+                       busses: &mut ChannelStack) -> ArtResult<()> {
         let mut expression = Expression::new(Vec::with_capacity(0));
         self.expressions.swap(expression_id, &mut expression);
 
@@ -44,7 +48,7 @@ impl Link for VMInner {
                 &DspOpcode::Parameter { unit_id, parameter_id } => {
                     try!(
                         self.link_parameter(unit_id, parameter_id,
-                                            expression_id)
+                                            expression_id, busses)
                     )
                 },
                 _ => {}

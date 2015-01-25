@@ -16,7 +16,8 @@ pub enum ArtError {
     UnlinkedParameter { unit_id: u32, parameter_id: u32 },
     InvalidChannelCount,
     InvalidByteCode { error: Option<IoError> },
-    StackFull,
+    StackOverflow,
+    StackUnderflow,
     InvalidStack,
     PortAudio { error: PaError }
 }
@@ -75,7 +76,8 @@ impl Error for ArtError {
             ArtError::UnlinkedParameter { .. } => "Unlinked parameter",
             ArtError::InvalidChannelCount => "Invalid channel count",
             ArtError::InvalidByteCode { .. } => "Invalid byte code",
-            ArtError::StackFull => "Stack full",
+            ArtError::StackOverflow => "Stack overflow",
+            ArtError::StackUnderflow => "Stack underflow",
             ArtError::InvalidStack => "Invalid stack",
             ArtError::PortAudio { .. } => "PortAudio error"
         }

@@ -1,10 +1,15 @@
+use std::cmp;
+
 use types::ArtResult;
 use errors::ArtError;
+
 use vm_inner::VMInner;
+use channel_stack::ChannelStack;
 
 pub trait Unit {
     fn init_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()>;
-    fn tick_unit(&mut self, unit_id: u32) -> ArtResult<()>;
+    fn tick_unit(&mut self, unit_id: u32, stack: &mut ChannelStack,
+                 busses: &mut ChannelStack) -> ArtResult<()>;
 }
 
 impl Unit for VMInner {
@@ -21,7 +26,9 @@ impl Unit for VMInner {
         Ok(())
     }
 
-    fn tick_unit(&mut self, unit_id: u32) -> ArtResult<()> {
+    fn tick_unit(&mut self, unit_id: u32, stack: &mut ChannelStack,
+                 busses: &mut ChannelStack)
+            -> ArtResult<()> {
         let mut unit = try!(
             self.units.get_mut(&unit_id).ok_or(
                 ArtError::UnitNotFound {
@@ -32,32 +39,22 @@ impl Unit for VMInner {
 
         let input_channels = unit.layout.input;
         let output_channels = unit.layout.output;
+        let channels = cmp::max(input_channels, output_channels);
 
-        let mut start = 0us;
-        let mut end = 0us;
+        let index = try!(stack.pop(input_channels));
+        try!(stack.push(output_channels));
 
-        if input_channels != 0u32 {
-            // If we have input channels, then the number of channels at the
-            // top of the stack should be the number of input channels of the
-            // unit
-            end = self.channel_stack.position;
-            try!(self.channel_stack.pop_expect(input_channels));
-            start = self.channel_stack.position;
-        }
-
-        if output_channels != 0u32 {
-            try!(self.channel_stack.push(output_channels));
-            end = self.channel_stack.position;
-        }
 
         // Split the stack into the unit half, and half which the unit
         // can use for whatever
-        let (unit_stack, stack) = self.channel_stack.data.split_at_mut(end);
-        let mut block = &mut unit_stack[start..];
+        let (mut unit_stack, mut stack) = stack.split(
+            index + channels
+        );
+        let mut block = try!(unit_stack.get(index, channels));
 
         try!(
             (unit.tick)(block, &unit.layout, &mut unit.data,
-                        stack, &mut self.busses)
+                        &mut stack, busses)
         );
 
         Ok(())

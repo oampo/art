@@ -21,7 +21,6 @@ pub mod opcode_reader;
 
 pub mod device;
 pub mod unit_factory;
-pub mod bus_manager;
 
 pub mod expression;
 pub mod unit;

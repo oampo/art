@@ -5,13 +5,12 @@ use std::u32;
 
 use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
-use errors::ArtError;
 
 use unit::{Unit, UnitDefinition, UnitKind, UnitData, ChannelLayout};
 use parameter::Parameter;
-use bus_manager::BusManager;
+use channel_stack::ChannelStack;
 
-use util::{CheckedSplitAt, modulo};
+use util::modulo;
 
 pub static SINE_DEFINITION: UnitDefinition = UnitDefinition {
     name: "Sine",
@@ -39,22 +38,17 @@ impl Sine {
     }
 
     fn tick(block: &mut[f32], layout: &ChannelLayout, data: &mut UnitData,
-            stack: &mut [f32], busses: &mut BusManager) -> ArtResult<()> {
+            stack: &mut ChannelStack, busses: &mut ChannelStack) -> ArtResult<()> {
         if let &mut UnitData::Sine {ref mut position,
                                     ref mut parameters} = data {
-            let (frequency, stack) = try!(
-                stack.checked_split_at_mut(BLOCK_SIZE).ok_or(
-                    ArtError::StackFull
-                )
-            );
-            parameters[0].get(frequency, busses);
+            let (mut frequency_stack, mut phase_stack) = stack.split(1);
+            let frequency_index = try!(parameters[0].get(&mut frequency_stack,
+                                                         busses));
+            let phase_index = try!(parameters[1].get(&mut phase_stack,
+                                                     busses));
 
-            let (phase, _) = try!(
-                stack.checked_split_at_mut(BLOCK_SIZE).ok_or(
-                    ArtError::StackFull
-                )
-            );
-            parameters[1].get(phase, busses);
+            let frequency = try!(frequency_stack.get(frequency_index, 1));
+            let phase = try!(phase_stack.get(phase_index, 1));
 
             let channels = layout.output as usize;
 

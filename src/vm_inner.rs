@@ -1,3 +1,4 @@
+use std::mem;
 use std::collections::HashMap;
 
 use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
@@ -8,7 +9,6 @@ use sizes::BLOCK_SIZE;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
-use bus_manager::BusManager;
 
 use phases::process::Process;
 use phases::init::Init;
@@ -22,37 +22,54 @@ pub struct VMInner {
     pub units: UnitMap,
     pub expressions: ExpressionMap,
     pub unit_factory: UnitFactory,
-    pub channel_stack: ChannelStack,
     pub expression_ids: Vec<u32>,
     pub graph: Graph,
-    pub busses: BusManager
+    pub stack_data: Vec<f32>,
+    pub bus_data: Vec<f32>
 }
 
 impl VMInner {
     pub fn new(input_channel: ByteCodeReceiver) -> VMInner {
         // TODO: Make sizes options
+        let mut stack_data = Vec::with_capacity(32 * BLOCK_SIZE);
+        stack_data.resize(32 * BLOCK_SIZE, 0f32);
+
+        let mut bus_data = Vec::with_capacity(32 * BLOCK_SIZE);
+        bus_data.resize(32 * BLOCK_SIZE, 0f32);
+
         VMInner {
             input_channel: input_channel,
             units: HashMap::new(),
             expressions: HashMap::new(),
             unit_factory: UnitFactory::new(),
-            channel_stack: ChannelStack::new(16),
             expression_ids: Vec::with_capacity(32),
             graph: Graph::new(16),
-            busses: BusManager::new(16, BLOCK_SIZE)
+            stack_data: stack_data,
+            bus_data: bus_data
         }
     }
 
     fn tick(&mut self, adc_block: &[f32], dac_block: &mut [f32])
             -> StreamCallbackResult {
-        self.process();
-        self.init();
-        self.link();
-        self.sort();
-        self.run(adc_block, dac_block);
-        self.clean();
+        let mut bus_data = Vec::with_capacity(0);
+        mem::swap(&mut self.bus_data, &mut bus_data);
+        self.tick_inner(&mut bus_data, adc_block, dac_block);
+        mem::swap(&mut self.bus_data, &mut bus_data);
         StreamCallbackResult::Continue
     }
+
+    fn tick_inner(&mut self, bus_data: &mut Vec<f32>,
+                 adc_block: &[f32], dac_block: &mut [f32]) {
+        let mut busses = ChannelStack::new(bus_data.as_mut_slice(),
+                                           BLOCK_SIZE);
+        self.process();
+        self.init();
+        self.link(&mut busses);
+        self.sort();
+        self.run(&mut busses, adc_block, dac_block);
+        self.clean();
+    }
+
 }
 
 
