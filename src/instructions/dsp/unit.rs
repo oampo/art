@@ -5,15 +5,36 @@ use errors::ArtError;
 
 use vm_inner::VMInner;
 use channel_stack::ChannelStack;
+use parameter::Parameter;
 
 pub trait Unit {
     fn verify_unit(&mut self, id: (u32, u32)) -> ArtResult<()>;
+    fn construct_unit(&mut self, id: (u32, u32), type_id: u32,
+                      input_channels: u32, output_channels: u32)
+            -> ArtResult<()>;
     fn tick_unit(&mut self, id: (u32, u32), stack: &mut ChannelStack,
                  busses: &mut ChannelStack) -> ArtResult<()>;
 }
 
 impl Unit for VMInner {
     fn verify_unit(&mut self, id: (u32, u32)) -> ArtResult<()> {
+        Ok(())
+    }
+
+    fn construct_unit(&mut self, id: (u32, u32), type_id: u32,
+                      input_channels: u32, output_channels: u32)
+            -> ArtResult<()> {
+        let unit = try!(
+            self.unit_factory.create(id, type_id, input_channels,
+                                     output_channels)
+        );
+
+        let (eid, uid) = id;
+        for pid in range(0, unit.definition.num_parameters) {
+            self.parameters.insert((eid, uid, pid), Parameter::new(0f32));
+        }
+
+        self.units.insert(id, unit);
         Ok(())
     }
 

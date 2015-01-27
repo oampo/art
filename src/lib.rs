@@ -34,6 +34,7 @@ pub mod util;
 pub mod phases {
     pub mod process;
     pub mod verify;
+    pub mod construct;
     pub mod link;
     pub mod sort;
     pub mod run;

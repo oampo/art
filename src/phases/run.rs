@@ -63,7 +63,7 @@ impl Run for VMInner {
                             busses: &mut ChannelStack,
                             adc_block: &[f32], dac_block: &mut[f32])
             -> ArtResult<()> {
-        let mut expression = Expression::new(Vec::with_capacity(0));
+        let mut expression = Expression::new(0, Vec::with_capacity(0));
         self.expressions.swap(id, &mut expression);
 
         let mut stack = ChannelStack::new(stack_data.as_mut_slice(),

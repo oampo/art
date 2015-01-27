@@ -40,7 +40,7 @@ impl Link for VMInner {
 
     fn link_expression(&mut self, from_id: u32,
                        busses: &mut ChannelStack) -> ArtResult<()> {
-        let mut expression = Expression::new(Vec::with_capacity(0));
+        let mut expression = Expression::new(0, Vec::with_capacity(0));
         self.expressions.swap(from_id, &mut expression);
 
         for opcode in expression.opcodes.iter() {

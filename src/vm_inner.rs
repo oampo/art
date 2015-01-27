@@ -11,7 +11,6 @@ use channel_stack::ChannelStack;
 use graph::Graph;
 
 use phases::process::Process;
-use phases::verify::Verify;
 use phases::link::Link;
 use phases::sort::Sort;
 use phases::run::Run;
@@ -65,7 +64,6 @@ impl VMInner {
         let mut busses = ChannelStack::new(bus_data.as_mut_slice(),
                                            BLOCK_SIZE);
         self.process();
-        self.verify();
         self.link(&mut busses);
         self.sort();
         self.run(&mut busses, adc_block, dac_block);
