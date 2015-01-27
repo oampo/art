@@ -1,6 +1,5 @@
 #[derive(FromPrimitive, Copy, Show)]
 pub enum OpcodeType {
-    CreateUnit,
     SetParameter,
     AddExpression,
     Play,
@@ -14,13 +13,8 @@ pub enum OpcodeType {
 
 #[derive(Show)]
 pub enum ControlOpcode {
-    CreateUnit {
-        unit_id: u32,
-        type_id: u32,
-        input_channels: u32,
-        output_channels: u32
-    },
     SetParameter {
+        expression_id: u32,
         unit_id: u32,
         parameter_id: u32,
         value: f32
@@ -38,9 +32,13 @@ pub enum ControlOpcode {
 #[derive(Copy, Show)]
 pub enum DspOpcode {
     Unit {
-        unit_id: u32
+        unit_id: u32,
+        type_id: u32,
+        input_channels: u32,
+        output_channels: u32
     },
     Parameter {
+        expression_id: u32,
         unit_id: u32,
         parameter_id: u32
     },

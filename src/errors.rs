@@ -9,11 +9,10 @@ use opcode::Opcode;
 pub enum ArtError {
     UnimplementedOpcode { opcode: Opcode },
     UndefinedUnit { type_id: u32 },
-    UnitNotFound { unit_id: u32 },
-    UnownedUnit { unit_id: u32 },
-    ParameterNotFound { unit_id: u32, parameter_id: u32 },
     ExpressionNotFound { expression_id: u32 },
-    UnlinkedParameter { unit_id: u32, parameter_id: u32 },
+    UnitNotFound { expression_id: u32, unit_id: u32 },
+    ParameterNotFound { expression_id: u32, unit_id: u32, parameter_id: u32 },
+    UnlinkedParameter { expression_id: u32, unit_id: u32, parameter_id: u32 },
     InvalidChannelCount,
     InvalidByteCode { error: Option<IoError> },
     StackOverflow,
@@ -32,22 +31,22 @@ impl ArtError {
             ArtError::UndefinedUnit { type_id } => {
                 Some(format!("type_id={}", type_id))
             },
-            ArtError::UnitNotFound { unit_id } => {
-                Some(format!("unit_id={}", unit_id))
-            },
-            ArtError::UnownedUnit { unit_id } => {
-                Some(format!("unit_id={}", unit_id))
-            },
-            ArtError::ParameterNotFound { unit_id, parameter_id } => {
-                Some(format!("unit_id={}, parameter_id={}",
-                             unit_id, parameter_id))
-            },
             ArtError::ExpressionNotFound { expression_id } => {
                 Some(format!("expression_id={}", expression_id))
             },
-            ArtError::UnlinkedParameter { unit_id, parameter_id } => {
-                Some(format!("unit_id={}, parameter_id={}",
-                             unit_id, parameter_id))
+            ArtError::UnitNotFound { expression_id, unit_id } => {
+                Some(format!("expression_id: {}, unit_id={}",
+                             expression_id, unit_id))
+            },
+            ArtError::ParameterNotFound { expression_id, unit_id,
+                                          parameter_id } => {
+                Some(format!("expression_id={}, unit_id={}, parameter_id={}",
+                             expression_id, unit_id, parameter_id))
+            },
+            ArtError::UnlinkedParameter { expression_id, unit_id,
+                                          parameter_id } => {
+                Some(format!("expression_id={}, unit_id={}, parameter_id={}",
+                             expression_id, unit_id, parameter_id))
             },
             ArtError::InvalidByteCode { ref error } => {
                 match error {
@@ -70,7 +69,6 @@ impl Error for ArtError {
             ArtError::UnimplementedOpcode { .. } => "Unimplemented opcode",
             ArtError::UndefinedUnit { .. } => "Undefined unit",
             ArtError::UnitNotFound { .. } => "Unit not found",
-            ArtError::UnownedUnit { .. } => "Unowned unit",
             ArtError::ParameterNotFound { .. } => "Parameter not found",
             ArtError::ExpressionNotFound { .. } => "Expression not found",
             ArtError::UnlinkedParameter { .. } => "Unlinked parameter",

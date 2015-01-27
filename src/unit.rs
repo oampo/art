@@ -1,5 +1,4 @@
-use types::ArtResult;
-use parameter::Parameter;
+use types::{ArtResult, ParameterMap};
 use channel_stack::ChannelStack;
 
 #[derive(Copy)]
@@ -10,65 +9,41 @@ pub enum UnitKind {
 }
 
 #[derive(Copy)]
-pub struct UnitDefinition {
-    pub name: &'static str,
-    pub kind: UnitKind,
-    pub min_input_channels: u32,
-    pub max_input_channels: u32,
-    pub min_output_channels: u32,
-    pub max_output_channels: u32
-}
-
-#[derive(Copy)]
 pub struct ChannelLayout {
     pub input: u32,
     pub output: u32
 }
 
 pub type TickFunction = fn(
-    block: &mut[f32], channels: &ChannelLayout, data: &mut UnitData,
+    unit: &mut Unit, block: &mut[f32], parameters: &mut ParameterMap,
     stack: &mut ChannelStack, busses: &mut ChannelStack
 ) -> ArtResult<()>;
 
 #[derive(Copy)]
-pub struct Unit {
-    pub layout: ChannelLayout,
-    pub data: UnitData,
-    pub tick: TickFunction,
-    pub owner: Option<u32>
+pub struct UnitDefinition {
+    pub name: &'static str,
+    pub kind: UnitKind,
+    pub min_channels: ChannelLayout,
+    pub max_channels: ChannelLayout,
+    // TODO: Remove me when we describe parameters properly
+    pub num_parameters: u32,
+    pub tick: TickFunction
 }
 
-impl Unit {
-    pub fn new(input_channels: u32, output_channels: u32, data: UnitData,
-               tick: TickFunction) -> Unit {
-        Unit {
-            layout: ChannelLayout {
-                input: input_channels,
-                output: output_channels,
-            },
-            data: data,
-            tick: tick,
-            owner: None
-        }
-    }
+#[derive(Copy)]
+pub struct Unit {
+    pub id: (u32, u32),
+    pub definition: &'static UnitDefinition,
+    pub layout: ChannelLayout,
+    pub data: UnitData
 }
 
 #[derive(Copy)]
 pub enum UnitData {
     Sine {
         position: f32,
-        parameters: [Parameter; 2]
     },
     // Stops irrefutable if-let error.  Remove when another unit is introduced.
     Unknown
-}
-
-impl UnitData {
-    pub fn get_parameters(&mut self) -> &mut [Parameter] {
-        match *self {
-            UnitData::Sine {ref mut parameters, ..} => parameters.as_mut_slice(),
-            UnitData::Unknown => unimplemented!()
-        }
-    }
 }
 

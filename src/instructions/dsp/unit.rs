@@ -7,32 +7,25 @@ use vm_inner::VMInner;
 use channel_stack::ChannelStack;
 
 pub trait Unit {
-    fn verify_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()>;
-    fn tick_unit(&mut self, unit_id: u32, stack: &mut ChannelStack,
+    fn verify_unit(&mut self, id: (u32, u32)) -> ArtResult<()>;
+    fn tick_unit(&mut self, id: (u32, u32), stack: &mut ChannelStack,
                  busses: &mut ChannelStack) -> ArtResult<()>;
 }
 
 impl Unit for VMInner {
-    fn verify_unit(&mut self, unit_id: u32, owner_id: u32) -> ArtResult<()> {
-        let unit = try!(
-            self.units.get_mut(&unit_id).ok_or(
-                ArtError::UnitNotFound {
-                    unit_id: unit_id
-                }
-            )
-        );
-
-        unit.owner = Some(owner_id);
+    fn verify_unit(&mut self, id: (u32, u32)) -> ArtResult<()> {
         Ok(())
     }
 
-    fn tick_unit(&mut self, unit_id: u32, stack: &mut ChannelStack,
+    fn tick_unit(&mut self, id: (u32, u32), stack: &mut ChannelStack,
                  busses: &mut ChannelStack)
             -> ArtResult<()> {
+        let (eid, uid) = id;
         let mut unit = try!(
-            self.units.get_mut(&unit_id).ok_or(
+            self.units.get_mut(&id).ok_or(
                 ArtError::UnitNotFound {
-                    unit_id: unit_id
+                    expression_id: eid,
+                    unit_id: uid
                 }
             )
         );
@@ -53,8 +46,8 @@ impl Unit for VMInner {
         let mut block = try!(unit_stack.get(index, channels));
 
         try!(
-            (unit.tick)(block, &unit.layout, &mut unit.data,
-                        &mut stack, busses)
+            (unit.definition.tick)(unit, block, &mut self.parameters,
+                                   &mut stack, busses)
         );
 
         Ok(())

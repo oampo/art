@@ -7,7 +7,6 @@ use vm_inner::VMInner;
 use opcode::{Opcode, ControlOpcode};
 use opcode_reader::OpcodeReader;
 
-use instructions::control::create_unit::CreateUnit;
 use instructions::control::add_expression::AddExpression;
 use instructions::control::set_parameter::SetParameter;
 
@@ -42,14 +41,10 @@ impl Process for VMInner {
                 self.add_expression(expression_id, opcodes)
             },
 
-            ControlOpcode::SetParameter { unit_id, parameter_id, value } => {
-                self.set_parameter(unit_id, parameter_id, value)
-            },
-
-            ControlOpcode::CreateUnit { unit_id, type_id, input_channels,
-                                        output_channels } => {
-                self.create_unit(unit_id, type_id, input_channels,
-                                 output_channels)
+            ControlOpcode::SetParameter { expression_id, unit_id, parameter_id,
+                                          value } => {
+                self.set_parameter((expression_id, unit_id, parameter_id),
+                                   value)
             },
             _ => Err(ArtError::UnimplementedOpcode {
                 opcode: Opcode::Control(opcode)

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
-use types::{ByteCodeReceiver, UnitMap, ExpressionMap};
+use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap};
 use sizes::BLOCK_SIZE;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
@@ -19,11 +19,12 @@ use phases::clean::Clean;
 
 pub struct VMInner {
     pub input_channel: ByteCodeReceiver,
-    pub units: UnitMap,
-    pub expressions: ExpressionMap,
     pub unit_factory: UnitFactory,
-    pub expression_ids: Vec<u32>,
+    pub expressions: ExpressionMap,
+    pub units: UnitMap,
+    pub parameters: ParameterMap,
     pub graph: Graph,
+    pub expression_ids: Vec<u32>,
     pub stack_data: Vec<f32>,
     pub bus_data: Vec<f32>
 }
@@ -39,11 +40,12 @@ impl VMInner {
 
         VMInner {
             input_channel: input_channel,
-            units: HashMap::new(),
-            expressions: HashMap::new(),
             unit_factory: UnitFactory::new(),
-            expression_ids: Vec::with_capacity(32),
+            expressions: HashMap::new(),
+            units: HashMap::new(),
+            parameters: HashMap::new(),
             graph: Graph::new(16),
+            expression_ids: Vec::with_capacity(32),
             stack_data: stack_data,
             bus_data: bus_data
         }

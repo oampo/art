@@ -34,8 +34,9 @@ impl UnitFactory {
         );
     }
 
-    pub fn create(&mut self, type_id: u32, input_channels: u32,
-                  output_channels: u32) -> ArtResult<Unit> {
+    pub fn create(&mut self, id: (u32, u32), type_id: u32,
+                  input_channels: u32, output_channels: u32)
+            -> ArtResult<Unit> {
         let item = try!(
             self.unit_map.get(&type_id).ok_or(
                 ArtError::UndefinedUnit {
@@ -44,14 +45,15 @@ impl UnitFactory {
             )
         );
 
-        if input_channels < item.definition.min_input_channels ||
-           input_channels > item.definition.max_input_channels ||
-           output_channels < item.definition.min_output_channels ||
-           output_channels > item.definition.max_output_channels {
+        if input_channels < item.definition.min_channels.input ||
+           input_channels > item.definition.max_channels.input ||
+           output_channels < item.definition.min_channels.output ||
+           output_channels > item.definition.max_channels.output {
             return Err(ArtError::InvalidChannelCount);
         }
 
-        Ok((item.constructor)(input_channels, output_channels))
+        Ok((item.constructor)(id, input_channels,
+                              output_channels))
     }
 }
 

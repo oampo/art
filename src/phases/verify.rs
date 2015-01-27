@@ -45,8 +45,8 @@ impl Verify for VMInner {
         for opcode in expression.opcodes.iter() {
             result = result.and(
                 match opcode {
-                    &DspOpcode::Unit { unit_id } => {
-                        self.verify_unit(unit_id, expression_id)
+                    &DspOpcode::Unit { unit_id, .. } => {
+                        self.verify_unit((expression_id, unit_id))
                     },
                     _ => Ok(())
                 }

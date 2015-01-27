@@ -38,24 +38,27 @@ impl Link for VMInner {
         mem::swap(&mut self.expression_ids, &mut expression_ids);
     }
 
-    fn link_expression(&mut self, expression_id: u32,
+    fn link_expression(&mut self, from_id: u32,
                        busses: &mut ChannelStack) -> ArtResult<()> {
         let mut expression = Expression::new(Vec::with_capacity(0));
-        self.expressions.swap(expression_id, &mut expression);
+        self.expressions.swap(from_id, &mut expression);
 
         for opcode in expression.opcodes.iter() {
             match opcode {
-                &DspOpcode::Parameter { unit_id, parameter_id } => {
+                &DspOpcode::Parameter { expression_id, unit_id,
+                                        parameter_id } => {
                     try!(
-                        self.link_parameter(unit_id, parameter_id,
-                                            expression_id, busses)
+                        self.link_parameter(
+                            from_id, (expression_id, unit_id, parameter_id),
+                            busses
+                        )
                     )
                 },
                 _ => {}
             }
         }
 
-        self.expressions.swap(expression_id, &mut expression);
+        self.expressions.swap(from_id, &mut expression);
         Ok(())
     }
 }

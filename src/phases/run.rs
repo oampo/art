@@ -21,7 +21,8 @@ pub trait Run {
     fn run_expression(&mut self, id: u32, busses: &mut ChannelStack,
                           adc_block: &[f32], dac_block: &mut[f32])
             -> ArtResult<()>;
-    fn run_expression_inner(&mut self, id: u32, stack_data: &mut Vec<f32>,
+    fn run_expression_inner(&mut self, id: u32,
+                            stack_data: &mut Vec<f32>,
                             busses: &mut ChannelStack,
                             adc_block: &[f32], dac_block: &mut[f32])
             -> ArtResult<()>;
@@ -57,9 +58,10 @@ impl Run for VMInner {
         Ok(())
     }
 
-    fn run_expression_inner(&mut self, id: u32, stack_data: &mut Vec<f32>,
-                                busses: &mut ChannelStack,
-                                adc_block: &[f32], dac_block: &mut[f32])
+    fn run_expression_inner(&mut self, id: u32,
+                            stack_data: &mut Vec<f32>,
+                            busses: &mut ChannelStack,
+                            adc_block: &[f32], dac_block: &mut[f32])
             -> ArtResult<()> {
         let mut expression = Expression::new(Vec::with_capacity(0));
         self.expressions.swap(id, &mut expression);
@@ -68,14 +70,17 @@ impl Run for VMInner {
                                           BLOCK_SIZE);
         for opcode in expression.opcodes.iter() {
             match opcode {
-                &DspOpcode::Unit { unit_id } => {
-                    try!(self.tick_unit(unit_id, &mut stack, busses))
+                &DspOpcode::Unit { unit_id, .. } => {
+                    try!(self.tick_unit((id, unit_id), &mut stack,
+                                        busses))
                 },
                 &DspOpcode::Dac => {
                     try!(self.tick_dac(dac_block, &mut stack));
                 },
-                &DspOpcode::Parameter { unit_id, parameter_id } => {
-                    try!(self.tick_parameter(unit_id, parameter_id,
+                &DspOpcode::Parameter { expression_id, unit_id,
+                                        parameter_id } => {
+                    try!(self.tick_parameter((expression_id,
+                                              unit_id, parameter_id),
                                              &mut stack, busses));
                 },
                 &DspOpcode::Unknown => {
