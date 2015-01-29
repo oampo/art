@@ -30,8 +30,8 @@ impl Unit for VMInner {
         );
 
         let (eid, uid) = id;
-        for pid in range(0, unit.definition.num_parameters) {
-            self.parameters.insert((eid, uid, pid), Parameter::new(0f32));
+        for pid in range(0, unit.definition.parameters.as_slice().len()) {
+            self.parameters.insert((eid, uid, pid as u32), Parameter::new(0f32));
         }
 
         self.units.insert(id, unit);

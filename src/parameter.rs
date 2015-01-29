@@ -38,3 +38,25 @@ impl Parameter {
         Ok(index)
     }
 }
+
+#[derive(Copy)]
+pub struct ParameterDefinition {
+    pub name: &'static str,
+    pub default: f32
+}
+
+#[derive(Copy)]
+pub enum ParameterDefinitions {
+    Sine([ParameterDefinition; 2]),
+    Unknown([ParameterDefinition; 0])
+}
+
+impl ParameterDefinitions {
+    pub fn as_slice(&self) -> &[ParameterDefinition] {
+        match *self {
+            ParameterDefinitions::Sine(ref parameters) => parameters,
+            ParameterDefinitions::Unknown(ref parameters) => parameters
+        }
+    }
+}
+

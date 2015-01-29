@@ -7,12 +7,13 @@ use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
 
 use unit::{Unit, UnitDefinition, UnitData, ChannelLayout};
+use parameter::{ParameterDefinition, ParameterDefinitions};
 use channel_stack::ChannelStack;
 
 use util::modulo;
 
 pub static SINE_DEFINITION: UnitDefinition = UnitDefinition {
-    name: "Sine",
+    name: "sine",
     min_channels: ChannelLayout {
         input: 0,
         output: 1
@@ -21,7 +22,16 @@ pub static SINE_DEFINITION: UnitDefinition = UnitDefinition {
         input: 0,
         output: u32::MAX
     },
-    num_parameters: 2,
+    parameters: ParameterDefinitions::Sine([
+        ParameterDefinition {
+            name: "frequency",
+            default: 440f32
+        },
+        ParameterDefinition {
+            name: "phase",
+            default: 0f32
+        }
+    ]),
     tick: Sine::tick
 };
 
