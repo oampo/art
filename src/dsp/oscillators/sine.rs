@@ -6,14 +6,13 @@ use types::{ArtResult, ParameterMap};
 use sizes::BLOCK_SIZE;
 use rates::AUDIO_RATE_INVERSE;
 
-use unit::{Unit, UnitDefinition, UnitKind, UnitData, ChannelLayout};
+use unit::{Unit, UnitDefinition, UnitData, ChannelLayout};
 use channel_stack::ChannelStack;
 
 use util::modulo;
 
 pub static SINE_DEFINITION: UnitDefinition = UnitDefinition {
     name: "Sine",
-    kind: UnitKind::Source,
     min_channels: ChannelLayout {
         input: 0,
         output: 1

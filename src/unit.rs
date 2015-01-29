@@ -2,13 +2,6 @@ use types::{ArtResult, ParameterMap};
 use channel_stack::ChannelStack;
 
 #[derive(Copy)]
-pub enum UnitKind {
-    Source,
-    Processor,
-    Sink
-}
-
-#[derive(Copy)]
 pub struct ChannelLayout {
     pub input: u32,
     pub output: u32
@@ -22,7 +15,6 @@ pub type TickFunction = fn(
 #[derive(Copy)]
 pub struct UnitDefinition {
     pub name: &'static str,
-    pub kind: UnitKind,
     pub min_channels: ChannelLayout,
     pub max_channels: ChannelLayout,
     // TODO: Remove me when we describe parameters properly
