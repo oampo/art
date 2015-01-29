@@ -7,7 +7,7 @@ pub enum ControlOpcodeType {
 
 #[derive(FromPrimitive, Copy, Show)]
 pub enum DspOpcodeType {
-    Unit = 4,
+    Unit = 3,
     Parameter,
     Sample,
     Dac,
