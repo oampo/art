@@ -1,61 +1,74 @@
 use std::io::{IoError, IoErrorKind, BufReader};
 use std::num::FromPrimitive;
 
-use opcode::{OpcodeType, ControlOpcode, DspOpcode};
+use opcode::{ControlOpcodeType, DspOpcodeType, ControlOpcode, DspOpcode};
 
 pub trait OpcodeReader: Reader {
     fn read_control_opcode(&mut self) -> Result<ControlOpcode, IoError> {
-        let opcode_type = try!(self.read_opcode_type());
+        let opcode_type = try!(self.read_control_opcode_type());
         self.read_control_opcode_parameters(opcode_type)
     }
 
-    fn read_opcode_type(&mut self) -> Result<OpcodeType, IoError> {
+    fn read_dsp_opcode(&mut self) -> Result<DspOpcode, IoError> {
+        let opcode_type = try!(self.read_dsp_opcode_type());
+        self.read_dsp_opcode_parameters(opcode_type)
+    }
+
+    fn read_control_opcode_type(&mut self)
+            -> Result<ControlOpcodeType, IoError> {
         let opcode_value = try!(self.read_be_u32());
-        Ok(
-            FromPrimitive::from_u32(opcode_value).unwrap_or(
-                OpcodeType::Unknown
-            )
+        FromPrimitive::from_u32(opcode_value).ok_or(
+            IoError {
+                kind: IoErrorKind::InvalidInput,
+                desc: "Unknown opcode",
+                detail: None
+            }
+        )
+    }
+    fn read_dsp_opcode_type(&mut self) -> Result<DspOpcodeType, IoError> {
+        let opcode_value = try!(self.read_be_u32());
+        FromPrimitive::from_u32(opcode_value).ok_or(
+            IoError {
+                kind: IoErrorKind::InvalidInput,
+                desc: "Unknown opcode",
+                detail: None
+            }
         )
     }
 
-    fn read_control_opcode_parameters(&mut self, opcode_type: OpcodeType)
+    fn read_control_opcode_parameters(&mut self,
+                                      opcode_type: ControlOpcodeType)
             -> Result<ControlOpcode, IoError> {
         match opcode_type {
-            OpcodeType::SetParameter => {
+            ControlOpcodeType::SetParameter => {
                 self.read_set_parameter()
             },
-            OpcodeType::AddExpression => {
+            ControlOpcodeType::AddExpression => {
                 self.read_expression()
             },
-            OpcodeType::Play => {
+            ControlOpcodeType::Play => {
                 self.read_play()
-            },
-            _ => {
-                Ok(ControlOpcode::Unknown)
             }
         }
     }
 
-    fn read_dsp_opcode_parameters(&mut self, opcode_type: OpcodeType)
+    fn read_dsp_opcode_parameters(&mut self, opcode_type: DspOpcodeType)
             -> Result<DspOpcode, IoError> {
         match opcode_type {
-            OpcodeType::Unit => {
+            DspOpcodeType::Unit => {
                 self.read_unit()
             },
-            OpcodeType::Parameter => {
+            DspOpcodeType::Parameter => {
                 self.read_parameter()
             },
-            OpcodeType::Sample => {
+            DspOpcodeType::Sample => {
                 self.read_sample()
             },
-            OpcodeType::Dac => {
+            DspOpcodeType::Dac => {
                 Ok(DspOpcode::Dac)
             },
-            OpcodeType::Adc => {
+            DspOpcodeType::Adc => {
                 Ok(DspOpcode::Adc)
-            },
-            _ => {
-                Ok(DspOpcode::Unknown)
             }
         }
     }
@@ -77,24 +90,12 @@ pub trait OpcodeReader: Reader {
 
     fn read_expression(&mut self) -> Result<ControlOpcode, IoError> {
         let expression_id = try!(self.read_be_u32());
-        let mut opcodes = Vec::new();
+        let num_opcodes = try!(self.read_be_u32());
+        let mut opcodes = Vec::with_capacity(num_opcodes as usize);
 
-        loop {
-            // TODO: Can this logic be simplified?
-            let opcode_type_result = self.read_opcode_type();
-
-            match opcode_type_result {
-                Ok(opcode_type) => {
-                    let opcode = try!(self.read_dsp_opcode_parameters(opcode_type));
-                    opcodes.push(opcode);
-                },
-                Err(error) => {
-                    match error.kind {
-                        IoErrorKind::EndOfFile => break,
-                        _ => return Err(error)
-                    }
-                }
-            }
+        for _ in range(0, num_opcodes) {
+            let opcode = try!(self.read_dsp_opcode());
+            opcodes.push(opcode);
         }
 
         Ok(

@@ -83,9 +83,6 @@ impl Run for VMInner {
                                               unit_id, parameter_id),
                                              &mut stack, busses));
                 },
-                &DspOpcode::Unknown => {
-                    return Err(ArtError::InvalidByteCode { error: None });
-                },
                 _ => {
                     return Err(ArtError::UnimplementedOpcode {
                         opcode: Opcode::Dsp(*opcode)

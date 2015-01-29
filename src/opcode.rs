@@ -1,14 +1,17 @@
 #[derive(FromPrimitive, Copy, Show)]
-pub enum OpcodeType {
+pub enum ControlOpcodeType {
     SetParameter,
     AddExpression,
-    Play,
-    Unit,
+    Play
+}
+
+#[derive(FromPrimitive, Copy, Show)]
+pub enum DspOpcodeType {
+    Unit = 4,
     Parameter,
     Sample,
     Dac,
-    Adc,
-    Unknown
+    Adc
 }
 
 #[derive(Show)]
@@ -25,8 +28,7 @@ pub enum ControlOpcode {
     },
     Play {
         expression_id: u32
-    },
-    Unknown
+    }
 }
 
 #[derive(Copy, Show)]
@@ -46,8 +48,7 @@ pub enum DspOpcode {
         value: f32
     },
     Dac,
-    Adc,
-    Unknown
+    Adc
 }
 
 #[derive(Show)]
