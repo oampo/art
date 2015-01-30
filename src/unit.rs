@@ -1,6 +1,6 @@
 use types::{ArtResult, ParameterMap};
 use channel_stack::ChannelStack;
-use parameter::ParameterDefinitions;
+use parameter::ParameterDefinition;
 
 #[derive(Copy)]
 pub struct Unit {
@@ -26,7 +26,7 @@ pub struct UnitDefinition {
     pub name: &'static str,
     pub min_channels: ChannelLayout,
     pub max_channels: ChannelLayout,
-    pub parameters: ParameterDefinitions,
+    pub parameters: &'static [ParameterDefinition],
     pub tick: TickFunction
 }
 
