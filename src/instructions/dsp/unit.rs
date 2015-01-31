@@ -3,7 +3,7 @@ use std::cmp;
 use types::ArtResult;
 use errors::ArtError;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 use channel_stack::ChannelStack;
 use parameter::Parameter;
 
@@ -16,7 +16,7 @@ pub trait Unit {
                  busses: &mut ChannelStack) -> ArtResult<()>;
 }
 
-impl Unit for VMInner {
+impl Unit for VmInner {
     fn verify_unit(&mut self, id: (u32, u32)) -> ArtResult<()> {
         Ok(())
     }

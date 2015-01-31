@@ -2,7 +2,7 @@ use std::mem;
 
 use types::ArtResult;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 use expression::{Expression, ExpressionState};
 use expression_list::ExpressionList;
 use opcode::DspOpcode;
@@ -13,7 +13,7 @@ pub trait Construct {
     fn construct(&mut self, expression: &mut Expression) -> ArtResult<()>;
 }
 
-impl Construct for VMInner {
+impl Construct for VmInner {
     fn construct(&mut self, expression: &mut Expression) -> ArtResult<()> {
         let index = expression.index;
 

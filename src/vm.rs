@@ -2,10 +2,10 @@ use std::default::Default;
 
 use types::{ArtResult, ByteCodeReceiver};
 use device::{Device, DeviceId};
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 
 #[derive(Copy)]
-pub struct VMOptions {
+pub struct VmOptions {
     pub input_device: DeviceId,
     pub output_device: DeviceId,
 
@@ -25,9 +25,9 @@ pub struct VMOptions {
     pub max_edges: u32
 }
 
-impl Default for VMOptions {
-    fn default() -> VMOptions {
-        VMOptions {
+impl Default for VmOptions {
+    fn default() -> VmOptions {
+        VmOptions {
             input_device: DeviceId::Default,
             output_device: DeviceId::Default,
             input_channels: 2,
@@ -45,16 +45,16 @@ impl Default for VMOptions {
     }
 }
 
-pub struct VM<'a> {
-    inner: VMInner,
+pub struct Vm<'a> {
+    inner: VmInner,
     device: Device<'a>
 }
 
-impl<'a> VM<'a> {
-    pub fn new(options: &VMOptions, input_channel: ByteCodeReceiver)
-            -> VM<'a> {
-        VM {
-            inner: VMInner::new(options, input_channel),
+impl<'a> Vm<'a> {
+    pub fn new(options: &VmOptions, input_channel: ByteCodeReceiver)
+            -> Vm<'a> {
+        Vm {
+            inner: VmInner::new(options, input_channel),
             device:  Device::new(options.input_device, options.output_device,
                                  options.input_channels,
                                  options.output_channels)

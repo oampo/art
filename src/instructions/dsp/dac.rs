@@ -1,7 +1,7 @@
 use types::ArtResult;
 use sizes::BLOCK_SIZE;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 use channel_stack::ChannelStack;
 
 pub trait Dac {
@@ -9,7 +9,7 @@ pub trait Dac {
             -> ArtResult<()>;
 }
 
-impl Dac for VMInner {
+impl Dac for VmInner {
     fn tick_dac(&mut self, block: &mut[f32], stack: &mut ChannelStack)
             -> ArtResult<()> {
         let channels = block.len() / BLOCK_SIZE;

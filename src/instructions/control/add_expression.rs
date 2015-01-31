@@ -1,6 +1,6 @@
 use types::ArtResult;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 use expression::Expression;
 
 use phases::verify::Verify;
@@ -11,7 +11,7 @@ pub trait AddExpression {
             -> ArtResult<()>;
 }
 
-impl AddExpression for VMInner {
+impl AddExpression for VmInner {
     fn add_expression(&mut self, id: u32, index: usize)
             -> ArtResult<()> {
         debug!("Adding expression: id={:?}, index={:?}", id, index);

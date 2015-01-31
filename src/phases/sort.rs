@@ -1,4 +1,4 @@
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 
 use graph::Node;
 
@@ -6,7 +6,7 @@ pub trait Sort {
     fn sort(&mut self);
 }
 
-impl Sort for VMInner {
+impl Sort for VmInner {
     fn sort(&mut self) {
         debug!("Starting sort phase");
         for (_, expression) in self.expressions.iter_mut() {

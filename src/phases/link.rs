@@ -2,7 +2,7 @@ use std::mem;
 
 use types::ArtResult;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 use expression_list::ExpressionList;
 use channel_stack::ChannelStack;
 use opcode::DspOpcode;
@@ -15,7 +15,7 @@ pub trait Link {
                        busses: &mut ChannelStack) -> ArtResult<()>;
 }
 
-impl Link for VMInner {
+impl Link for VmInner {
     fn link(&mut self, busses: &mut ChannelStack) {
         debug!("Starting link phase");
 

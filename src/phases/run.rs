@@ -4,7 +4,7 @@ use types::ArtResult;
 use errors::ArtError;
 use sizes::BLOCK_SIZE;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 use opcode::{DspOpcode, Opcode};
 use expression_list::ExpressionList;
 use channel_stack::ChannelStack;
@@ -26,7 +26,7 @@ pub trait Run {
             -> ArtResult<()>;
 }
 
-impl Run for VMInner {
+impl Run for VmInner {
     fn run(&mut self, busses: &mut ChannelStack,
            adc_block: &[f32], dac_block: &mut [f32]) {
         debug!("Starting run phase");

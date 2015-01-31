@@ -1,10 +1,10 @@
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 
 pub trait Clean {
     fn clean(&mut self);
 }
 
-impl Clean for VMInner {
+impl Clean for VmInner {
     fn clean(&mut self) {
         debug!("Starting clean phase");
         self.graph.clear();

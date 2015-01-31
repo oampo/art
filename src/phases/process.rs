@@ -3,7 +3,7 @@ use std::io::BufReader;
 use types::ArtResult;
 use errors::ArtError;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 use opcode::{Opcode, ControlOpcode};
 use opcode_reader::OpcodeReader;
 
@@ -18,7 +18,7 @@ pub trait Process {
                           num_opcodes: u32) -> ArtResult<()>;
 }
 
-impl Process for VMInner {
+impl Process for VmInner {
     fn process(&mut self) {
         debug!("Starting process phase");
         let result = self.input_channel.try_recv();

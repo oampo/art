@@ -1,7 +1,7 @@
 use types::ArtResult;
 use errors::ArtError;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 use channel_stack::ChannelStack;
 
 pub trait Parameter {
@@ -12,7 +12,7 @@ pub trait Parameter {
             -> ArtResult<()>;
 }
 
-impl Parameter for VMInner {
+impl Parameter for VmInner {
     fn link_parameter(&mut self, from: u32, to: (u32, u32, u32),
                       busses: &mut ChannelStack) -> ArtResult<()> {
         let (eid, uid, pid) = to;

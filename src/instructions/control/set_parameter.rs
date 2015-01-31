@@ -1,14 +1,14 @@
 use types::ArtResult;
 use errors::ArtError;
 
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 
 pub trait SetParameter {
     fn set_parameter(&mut self, id: (u32, u32, u32), value: f32)
             -> ArtResult<()>;
 }
 
-impl SetParameter for VMInner {
+impl SetParameter for VmInner {
     fn set_parameter(&mut self, id: (u32, u32, u32), value: f32)
             -> ArtResult<()> {
         let (uid, eid, pid) = id;

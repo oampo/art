@@ -1,12 +1,12 @@
 use types::ArtResult;
-use vm_inner::VMInner;
+use vm_inner::VmInner;
 
 pub trait CreateUnit {
     fn create_unit(&mut self, id: (u32, u32), type_id: u32, input_channels: u32,
                    output_channels: u32) -> ArtResult<()>;
 }
 
-impl CreateUnit for VMInner {
+impl CreateUnit for VmInner {
     fn create_unit(&mut self, id: (u32, u32), type_id: u32, input_channels: u32,
                    output_channels: u32) -> ArtResult<()> {
         let (eid, uid) = id;

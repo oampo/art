@@ -6,7 +6,7 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
 
 use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap};
 use sizes::BLOCK_SIZE;
-use vm::VMOptions;
+use vm::VmOptions;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
@@ -18,7 +18,7 @@ use phases::sort::Sort;
 use phases::run::Run;
 use phases::clean::Clean;
 
-pub struct VMInner {
+pub struct VmInner {
     pub input_channel: ByteCodeReceiver,
     pub unit_factory: UnitFactory,
     pub expressions: ExpressionMap,
@@ -31,9 +31,9 @@ pub struct VMInner {
     pub bus_data: Vec<f32>
 }
 
-impl VMInner {
-    pub fn new(options: &VMOptions, input_channel: ByteCodeReceiver)
-            -> VMInner {
+impl VmInner {
+    pub fn new(options: &VmOptions, input_channel: ByteCodeReceiver)
+            -> VmInner {
         let stack_data_size = (
             options.num_stack_channels * options.block_size
         ) as usize;
@@ -46,7 +46,7 @@ impl VMInner {
         let mut bus_data = Vec::with_capacity(bus_data_size);
         bus_data.resize(bus_data_size, 0f32);
 
-        VMInner {
+        VmInner {
             input_channel: input_channel,
             unit_factory: UnitFactory::new(),
             expression_list: ExpressionList::with_capacity(
@@ -96,7 +96,7 @@ impl VMInner {
 impl<'a, 'b> FnMut<
     (&'a [f32], &'b mut [f32], StreamTimeInfo, StreamCallbackFlags),
     (StreamCallbackResult)
-> for VMInner {
+> for VmInner {
     extern "rust-call" fn call_mut(&mut self, args: (&[f32], &mut [f32],
                                                      StreamTimeInfo,
                                                      StreamCallbackFlags))
