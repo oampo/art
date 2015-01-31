@@ -6,6 +6,7 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
 
 use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap};
 use sizes::BLOCK_SIZE;
+use vm::VMOptions;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
@@ -31,23 +32,39 @@ pub struct VMInner {
 }
 
 impl VMInner {
-    pub fn new(input_channel: ByteCodeReceiver) -> VMInner {
-        // TODO: Make sizes options
-        let mut stack_data = Vec::with_capacity(32 * BLOCK_SIZE);
-        stack_data.resize(32 * BLOCK_SIZE, 0f32);
+    pub fn new(options: &VMOptions, input_channel: ByteCodeReceiver)
+            -> VMInner {
+        let stack_data_size = (
+            options.num_stack_channels * options.block_size
+        ) as usize;
+        let mut stack_data = Vec::with_capacity(stack_data_size);
+        stack_data.resize(stack_data_size, 0f32);
 
-        let mut bus_data = Vec::with_capacity(32 * BLOCK_SIZE);
-        bus_data.resize(32 * BLOCK_SIZE, 0f32);
+        let bus_data_size = (
+            options.num_bus_channels * options.block_size
+        ) as usize;
+        let mut bus_data = Vec::with_capacity(bus_data_size);
+        bus_data.resize(bus_data_size, 0f32);
 
         VMInner {
             input_channel: input_channel,
             unit_factory: UnitFactory::new(),
-            expressions: HashMap::new(),
-            expression_list: ExpressionList::with_capacity(32),
-            units: HashMap::new(),
-            parameters: HashMap::new(),
-            graph: Graph::new(16),
-            expression_ids: Vec::with_capacity(32),
+            expression_list: ExpressionList::with_capacity(
+                options.max_opcodes as usize
+            ),
+            expressions: HashMap::with_capacity(
+                options.max_expressions as usize
+            ),
+            units: HashMap::with_capacity(
+                options.max_units as usize
+            ),
+            parameters: HashMap::with_capacity(
+                options.max_parameters as usize
+            ),
+            graph: Graph::with_capacity(options.max_edges),
+            expression_ids: Vec::with_capacity(
+                options.max_expressions as usize
+            ),
             stack_data: stack_data,
             bus_data: bus_data
         }

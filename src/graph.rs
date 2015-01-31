@@ -41,7 +41,13 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn new(edge_capacity: u32) -> Graph {
+    pub fn new() -> Graph {
+        Graph {
+            edges:Vec::with_capacity(0)
+        }
+    }
+
+    pub fn with_capacity(edge_capacity: u32) -> Graph {
         Graph {
             edges:Vec::with_capacity(edge_capacity as usize)
         }
