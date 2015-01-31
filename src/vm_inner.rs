@@ -9,6 +9,7 @@ use sizes::BLOCK_SIZE;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
+use expression_list::ExpressionList;
 
 use phases::process::Process;
 use phases::link::Link;
@@ -20,6 +21,7 @@ pub struct VMInner {
     pub input_channel: ByteCodeReceiver,
     pub unit_factory: UnitFactory,
     pub expressions: ExpressionMap,
+    pub expression_list: ExpressionList,
     pub units: UnitMap,
     pub parameters: ParameterMap,
     pub graph: Graph,
@@ -41,6 +43,7 @@ impl VMInner {
             input_channel: input_channel,
             unit_factory: UnitFactory::new(),
             expressions: HashMap::new(),
+            expression_list: ExpressionList::with_capacity(32),
             units: HashMap::new(),
             parameters: HashMap::new(),
             graph: Graph::new(16),

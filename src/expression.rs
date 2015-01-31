@@ -1,4 +1,3 @@
-use opcode::DspOpcode;
 use graph::Node;
 
 #[derive(Copy)]
@@ -10,18 +9,19 @@ pub enum ExpressionState {
     Free
 }
 
+#[derive(Copy)]
 pub struct Expression {
     pub id: u32,
-    pub opcodes: Vec<DspOpcode>,
+    pub index: usize,
     incoming_edges: u32,
     pub state: ExpressionState
 }
 
 impl Expression {
-    pub fn new(id: u32, opcodes: Vec<DspOpcode>) -> Expression {
+    pub fn new(id: u32, index: usize) -> Expression {
         Expression {
             id: id,
-            opcodes: opcodes,
+            index: index,
             incoming_edges: 0,
             state: ExpressionState::Verify
         }

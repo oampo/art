@@ -91,17 +91,20 @@ pub trait OpcodeReader: Reader {
     fn read_expression(&mut self) -> Result<ControlOpcode, IoError> {
         let expression_id = try!(self.read_be_u32());
         let num_opcodes = try!(self.read_be_u32());
+
+        /*
         let mut opcodes = Vec::with_capacity(num_opcodes as usize);
 
         for _ in range(0, num_opcodes) {
             let opcode = try!(self.read_dsp_opcode());
             opcodes.push(opcode);
         }
+        */
 
         Ok(
             ControlOpcode::AddExpression {
                 expression_id: expression_id,
-                opcodes: opcodes
+                num_opcodes: num_opcodes
             }
         )
     }

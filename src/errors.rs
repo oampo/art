@@ -9,6 +9,7 @@ use opcode::Opcode;
 pub enum ArtError {
     UnimplementedOpcode { opcode: Opcode },
     UndefinedUnit { type_id: u32 },
+    IndexError,
     ExpressionNotFound { expression_id: u32 },
     UnitNotFound { expression_id: u32, unit_id: u32 },
     ParameterNotFound { expression_id: u32, unit_id: u32, parameter_id: u32 },
@@ -17,6 +18,7 @@ pub enum ArtError {
     InvalidByteCode { error: Option<IoError> },
     StackOverflow,
     StackUnderflow,
+    BufferOverflow,
     InvalidStack,
     PortAudio { error: PaError }
 }
@@ -68,6 +70,7 @@ impl Error for ArtError {
         match *self {
             ArtError::UnimplementedOpcode { .. } => "Unimplemented opcode",
             ArtError::UndefinedUnit { .. } => "Undefined unit",
+            ArtError::IndexError => "Index error",
             ArtError::UnitNotFound { .. } => "Unit not found",
             ArtError::ParameterNotFound { .. } => "Parameter not found",
             ArtError::ExpressionNotFound { .. } => "Expression not found",
@@ -76,6 +79,7 @@ impl Error for ArtError {
             ArtError::InvalidByteCode { .. } => "Invalid byte code",
             ArtError::StackOverflow => "Stack overflow",
             ArtError::StackUnderflow => "Stack underflow",
+            ArtError::BufferOverflow => "Buffer overflow",
             ArtError::InvalidStack => "Invalid stack",
             ArtError::PortAudio { .. } => "PortAudio error"
         }

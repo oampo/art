@@ -14,20 +14,17 @@ pub trait Process {
     fn process(&mut self);
     fn process_byte_code(&mut self, byte_code: &[u8]) -> ArtResult<()>;
     fn process_opcode(&mut self, reader: &mut BufReader) -> ArtResult<()>;
+    fn process_expression(&mut self, reader: &mut BufReader,
+                          num_opcodes: u32) -> ArtResult<()>;
 }
 
 impl Process for VMInner {
     fn process(&mut self) {
         debug!("Starting process phase");
-        loop {
-            let result = self.input_channel.try_recv();
-            match result {
-                Ok(byte_code) => {
-                    let result = self.process_byte_code(byte_code.as_slice());
-                    result.unwrap_or_else(|error| error!("{}", error));
-                },
-                Err(_) => { return; }
-            }
+        let result = self.input_channel.try_recv();
+        if let Ok(byte_code) = result {
+            let result = self.process_byte_code(byte_code.as_slice());
+            result.unwrap_or_else(|error| error!("{}", error));
         }
     }
 
@@ -45,8 +42,19 @@ impl Process for VMInner {
         );
 
         match opcode {
-            ControlOpcode::AddExpression { expression_id, opcodes } => {
-                self.add_expression(expression_id, opcodes)
+            ControlOpcode::AddExpression { expression_id, num_opcodes } => {
+                let start = try!(
+                    self.expression_list.push_start(num_opcodes as usize)
+                );
+
+                let result = self.process_expression(reader, num_opcodes);
+
+                if result.is_err() {
+                    try!(self.expression_list.remove(start));
+                    return result;
+                }
+
+                self.add_expression(expression_id, start)
             },
             ControlOpcode::SetParameter { expression_id, unit_id,
                                           parameter_id, value } => {
@@ -57,5 +65,14 @@ impl Process for VMInner {
                 opcode: Opcode::Control(opcode)
             })
         }
+    }
+
+    fn process_expression(&mut self, reader: &mut BufReader,
+                          num_opcodes: u32) -> ArtResult<()> {
+        for _ in range(0, num_opcodes) {
+            let opcode = try!(reader.read_dsp_opcode());
+            try!(self.expression_list.push(opcode));
+        }
+        Ok(())
     }
 }

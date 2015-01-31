@@ -14,7 +14,7 @@ pub enum DspOpcodeType {
     Adc
 }
 
-#[derive(Show)]
+#[derive(Copy, Show)]
 pub enum ControlOpcode {
     SetParameter {
         expression_id: u32,
@@ -24,7 +24,7 @@ pub enum ControlOpcode {
     },
     AddExpression {
         expression_id: u32,
-        opcodes: Vec<DspOpcode>
+        num_opcodes: u32
     },
     Play {
         expression_id: u32
@@ -51,7 +51,7 @@ pub enum DspOpcode {
     Adc
 }
 
-#[derive(Show)]
+#[derive(Copy, Show)]
 pub enum Opcode {
     Control(ControlOpcode),
     Dsp(DspOpcode)
