@@ -5,12 +5,12 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
 use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap};
-use sizes::BLOCK_SIZE;
-use vm::VmOptions;
+use options::Options;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
 use expression_list::ExpressionList;
+use constants::{Constants, Sizes, Rates};
 
 use phases::process::Process;
 use phases::link::Link;
@@ -20,6 +20,7 @@ use phases::clean::Clean;
 
 pub struct VmInner {
     pub input_channel: ByteCodeReceiver,
+    pub constants: Constants,
     pub unit_factory: UnitFactory,
     pub expressions: ExpressionMap,
     pub expression_list: ExpressionList,
@@ -28,11 +29,11 @@ pub struct VmInner {
     pub graph: Graph,
     pub expression_ids: Vec<u32>,
     pub stack_data: Vec<f32>,
-    pub bus_data: Vec<f32>
+    pub bus_data: Vec<f32>,
 }
 
 impl VmInner {
-    pub fn new(options: &VmOptions, input_channel: ByteCodeReceiver)
+    pub fn new(options: &Options, input_channel: ByteCodeReceiver)
             -> VmInner {
         let stack_data_size = (
             options.num_stack_channels * options.block_size
@@ -48,6 +49,16 @@ impl VmInner {
 
         VmInner {
             input_channel: input_channel,
+            constants: Constants {
+                sizes: Sizes {
+                    block_size: options.block_size as usize,
+                    block_size_inverse: 1f32 / options.block_size as f32
+                },
+                rates: Rates {
+                    audio_rate: options.sample_rate as f32,
+                    audio_rate_inverse: 1f32 / options.sample_rate as f32
+                }
+            },
             unit_factory: UnitFactory::new(),
             expression_list: ExpressionList::with_capacity(
                 options.max_opcodes as usize
@@ -82,7 +93,7 @@ impl VmInner {
     fn tick_inner(&mut self, bus_data: &mut Vec<f32>,
                  adc_block: &[f32], dac_block: &mut [f32]) {
         let mut busses = ChannelStack::new(bus_data.as_mut_slice(),
-                                           BLOCK_SIZE);
+                                           self.constants.sizes.block_size);
         self.process();
         self.link(&mut busses);
         self.sort();

@@ -10,9 +10,9 @@ extern crate portaudio;
 
 pub mod errors;
 pub mod types;
-pub mod sizes;
-pub mod rates;
+pub mod constants;
 
+pub mod options;
 pub mod vm;
 pub mod vm_inner;
 

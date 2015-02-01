@@ -2,13 +2,12 @@ use std::num::Float;
 use std::f32::consts::PI_2;
 use std::u32;
 
-use types::{ArtResult, ParameterMap};
-use sizes::BLOCK_SIZE;
-use rates::AUDIO_RATE_INVERSE;
+use types::ArtResult;
 
 use unit::{Unit, UnitDefinition, UnitData, ChannelLayout};
 use parameter::ParameterDefinition;
 use channel_stack::ChannelStack;
+use constants::Constants;
 
 use util::modulo;
 
@@ -56,33 +55,22 @@ impl Sine {
         }
     }
 
-    fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ParameterMap,
-            stack: &mut ChannelStack, busses: &mut ChannelStack)
-            -> ArtResult<()> {
+    fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
+            constants: &Constants) -> ArtResult<()> {
         if let UnitData::Sine {ref mut position} = unit.data {
-            let (eid, uid) = unit.id;
-
-            let (mut frequency_stack, mut phase_stack) = stack.split(1);
-            let frequency_index = try!(
-                parameters.get_mut(&(eid, uid, 0)).unwrap()
-                          .get(&mut frequency_stack, busses)
-            );
-            let phase_index = try!(
-                parameters.get_mut(&(eid, uid, 1)).unwrap()
-                          .get(&mut phase_stack, busses)
-            );
-
-            let frequency = try!(frequency_stack.get(frequency_index, 1));
-            let phase = try!(phase_stack.get(phase_index, 1));
+            let (mut frequency_stack, mut phase_stack) = parameters.split(1);
+            let frequency = try!(frequency_stack.get(0, 1));
+            let phase = try!(phase_stack.get(0, 1));
 
             let channels = unit.layout.output as usize;
 
-            for i in range(0, BLOCK_SIZE) {
+            for i in range(0, constants.sizes.block_size) {
                 let value = (*position + phase[i]).sin();
                 for j in range(0, channels) {
                     block[i * channels + j] = value;
                 }
-                *position += frequency[i] * PI_2 * AUDIO_RATE_INVERSE;
+                *position += frequency[i] * PI_2 *
+                             constants.rates.audio_rate_inverse;
                 *position = modulo(*position, PI_2);
             }
         }

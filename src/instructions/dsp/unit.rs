@@ -61,16 +61,32 @@ impl Unit for VmInner {
         try!(stack.push(output_channels));
 
 
-        // Split the stack into the unit half, and half which the unit
-        // can use for whatever
-        let (mut unit_stack, mut stack) = stack.split(
+        // Split the stack into the unit half, and half for the parameters
+        let (mut unit_stack, mut parameter_stack) = stack.split(
             index + channels
         );
+
         let mut block = try!(unit_stack.get(index, channels));
 
+        let (eid, uid) = unit.id;
+        for pid in range(0, unit.definition.parameters.len()) {
+            let (_, mut channel) = parameter_stack.split(pid as u32);
+
+            let parameter = try!(
+                self.parameters.get_mut(&(eid, uid, pid as u32)).ok_or(
+                    ArtError::ParameterNotFound {
+                        expression_id: eid,
+                        unit_id: uid,
+                        parameter_id: pid as u32
+                    }
+                )
+            );
+            try!(parameter.get(&mut channel, busses, &self.constants));
+        }
+
         try!(
-            (unit.definition.tick)(unit, block, &mut self.parameters,
-                                   &mut stack, busses)
+            (unit.definition.tick)(unit, block, &mut parameter_stack,
+                                   &self.constants)
         );
 
         Ok(())

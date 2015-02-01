@@ -1,8 +1,7 @@
 use portaudio;
 
-use rates::AUDIO_RATE;
-use sizes::BLOCK_SIZE;
 use types::ArtResult;
+use constants::Constants;
 
 pub type Stream<'a> = portaudio::stream::Stream<'a, f32, f32>;
 pub type Callback<'a> = portaudio::stream::StreamCallback<'a, f32, f32>;
@@ -82,7 +81,8 @@ impl<'a> Device <'a> {
         Ok(())
     }
 
-    pub fn open(&mut self, callback: &'a mut Callback<'a>) -> ArtResult<()> {
+    pub fn open(&mut self, callback: &'a mut Callback<'a>,
+                constants: Constants) -> ArtResult<()> {
         // Currently pa-rs requires both input and output
         let input_device_id = match self.input_device {
             DeviceId::Id(id) =>  id,
@@ -128,17 +128,20 @@ impl<'a> Device <'a> {
             suggested_latency: output_device_info.default_low_input_latency
         };
 
-        try!(portaudio::stream::is_format_supported(input_parameters,
-                                                    output_parameters,
-                                                    AUDIO_RATE as f64));
+        try!(
+            portaudio::stream::is_format_supported(
+                input_parameters, output_parameters,
+                constants.rates.audio_rate as f64
+            )
+        );
 
         self.stream = Some(
             try!(
                 portaudio::stream::Stream::open(
                     input_parameters,
                     output_parameters,
-                    AUDIO_RATE as f64,
-                    BLOCK_SIZE as u64,
+                    constants.rates.audio_rate as f64,
+                    constants.sizes.block_size as u64,
                     portaudio::stream::StreamFlags::empty(),
                     Some(callback)
                 )

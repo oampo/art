@@ -2,7 +2,6 @@ use std::mem;
 
 use types::ArtResult;
 use errors::ArtError;
-use sizes::BLOCK_SIZE;
 
 use vm_inner::VmInner;
 use opcode::{DspOpcode, Opcode};
@@ -68,7 +67,7 @@ impl Run for VmInner {
 
 
         let mut stack = ChannelStack::new(stack_data.as_mut_slice(),
-                                          BLOCK_SIZE);
+                                          self.constants.sizes.block_size);
         for opcode in try!(expression_list.iter(index)) {
             match opcode {
                 DspOpcode::Unit { unit_id, .. } => {

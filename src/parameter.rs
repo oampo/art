@@ -1,5 +1,5 @@
 use types::ArtResult;
-use sizes::{BLOCK_SIZE, BLOCK_SIZE_INVERSE};
+use constants::Constants;
 
 use channel_stack::ChannelStack;
 
@@ -19,8 +19,8 @@ impl Parameter {
         }
     }
 
-    pub fn get(&mut self, stack: &mut ChannelStack, busses: &mut ChannelStack) 
-            -> ArtResult<u32> {
+    pub fn get(&mut self, stack: &mut ChannelStack, busses: &mut ChannelStack,
+               constants: &Constants) -> ArtResult<u32> {
         let index = try!(stack.push(1));
         let block = try!(stack.get(index, 1));
         match self.bus {
@@ -28,13 +28,14 @@ impl Parameter {
                 try!(busses.read(id, block));
             },
             None => {
-                let delta = (self.value - self.last_value) * BLOCK_SIZE_INVERSE;
-                for i in range(0, BLOCK_SIZE) {
+                let delta = (self.value - self.last_value) *
+                            constants.sizes.block_size_inverse;
+                for i in range(0, constants.sizes.block_size) {
                     block[i] = self.last_value + i as f32 * delta;
                 }
             }
         }
-        self.last_value = block[BLOCK_SIZE - 1];
+        self.last_value = block[constants.sizes.block_size - 1];
         Ok(index)
     }
 }

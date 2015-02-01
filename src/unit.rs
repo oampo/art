@@ -1,4 +1,6 @@
-use types::{ArtResult, ParameterMap};
+use types::ArtResult;
+use constants::Constants;
+
 use channel_stack::ChannelStack;
 use parameter::ParameterDefinition;
 
@@ -17,8 +19,8 @@ pub struct ChannelLayout {
 }
 
 pub type TickFunction = fn(
-    unit: &mut Unit, block: &mut[f32], parameters: &mut ParameterMap,
-    stack: &mut ChannelStack, busses: &mut ChannelStack
+    unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
+    constants: &Constants
 ) -> ArtResult<()>;
 
 #[derive(Copy)]
