@@ -1,5 +1,5 @@
-use std::vec::Vec;
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::sync::mpsc::Receiver;
 
 use errors::ArtError;
@@ -8,8 +8,12 @@ use expression::Expression;
 use unit::Unit;
 use parameter::Parameter;
 
-pub type ByteCode = Vec<u8>;
-pub type ByteCodeReceiver = Receiver<ByteCode>;
+#[derive(Copy)]
+pub struct ByteCode {
+    pub data: [u8; 1024],
+    pub size: usize
+}
+pub type ByteCodeReceiver = Receiver<Arc<ByteCode>>;
 
 pub type ExpressionId = u32;
 pub type UnitId = u32;

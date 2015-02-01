@@ -23,7 +23,9 @@ impl Process for VmInner {
         debug!("Starting process phase");
         let result = self.input_channel.try_recv();
         if let Ok(byte_code) = result {
-            let result = self.process_byte_code(byte_code.as_slice());
+            let result = self.process_byte_code(
+                &byte_code.data[..byte_code.size]
+            );
             result.unwrap_or_else(|error| error!("{}", error));
         }
     }
