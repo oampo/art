@@ -1,5 +1,5 @@
 use std::error::{Error, FromError};
-use std::io::IoError;
+use std::old_io::IoError;
 use std::fmt;
 
 use portaudio::pa::PaError;

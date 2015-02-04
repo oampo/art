@@ -8,3 +8,8 @@ authors = ["Joe Turner <joe@oampo.co.uk>"]
 
 git = "https://github.com/mvdnes/portaudio-rs"
 
+[dependencies]
+
+log = "*"
+
+

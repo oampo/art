@@ -1,4 +1,4 @@
-use std::io::{IoError, IoErrorKind, BufReader};
+use std::old_io::{IoError, IoErrorKind, BufReader};
 use std::num::FromPrimitive;
 
 use opcode::{ControlOpcodeType, DspOpcodeType, ControlOpcode, DspOpcode};

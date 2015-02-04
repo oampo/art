@@ -1,11 +1,11 @@
-#[derive(FromPrimitive, Copy, Show)]
+#[derive(FromPrimitive, Copy, Debug)]
 pub enum ControlOpcodeType {
     SetParameter,
     AddExpression,
     Play
 }
 
-#[derive(FromPrimitive, Copy, Show)]
+#[derive(FromPrimitive, Copy, Debug)]
 pub enum DspOpcodeType {
     Unit = 3,
     Parameter,
@@ -14,7 +14,7 @@ pub enum DspOpcodeType {
     Adc
 }
 
-#[derive(Copy, Show)]
+#[derive(Copy, Debug)]
 pub enum ControlOpcode {
     SetParameter {
         expression_id: u32,
@@ -31,7 +31,7 @@ pub enum ControlOpcode {
     }
 }
 
-#[derive(Copy, Show)]
+#[derive(Copy, Debug)]
 pub enum DspOpcode {
     Unit {
         unit_id: u32,
@@ -51,7 +51,7 @@ pub enum DspOpcode {
     Adc
 }
 
-#[derive(Copy, Show)]
+#[derive(Copy, Debug)]
 pub enum Opcode {
     Control(ControlOpcode),
     Dsp(DspOpcode)

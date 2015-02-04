@@ -3,7 +3,7 @@ use std::mem;
 use types::ArtResult;
 use errors::ArtError;
 
-#[derive(Show)]
+#[derive(Debug)]
 pub struct ChannelStack<'a> {
     data: &'a mut[f32],
     channel_size: usize,

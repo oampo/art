@@ -1,6 +1,6 @@
 use types::ExpressionMap;
 
-#[derive(Show)]
+#[derive(Debug)]
 struct Edge {
     from: u32,
     to: u32

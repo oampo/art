@@ -1,4 +1,4 @@
-use std::io::BufReader;
+use std::old_io::BufReader;
 
 use types::ArtResult;
 use errors::ArtError;

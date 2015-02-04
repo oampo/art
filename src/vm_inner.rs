@@ -105,9 +105,9 @@ impl VmInner {
 
 
 impl<'a, 'b> FnMut<
-    (&'a [f32], &'b mut [f32], StreamTimeInfo, StreamCallbackFlags),
-    (StreamCallbackResult)
+    (&'a [f32], &'b mut [f32], StreamTimeInfo, StreamCallbackFlags)
 > for VmInner {
+    type Output = StreamCallbackResult;
     extern "rust-call" fn call_mut(&mut self, args: (&[f32], &mut [f32],
                                                      StreamTimeInfo,
                                                      StreamCallbackFlags))
