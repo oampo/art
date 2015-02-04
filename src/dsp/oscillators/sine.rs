@@ -1,6 +1,5 @@
 use std::num::Float;
 use std::f32::consts::PI_2;
-use std::u32;
 
 use types::ArtResult;
 
@@ -24,13 +23,9 @@ pub static SINE_PARAMETERS: [ParameterDefinition; 2] = [
 
 pub static SINE_DEFINITION: UnitDefinition = UnitDefinition {
     name: "sine",
-    min_channels: ChannelLayout {
+    default_channels: ChannelLayout {
         input: 0,
         output: 1
-    },
-    max_channels: ChannelLayout {
-        input: 0,
-        output: u32::MAX
     },
     parameters: &SINE_PARAMETERS,
     tick: Sine::tick
@@ -64,13 +59,13 @@ impl Sine {
 
             let channels = unit.layout.output as usize;
 
-            for i in range(0, constants.sizes.block_size) {
+            for i in range(0, constants.block_size) {
                 let value = (*position + phase[i]).sin();
                 for j in range(0, channels) {
                     block[i * channels + j] = value;
                 }
                 *position += frequency[i] * PI_2 *
-                             constants.rates.audio_rate_inverse;
+                             constants.audio_rate_inverse;
                 *position = modulo(*position, PI_2);
             }
         }

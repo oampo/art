@@ -1,8 +1,8 @@
-#![feature(core, collections, io, unsafe_destructor, unboxed_closures)]
+#![feature(core, collections, io, os, path, unsafe_destructor,
+           unboxed_closures)]
 
 #[macro_use] extern crate log;
-
-
+extern crate "rustc-serialize" as rustc_serialize;
 
 extern crate portaudio;
 

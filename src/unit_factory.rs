@@ -1,32 +1,36 @@
-use std::collections::HashMap;
+use rustc_serialize::{Encoder, Encodable};
 
 use unit::{Unit, UnitDefinition};
-use types::{ArtResult, UnitTypeId, UnitConstructor};
+use types::{ArtResult, UnitConstructor};
 use errors::ArtError;
 use dsp::oscillators::sine;
 
-struct UnitFactoryItem {
+#[derive(Copy)]
+pub struct UnitFactoryItem {
     definition: &'static UnitDefinition,
     constructor: UnitConstructor
 }
 
+impl Encodable for UnitFactoryItem {
+    fn encode<S: Encoder>(&self, encoder: &mut S) -> Result<(), S::Error> {
+        self.definition.encode(encoder)
+    }
+}
+
 pub struct UnitFactory {
-    unit_map: HashMap<UnitTypeId, UnitFactoryItem>,
+    pub units: Vec<UnitFactoryItem>
 }
 
 impl UnitFactory {
     pub fn new() -> UnitFactory {
-        let mut factory = UnitFactory {unit_map: HashMap::new()};
+        let mut factory = UnitFactory {units: Vec::new()};
         factory.register(&sine::SINE_DEFINITION, sine::Sine::new);
         factory
     }
 
     pub fn register(&mut self, definition: &'static UnitDefinition,
                     constructor: UnitConstructor) {
-        let type_id = self.unit_map.len();
-        debug!("Registering unit: name = {}, type_id = {}", definition.name,
-               type_id);
-        self.unit_map.insert(type_id as u32,
+        self.units.push(
             UnitFactoryItem {
                 constructor: constructor,
                 definition: definition
@@ -37,23 +41,16 @@ impl UnitFactory {
     pub fn create(&mut self, id: (u32, u32), type_id: u32,
                   input_channels: u32, output_channels: u32)
             -> ArtResult<Unit> {
-        let item = try!(
-            self.unit_map.get(&type_id).ok_or(
+        if type_id as usize >= self.units.len() {
+            return Err(
                 ArtError::UndefinedUnit {
                     type_id: type_id
                 }
-            )
-        );
-
-        if input_channels < item.definition.min_channels.input ||
-           input_channels > item.definition.max_channels.input ||
-           output_channels < item.definition.min_channels.output ||
-           output_channels > item.definition.max_channels.output {
-            return Err(ArtError::InvalidChannelCount);
+            );
         }
 
-        Ok((item.constructor)(id, input_channels,
-                              output_channels))
+        Ok((self.units[type_id as usize].constructor)(id, input_channels,
+                                                      output_channels))
     }
 }
 

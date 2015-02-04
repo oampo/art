@@ -67,7 +67,7 @@ impl Run for VmInner {
 
 
         let mut stack = ChannelStack::new(stack_data.as_mut_slice(),
-                                          self.constants.sizes.block_size);
+                                          self.constants.block_size);
         for opcode in try!(expression_list.iter(index)) {
             match opcode {
                 DspOpcode::Unit { unit_id, .. } => {

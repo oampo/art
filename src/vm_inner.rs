@@ -1,16 +1,21 @@
 use std::mem;
+use std::old_io;
+use std::old_io::fs::{mkdir_recursive, File, PathExtensions};
 use std::collections::HashMap;
+
+use rustc_serialize::{Encoder, Encodable, json};
 
 use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
-use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap};
+use util;
+use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, ArtResult};
 use options::Options;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
 use expression_list::ExpressionList;
-use constants::{Constants, Sizes, Rates};
+use constants::Constants;
 
 use phases::process::Process;
 use phases::link::Link;
@@ -50,14 +55,12 @@ impl VmInner {
         VmInner {
             input_channel: input_channel,
             constants: Constants {
-                sizes: Sizes {
-                    block_size: options.block_size as usize,
-                    block_size_inverse: 1f32 / options.block_size as f32
-                },
-                rates: Rates {
-                    audio_rate: options.sample_rate as f32,
-                    audio_rate_inverse: 1f32 / options.sample_rate as f32
-                }
+                input_channels: options.input_channels,
+                output_channels: options.output_channels,
+                block_size: options.block_size as usize,
+                block_size_inverse: 1f32 / options.block_size as f32,
+                audio_rate: options.sample_rate as f32,
+                audio_rate_inverse: 1f32 / options.sample_rate as f32
             },
             unit_factory: UnitFactory::new(),
             expression_list: ExpressionList::with_capacity(
@@ -93,7 +96,7 @@ impl VmInner {
     fn tick_inner(&mut self, bus_data: &mut Vec<f32>,
                  adc_block: &[f32], dac_block: &mut [f32]) {
         let mut busses = ChannelStack::new(bus_data.as_mut_slice(),
-                                           self.constants.sizes.block_size);
+                                           self.constants.block_size);
         self.process();
         self.link(&mut busses);
         self.sort();
@@ -101,6 +104,22 @@ impl VmInner {
         self.clean();
     }
 
+    pub fn write_info_file(&self) -> ArtResult<()> {
+        let mut path = util::user_data_dir().unwrap();
+        if !path.exists() {
+            try!(mkdir_recursive(&path, old_io::USER_DIR));
+        }
+
+        path.push("art_info.json");
+
+        let mut file = File::create(&path);
+        try!(
+            file.write_all(
+                json::encode(self).unwrap().into_bytes().as_slice()
+            )
+        );
+        Ok(())
+    }
 }
 
 
@@ -116,4 +135,39 @@ impl<'a, 'b> FnMut<
         self.tick(adc_block, dac_block)
     }
 }
+
+impl Encodable for VmInner {
+    fn encode<S: Encoder>(&self, encoder: &mut S) -> Result<(), S::Error> {
+        encoder.emit_struct("VmInner", 5, |encoder| {
+            try!(
+                encoder.emit_struct_field("input_channels", 0, |encoder|
+                    self.constants.input_channels.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("output_channels", 1, |encoder|
+                    self.constants.output_channels.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("sample_rate", 2, |encoder|
+                    self.constants.audio_rate.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("block_size", 3, |encoder|
+                    self.constants.block_size.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("units", 4, |encoder|
+                    self.unit_factory.units.encode(encoder)
+                )
+            );
+            Ok(())
+        })
+    }
+}
+
+
 

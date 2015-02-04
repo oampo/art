@@ -3,6 +3,7 @@ use constants::Constants;
 
 use channel_stack::ChannelStack;
 
+
 #[derive(Copy)]
 pub struct Parameter {
     pub value: f32,
@@ -29,18 +30,17 @@ impl Parameter {
             },
             None => {
                 let delta = (self.value - self.last_value) *
-                            constants.sizes.block_size_inverse;
-                for i in range(0, constants.sizes.block_size) {
+                            constants.block_size_inverse;
+                for i in range(0, constants.block_size) {
                     block[i] = self.last_value + i as f32 * delta;
                 }
             }
         }
-        self.last_value = block[constants.sizes.block_size - 1];
+        self.last_value = block[constants.block_size - 1];
         Ok(index)
     }
 }
-
-#[derive(Copy)]
+#[derive(Copy, RustcEncodable)]
 pub struct ParameterDefinition {
     pub name: &'static str,
     pub default: f32

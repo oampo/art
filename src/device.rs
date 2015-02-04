@@ -131,7 +131,7 @@ impl<'a> Device <'a> {
         try!(
             portaudio::stream::is_format_supported(
                 input_parameters, output_parameters,
-                constants.rates.audio_rate as f64
+                constants.audio_rate as f64
             )
         );
 
@@ -140,8 +140,8 @@ impl<'a> Device <'a> {
                 portaudio::stream::Stream::open(
                     input_parameters,
                     output_parameters,
-                    constants.rates.audio_rate as f64,
-                    constants.sizes.block_size as u64,
+                    constants.audio_rate as f64,
+                    constants.block_size as u64,
                     portaudio::stream::StreamFlags::empty(),
                     Some(callback)
                 )

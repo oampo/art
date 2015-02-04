@@ -20,6 +20,7 @@ impl<'a> Vm<'a> {
     }
 
     pub fn start(&'a mut self) -> ArtResult<()> {
+        let _ = self.inner.write_info_file();
         if !self.device.is_open() {
             let constants = self.inner.constants;
             try!(self.device.open(&mut self.inner, constants));

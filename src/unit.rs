@@ -1,3 +1,4 @@
+use rustc_serialize::{Encodable, Encoder};
 use types::ArtResult;
 use constants::Constants;
 
@@ -12,7 +13,7 @@ pub struct Unit {
     pub data: UnitData
 }
 
-#[derive(Copy)]
+#[derive(Copy, RustcEncodable)]
 pub struct ChannelLayout {
     pub input: u32,
     pub output: u32
@@ -26,10 +27,32 @@ pub type TickFunction = fn(
 #[derive(Copy)]
 pub struct UnitDefinition {
     pub name: &'static str,
-    pub min_channels: ChannelLayout,
-    pub max_channels: ChannelLayout,
+    pub default_channels: ChannelLayout,
     pub parameters: &'static [ParameterDefinition],
     pub tick: TickFunction
+}
+
+impl Encodable for UnitDefinition {
+    fn encode<S: Encoder>(&self, encoder: &mut S) -> Result<(), S::Error> {
+        encoder.emit_struct("UnitDefinition", 3, |encoder| {
+            try!(
+                encoder.emit_struct_field("name", 0, |encoder|
+                    self.name.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("default_channels", 1, |encoder|
+                    self.default_channels.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("parameters", 2, |encoder|
+                    self.parameters.encode(encoder)
+                )
+            );
+            Ok(())
+        })
+    }
 }
 
 #[derive(Copy)]

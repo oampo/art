@@ -6,6 +6,7 @@ use portaudio::pa::PaError;
 
 use opcode::Opcode;
 
+#[derive(Debug)]
 pub enum ArtError {
     UnimplementedOpcode { opcode: Opcode },
     UndefinedUnit { type_id: u32 },
