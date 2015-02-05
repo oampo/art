@@ -19,7 +19,6 @@ use expression_list::ExpressionList;
 use constants::Constants;
 
 use phases::process::Process;
-use phases::link::Link;
 use phases::sort::Sort;
 use phases::run::Run;
 use phases::clean::Clean;
@@ -107,7 +106,6 @@ impl VmInner {
         let dac_index = try!(busses.push(self.constants.output_channels));
         try!(busses.write(adc_index, adc_block));
         self.process();
-        self.link(&mut busses);
         self.sort();
         self.run(&mut busses);
         try!(busses.read(dac_index, dac_block));

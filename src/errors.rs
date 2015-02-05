@@ -14,7 +14,6 @@ pub enum ArtError {
     ExpressionNotFound { expression_id: u32 },
     UnitNotFound { expression_id: u32, unit_id: u32 },
     ParameterNotFound { expression_id: u32, unit_id: u32, parameter_id: u32 },
-    UnlinkedParameter { expression_id: u32, unit_id: u32, parameter_id: u32 },
     InvalidChannelCount,
     InvalidByteCode { error: Option<IoError> },
     StackOverflow,
@@ -46,11 +45,6 @@ impl ArtError {
                 Some(format!("expression_id={}, unit_id={}, parameter_id={}",
                              expression_id, unit_id, parameter_id))
             },
-            ArtError::UnlinkedParameter { expression_id, unit_id,
-                                          parameter_id } => {
-                Some(format!("expression_id={}, unit_id={}, parameter_id={}",
-                             expression_id, unit_id, parameter_id))
-            },
             ArtError::InvalidByteCode { ref error } => {
                 match error {
                     &Some(ref e) => Some(format!("error={}", e)),
@@ -75,7 +69,6 @@ impl Error for ArtError {
             ArtError::UnitNotFound { .. } => "Unit not found",
             ArtError::ParameterNotFound { .. } => "Parameter not found",
             ArtError::ExpressionNotFound { .. } => "Expression not found",
-            ArtError::UnlinkedParameter { .. } => "Unlinked parameter",
             ArtError::InvalidChannelCount => "Invalid channel count",
             ArtError::InvalidByteCode { .. } => "Invalid byte code",
             ArtError::StackOverflow => "Stack overflow",
