@@ -86,7 +86,7 @@ impl Unit for VmInner {
 
         try!(
             (unit.definition.tick)(unit, block, &mut parameter_stack,
-                                   &self.constants)
+                                   busses, &mut self.bus_map, &self.constants)
         );
 
         Ok(())

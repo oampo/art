@@ -1,3 +1,5 @@
+use env_logger;
+
 use types::{ArtResult, ByteCodeReceiver};
 use options::Options;
 use device::Device;
@@ -11,6 +13,7 @@ pub struct Vm<'a> {
 impl<'a> Vm<'a> {
     pub fn new(options: &Options, input_channel: ByteCodeReceiver)
             -> Vm<'a> {
+        env_logger::init().unwrap();
         Vm {
             inner: VmInner::new(options, input_channel),
             device:  Device::new(options.input_device, options.output_device,

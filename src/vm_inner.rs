@@ -9,7 +9,8 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
                         StreamCallbackFlags};
 
 use util;
-use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, ArtResult};
+use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, BusMap,
+            ArtResult};
 use options::Options;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
@@ -31,6 +32,7 @@ pub struct VmInner {
     pub expression_list: ExpressionList,
     pub units: UnitMap,
     pub parameters: ParameterMap,
+    pub bus_map: BusMap,
     pub graph: Graph,
     pub expression_ids: Vec<u32>,
     pub stack_data: Vec<f32>,
@@ -74,6 +76,9 @@ impl VmInner {
             ),
             parameters: HashMap::with_capacity(
                 options.max_parameters as usize
+            ),
+            bus_map: HashMap::with_capacity(
+                options.num_bus_channels as usize
             ),
             graph: Graph::with_capacity(options.max_edges),
             expression_ids: Vec::with_capacity(

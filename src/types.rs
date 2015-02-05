@@ -22,6 +22,7 @@ pub type UnitTypeId = u32;
 pub type ExpressionMap = HashMap<ExpressionId, Expression>;
 pub type UnitMap = HashMap<(ExpressionId, UnitId), Unit>;
 pub type ParameterMap = HashMap<(ExpressionId, UnitId, ParameterId), Parameter>;
+pub type BusMap = HashMap<u32, u32>;
 
 pub type UnitConstructor = fn((u32, u32), u32, u32) -> Unit;
 

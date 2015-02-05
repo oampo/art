@@ -60,6 +60,19 @@ impl<'a> ChannelStack<'a> {
         Ok(())
     }
 
+    pub fn add(&mut self, index: u32, values: &[f32]) -> ArtResult<()> {
+        if index as usize + values.len() / self.channel_size > self.capacity {
+            return Err(ArtError::StackOverflow);
+        }
+
+        let start = index as usize * self.channel_size;
+        for i in range(0, values.len()) {
+            self.data[start + i] += values[i];
+        }
+        Ok(())
+    }
+
+
     pub fn get(&mut self, index: u32, channels: u32) -> ArtResult<&mut[f32]> {
         if (index + channels) as usize > self.capacity {
             return Err(ArtError::StackOverflow);

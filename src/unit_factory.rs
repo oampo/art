@@ -3,7 +3,10 @@ use rustc_serialize::{Encoder, Encodable};
 use unit::{Unit, UnitDefinition};
 use types::{ArtResult, UnitConstructor};
 use errors::ArtError;
+
 use dsp::oscillators::sine;
+use dsp::bus::bus_in;
+use dsp::bus::bus_out;
 
 #[derive(Copy)]
 pub struct UnitFactoryItem {
@@ -25,6 +28,8 @@ impl UnitFactory {
     pub fn new() -> UnitFactory {
         let mut factory = UnitFactory {units: Vec::new()};
         factory.register(&sine::SINE_DEFINITION, sine::Sine::new);
+        factory.register(&bus_in::BUS_IN_DEFINITION, bus_in::BusIn::new);
+        factory.register(&bus_out::BUS_OUT_DEFINITION, bus_out::BusOut::new);
         factory
     }
 

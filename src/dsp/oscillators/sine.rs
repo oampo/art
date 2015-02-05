@@ -1,7 +1,7 @@
 use std::num::Float;
 use std::f32::consts::PI_2;
 
-use types::ArtResult;
+use types::{ArtResult, BusMap};
 
 use unit::{Unit, UnitDefinition, UnitData, ChannelLayout};
 use parameter::ParameterDefinition;
@@ -51,7 +51,8 @@ impl Sine {
     }
 
     fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
-            constants: &Constants) -> ArtResult<()> {
+            _: &mut ChannelStack, _: &mut BusMap, constants: &Constants)
+                -> ArtResult<()> {
         if let UnitData::Sine {ref mut position} = unit.data {
             let (mut frequency_stack, mut phase_stack) = parameters.split(1);
             let frequency = try!(frequency_stack.get(0, 1));

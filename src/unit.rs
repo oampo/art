@@ -1,5 +1,5 @@
 use rustc_serialize::{Encodable, Encoder};
-use types::ArtResult;
+use types::{ArtResult, BusMap};
 use constants::Constants;
 
 use channel_stack::ChannelStack;
@@ -21,7 +21,7 @@ pub struct ChannelLayout {
 
 pub type TickFunction = fn(
     unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
-    constants: &Constants
+    busses: &mut ChannelStack, bus_map: &mut BusMap, constants: &Constants
 ) -> ArtResult<()>;
 
 #[derive(Copy)]
@@ -60,8 +60,7 @@ pub enum UnitData {
     Sine {
         position: f32,
     },
-    // Stops irrefutable if-let error.  Remove when another unit is introduced.
-    Unknown
+    None
 }
 
 

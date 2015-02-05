@@ -2,6 +2,7 @@
            unboxed_closures)]
 
 #[macro_use] extern crate log;
+extern crate env_logger;
 extern crate "rustc-serialize" as rustc_serialize;
 
 extern crate portaudio;
@@ -56,6 +57,10 @@ pub mod instructions {
 pub mod dsp {
     pub mod oscillators {
         pub mod sine;
+    }
+    pub mod bus {
+        pub mod bus_in;
+        pub mod bus_out;
     }
 }
 

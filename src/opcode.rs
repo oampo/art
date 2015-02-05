@@ -10,8 +10,8 @@ pub enum DspOpcodeType {
     Unit = 3,
     Parameter,
     Sample,
+    Adc,
     Dac,
-    Adc
 }
 
 #[derive(Copy, Debug)]

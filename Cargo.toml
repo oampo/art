@@ -11,6 +11,7 @@ git = "https://github.com/mvdnes/portaudio-rs"
 [dependencies]
 
 log = "*"
+env_logger = "*"
 rustc-serialize = "*"
 
 
