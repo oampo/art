@@ -37,22 +37,22 @@ struct Node {
     next: usize
 }
 
-pub struct ExpressionList {
+pub struct ExpressionStore {
     nodes: Vec<Node>,
     tail: usize,
     length: usize
 }
 
-impl ExpressionList {
-    pub fn new() -> ExpressionList {
-        ExpressionList {
+impl ExpressionStore {
+    pub fn new() -> ExpressionStore {
+        ExpressionStore {
             nodes: Vec::with_capacity(0),
             tail: 0,
             length: 0
         }
     }
 
-    pub fn with_capacity(capacity: usize) -> ExpressionList {
+    pub fn with_capacity(capacity: usize) -> ExpressionStore {
         let mut nodes = Vec::with_capacity(capacity);
         for i in range(0, capacity) {
             nodes.push(Node {
@@ -61,7 +61,7 @@ impl ExpressionList {
             })
         }
 
-        ExpressionList {
+        ExpressionStore {
             nodes: nodes,
             tail: 0,
             length: 0

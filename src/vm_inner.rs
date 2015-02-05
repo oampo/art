@@ -11,24 +11,26 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
 use util;
 use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, BusMap,
             ArtResult};
+use errors::ArtError;
 use options::Options;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
-use expression_list::ExpressionList;
+use expression::Expression;
+use expression_store::ExpressionStore;
 use constants::Constants;
 
-use phases::process::Process;
-use phases::sort::Sort;
-use phases::run::Run;
-use phases::clean::Clean;
+use phases::process;
+use phases::sort;
+use phases::run;
+use phases::clean;
 
 pub struct VmInner {
     pub input_channel: ByteCodeReceiver,
     pub constants: Constants,
     pub unit_factory: UnitFactory,
     pub expressions: ExpressionMap,
-    pub expression_list: ExpressionList,
+    pub expression_store: ExpressionStore,
     pub units: UnitMap,
     pub parameters: ParameterMap,
     pub bus_map: BusMap,
@@ -64,7 +66,7 @@ impl VmInner {
                 audio_rate_inverse: 1f32 / options.sample_rate as f32
             },
             unit_factory: UnitFactory::new(),
-            expression_list: ExpressionList::with_capacity(
+            expression_store: ExpressionStore::with_capacity(
                 options.max_opcodes as usize
             ),
             expressions: HashMap::with_capacity(
@@ -105,11 +107,50 @@ impl VmInner {
         let adc_index = try!(busses.push(self.constants.input_channels));
         let dac_index = try!(busses.push(self.constants.output_channels));
         try!(busses.write(adc_index, adc_block));
-        self.process();
-        self.sort();
-        self.run(&mut busses);
+        process::process(self);
+        sort::sort(self);
+        run::run(self, &mut busses);
         try!(busses.read(dac_index, dac_block));
-        self.clean();
+        clean::clean(self);
+        Ok(())
+    }
+
+    pub fn add_expression(&mut self, id: u32, index: usize)
+            -> ArtResult<()> {
+        debug!("Adding expression: id={:?}, index={:?}", id, index);
+        let expression = Expression::new(id, index);
+
+        // TODO: Verify expression
+
+        let result = expression.construct_units(
+            &self.expression_store, &mut self.unit_factory, &mut self.units,
+            &mut self.parameters
+        );
+
+        // Insert even if construction fails so we free up any units and
+        // parameters which were sucessfully constructed
+        self.expressions.insert(id, expression);
+        result
+    }
+
+    pub fn set_parameter(&mut self, id: (u32, u32, u32), value: f32)
+            -> ArtResult<()> {
+        let (uid, eid, pid) = id;
+        debug!("Setting parameter: expression_id={}, unit_id={},
+                parameter_id={}, value={}", eid, uid, pid, value);
+
+        let parameter = try!(
+            self.parameters.get_mut(&id).ok_or(
+                ArtError::ParameterNotFound {
+                    expression_id: eid,
+                    unit_id: uid,
+                    parameter_id: pid
+                }
+            )
+        );
+
+        parameter.value = value;
+
         Ok(())
     }
 

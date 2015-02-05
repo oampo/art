@@ -26,30 +26,16 @@ pub mod unit;
 pub mod parameter;
 
 pub mod graph;
-pub mod expression_list;
+pub mod expression_store;
 pub mod channel_stack;
 
 pub mod util;
 
 pub mod phases {
     pub mod process;
-    pub mod verify;
-    pub mod construct;
     pub mod sort;
     pub mod run;
     pub mod clean;
-}
-
-pub mod instructions {
-    pub mod control {
-        pub mod create_unit;
-        pub mod set_parameter;
-        pub mod add_expression;
-    }
-    pub mod dsp {
-        pub mod unit;
-        pub mod parameter;
-    }
 }
 
 pub mod dsp {

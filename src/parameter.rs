@@ -39,6 +39,15 @@ impl Parameter {
         self.last_value = block[constants.block_size - 1];
         Ok(index)
     }
+
+    pub fn tick(&mut self, stack: &mut ChannelStack, busses: &mut ChannelStack)
+            -> ArtResult<()> {
+        let bus_id = try!(busses.push(1));
+        let index = try!(stack.pop(1));
+        try!(busses.write(bus_id, try!(stack.get(index, 1))));
+        self.bus = Some(bus_id);
+        Ok(())
+    }
 }
 #[derive(Copy, RustcEncodable)]
 pub struct ParameterDefinition {

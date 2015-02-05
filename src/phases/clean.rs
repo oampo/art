@@ -1,13 +1,7 @@
 use vm_inner::VmInner;
 
-pub trait Clean {
-    fn clean(&mut self);
-}
-
-impl Clean for VmInner {
-    fn clean(&mut self) {
-        debug!("Starting clean phase");
-        self.graph.clear();
-        self.bus_map.clear();
-    }
+pub fn clean(vm: &mut VmInner) {
+    debug!("Starting clean phase");
+    vm.graph.clear();
+    vm.bus_map.clear();
 }
