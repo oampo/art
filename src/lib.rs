@@ -49,7 +49,6 @@ pub mod instructions {
     }
     pub mod dsp {
         pub mod unit;
-        pub mod dac;
         pub mod parameter;
     }
 }

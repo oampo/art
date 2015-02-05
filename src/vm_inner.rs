@@ -93,20 +93,26 @@ impl VmInner {
             -> StreamCallbackResult {
         let mut bus_data = Vec::with_capacity(0);
         mem::swap(&mut self.bus_data, &mut bus_data);
-        self.tick_inner(&mut bus_data, adc_block, dac_block);
+        let _ = self.tick_inner(&mut bus_data, adc_block, dac_block);
         mem::swap(&mut self.bus_data, &mut bus_data);
         StreamCallbackResult::Continue
     }
 
     fn tick_inner(&mut self, bus_data: &mut Vec<f32>,
-                 adc_block: &[f32], dac_block: &mut [f32]) {
+                 adc_block: &[f32], dac_block: &mut [f32])
+            -> ArtResult<()> {
         let mut busses = ChannelStack::new(bus_data.as_mut_slice(),
                                            self.constants.block_size);
+        let adc_index = try!(busses.push(self.constants.input_channels));
+        let dac_index = try!(busses.push(self.constants.output_channels));
+        try!(busses.write(adc_index, adc_block));
         self.process();
         self.link(&mut busses);
         self.sort();
-        self.run(&mut busses, adc_block, dac_block);
+        self.run(&mut busses);
+        try!(busses.read(dac_index, dac_block));
         self.clean();
+        Ok(())
     }
 
     pub fn write_info_file(&self) -> ArtResult<()> {

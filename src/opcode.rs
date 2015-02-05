@@ -9,9 +9,7 @@ pub enum ControlOpcodeType {
 pub enum DspOpcodeType {
     Unit = 3,
     Parameter,
-    Sample,
-    Adc,
-    Dac,
+    Sample
 }
 
 #[derive(Copy, Debug)]
@@ -46,9 +44,7 @@ pub enum DspOpcode {
     },
     Sample {
         value: f32
-    },
-    Dac,
-    Adc
+    }
 }
 
 #[derive(Copy, Debug)]

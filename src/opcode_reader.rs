@@ -63,12 +63,6 @@ pub trait OpcodeReader: Reader {
             },
             DspOpcodeType::Sample => {
                 self.read_sample()
-            },
-            DspOpcodeType::Dac => {
-                Ok(DspOpcode::Dac)
-            },
-            DspOpcodeType::Adc => {
-                Ok(DspOpcode::Adc)
             }
         }
     }
