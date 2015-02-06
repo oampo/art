@@ -1,6 +1,9 @@
+use std::old_io::BufReader;
+
 use errors::ArtError;
 use types::ArtResult;
 
+use opcode_reader::OpcodeReader;
 use opcode::DspOpcode;
 
 enum Content {
@@ -68,7 +71,28 @@ impl ExpressionStore {
         }
     }
 
-    pub fn push_start(&mut self, num_opcodes: usize) -> ArtResult<usize> {
+    pub fn push_from_reader(&mut self, num_opcodes: u32,
+                            reader: &mut BufReader) -> ArtResult<(usize)> {
+        let start = try!(self.push_start(num_opcodes as usize));
+        for _ in range(0, num_opcodes) {
+            let result = self.push_opcode_from_reader(reader);
+
+            if result.is_err() {
+                let _ = self.remove(start);
+                return result.map(|_| 0);
+            }
+        }
+        Ok(start)
+    }
+
+    fn push_opcode_from_reader(&mut self, reader: &mut BufReader)
+            -> ArtResult<()> {
+       let opcode = try!(reader.read_dsp_opcode());
+       try!(self.push_opcode(opcode));
+       Ok(())
+    }
+
+    fn push_start(&mut self, num_opcodes: usize) -> ArtResult<usize> {
         if self.length + num_opcodes + 1 > self.nodes.len() {
             return Err(
                 ArtError::BufferOverflow
@@ -79,7 +103,7 @@ impl ExpressionStore {
         Ok(self.tail)
     }
 
-    pub fn push(&mut self, opcode: DspOpcode) -> ArtResult<usize> {
+    fn push_opcode(&mut self, opcode: DspOpcode) -> ArtResult<usize> {
         if self.length == self.nodes.len() {
             return Err(
                 ArtError::BufferOverflow

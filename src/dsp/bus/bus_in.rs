@@ -46,7 +46,7 @@ impl BusIn {
             _: &Constants) -> ArtResult<()> {
         let bus_id = try!(parameters.get(0, 1))[0].round() as u32;
 
-        if let Some(&bus_index) = bus_map.get(&bus_id) {;
+        if let Some(&bus_index) = bus_map.get(&bus_id) {
             try!(busses.read(bus_index, block));
         }
         else {

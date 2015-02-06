@@ -31,13 +31,6 @@ pub mod channel_stack;
 
 pub mod util;
 
-pub mod phases {
-    pub mod process;
-    pub mod sort;
-    pub mod run;
-    pub mod clean;
-}
-
 pub mod dsp {
     pub mod oscillators {
         pub mod sine;

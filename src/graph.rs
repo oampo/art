@@ -15,13 +15,6 @@ impl Edge {
     }
 }
 
-pub trait Node {
-    fn get_edge_count(&self) -> u32;
-    fn reset_edge_count(&mut self);
-    fn increment_edge_count(&mut self);
-    fn decrement_edge_count(&mut self);
-}
-
 pub trait NodeList {
     fn find_zero_order(&self, map: &ExpressionMap) -> Option<(usize, u32)>;
 }
@@ -30,7 +23,7 @@ impl NodeList for [u32] {
     fn find_zero_order(&self, map: &ExpressionMap) -> Option<(usize, u32)> {
         self.iter().enumerate().find(|&: &(_, id) | {
             let node = map.get(id).unwrap();
-            node.get_edge_count() == 0
+            node.incoming_edges == 0
         }).map(|(index, &id)| (index, id))
     }
 }
@@ -82,7 +75,7 @@ impl Graph {
             for edge in self.edges.iter() {
                 if edge.from == node {
                     let node = map.get_mut(&edge.to).unwrap();
-                    node.decrement_edge_count();
+                    node.incoming_edges -= 1;
                 }
             }
 
@@ -94,7 +87,7 @@ impl Graph {
     fn update_edge_counts(&self, map: &mut ExpressionMap) {
         for edge in self.edges.iter() {
             let node = map.get_mut(&edge.to).unwrap();
-            node.increment_edge_count();
+            node.incoming_edges += 1;
         }
     }
 }

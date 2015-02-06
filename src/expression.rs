@@ -5,7 +5,6 @@ use opcode::{DspOpcode, Opcode};
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use expression_store::ExpressionStore;
-use graph::Node;
 
 #[derive(Copy)]
 pub enum ExpressionState {
@@ -20,7 +19,7 @@ pub enum ExpressionState {
 pub struct Expression {
     pub id: u32,
     pub index: usize,
-    incoming_edges: u32,
+    pub incoming_edges: u32,
     pub state: ExpressionState
 }
 
@@ -99,20 +98,3 @@ impl Expression {
     }
 }
 
-impl Node for Expression {
-    fn get_edge_count(&self) -> u32 {
-        self.incoming_edges
-    }
-
-    fn reset_edge_count(&mut self) {
-        self.incoming_edges = 0;
-    }
-
-    fn increment_edge_count(&mut self) {
-        self.incoming_edges += 1;
-    }
-
-    fn decrement_edge_count(&mut self) {
-        self.incoming_edges -= 1;
-    }
-}

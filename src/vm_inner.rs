@@ -1,5 +1,5 @@
 use std::mem;
-use std::old_io;
+use std::old_io::{self, BufReader};
 use std::old_io::fs::{mkdir_recursive, File, PathExtensions};
 use std::collections::HashMap;
 
@@ -13,17 +13,14 @@ use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, BusMap,
             ArtResult};
 use errors::ArtError;
 use options::Options;
+use opcode::{Opcode, ControlOpcode};
+use opcode_reader::OpcodeReader;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
 use expression::Expression;
 use expression_store::ExpressionStore;
 use constants::Constants;
-
-use phases::process;
-use phases::sort;
-use phases::run;
-use phases::clean;
 
 pub struct VmInner {
     pub input_channel: ByteCodeReceiver,
@@ -92,29 +89,99 @@ impl VmInner {
 
     fn tick(&mut self, adc_block: &[f32], dac_block: &mut [f32])
             -> StreamCallbackResult {
-        let mut bus_data = Vec::with_capacity(0);
-        mem::swap(&mut self.bus_data, &mut bus_data);
-        let _ = self.tick_inner(&mut bus_data, adc_block, dac_block);
-        mem::swap(&mut self.bus_data, &mut bus_data);
+        self.read();
+        for id in self.expressions.keys() {
+            self.expression_ids.push(*id);
+        }
+        self.graph.topological_sort(&mut self.expressions,
+                                    &mut self.expression_ids);
+        self.run(adc_block, dac_block);
+        self.clean();
         StreamCallbackResult::Continue
     }
 
-    fn tick_inner(&mut self, bus_data: &mut Vec<f32>,
-                 adc_block: &[f32], dac_block: &mut [f32])
-            -> ArtResult<()> {
-        let mut busses = ChannelStack::new(bus_data.as_mut_slice(),
-                                           self.constants.block_size);
-        let adc_index = try!(busses.push(self.constants.input_channels));
-        let dac_index = try!(busses.push(self.constants.output_channels));
-        try!(busses.write(adc_index, adc_block));
-        process::process(self);
-        sort::sort(self);
-        run::run(self, &mut busses);
-        try!(busses.read(dac_index, dac_block));
-        clean::clean(self);
+    /* Phases */
+    pub fn read(&mut self) {
+        let result = self.input_channel.try_recv();
+        if let Ok(byte_code) = result {
+            let result = self.process(&byte_code.data[..byte_code.size]);
+            result.unwrap_or_else(|error| error!("{}", error));
+        }
+    }
+
+    fn process(&mut self, byte_code: &[u8]) -> ArtResult<()> {
+        let mut reader = BufReader::new(byte_code);
+        while !reader.eof() {
+            let opcode = try!(reader.read_control_opcode());
+            try!(self.process_opcode(opcode, &mut reader));
+        }
         Ok(())
     }
 
+    fn process_opcode(&mut self, opcode: ControlOpcode,
+                      reader: &mut BufReader) -> ArtResult<()> {
+        match opcode {
+            ControlOpcode::AddExpression { expression_id, num_opcodes } => {
+                let start = try!(
+                    self.expression_store.push_from_reader(num_opcodes,
+                                                           reader)
+                );
+                self.add_expression(expression_id, start)
+            },
+            ControlOpcode::SetParameter { expression_id, unit_id,
+                                          parameter_id, value } => {
+                self.set_parameter((expression_id, unit_id, parameter_id),
+                                   value)
+            },
+            _ => {
+                Err(ArtError::UnimplementedOpcode {
+                    opcode: Opcode::Control(opcode)
+                })
+            }
+        }
+    }
+
+    pub fn run(&mut self, adc_block: &[f32], dac_block: &mut [f32]) {
+        let mut busses = ChannelStack::new(&mut self.bus_data,
+                                           self.constants.block_size);
+
+        let adc_index = busses.push(self.constants.input_channels).unwrap();
+        let dac_index = busses.push(self.constants.output_channels).unwrap();
+        self.bus_map.insert(0, adc_index);
+        self.bus_map.insert(1, dac_index);
+        busses.write(adc_index, adc_block).unwrap();
+        busses.zero(dac_index, self.constants.output_channels).unwrap();
+
+        let mut expression_ids = Vec::with_capacity(0);
+        mem::swap(&mut self.expression_ids, &mut expression_ids);
+
+        for id in expression_ids.iter() {
+            let expression = self.expressions.get(id).unwrap();
+            let mut stack = ChannelStack::new(&mut self.stack_data,
+                                              self.constants.block_size);
+            let result = expression.tick(
+                &self.expression_store, &mut stack, &mut busses,
+                &mut self.units, &mut self.parameters, &mut self.bus_map,
+                &self.constants
+            );
+            result.unwrap_or_else(|error| error!("{}", error));
+        }
+
+        mem::swap(&mut self.expression_ids, &mut expression_ids);
+
+        busses.read(dac_index, dac_block).unwrap();
+    }
+
+    pub fn clean(&mut self) {
+        self.graph.clear();
+        for (_, expression) in self.expressions.iter_mut() {
+            expression.incoming_edges = 0;
+        }
+        self.expression_ids.clear();
+        self.bus_map.clear();
+    }
+
+    /* Control instructions */
     pub fn add_expression(&mut self, id: u32, index: usize)
             -> ArtResult<()> {
         debug!("Adding expression: id={:?}, index={:?}", id, index);
