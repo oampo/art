@@ -84,6 +84,20 @@ impl<'a> ChannelStack<'a> {
         Ok(&mut self.data[start..end])
     }
 
+    pub fn zero(&mut self, index: u32, channels: u32) -> ArtResult<()> {
+        if (index + channels) as usize > self.capacity {
+            return Err(ArtError::StackOverflow);
+        }
+
+        let start = index as usize * self.channel_size;
+        let end = start + channels as usize * self.channel_size;
+        for i in range(start, end) {
+            self.data[i] = 0f32;
+        }
+        Ok(())
+    }
+
+
     pub fn split(&mut self, index: u32)
             -> (ChannelStack, ChannelStack) {
         let (left, right) = self.data.split_at_mut(
