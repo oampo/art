@@ -60,7 +60,11 @@ impl VmInner {
                 block_size: options.block_size as usize,
                 block_size_inverse: 1f32 / options.block_size as f32,
                 audio_rate: options.sample_rate as f32,
-                audio_rate_inverse: 1f32 / options.sample_rate as f32
+                audio_rate_inverse: 1f32 / options.sample_rate as f32,
+                control_rate: options.sample_rate as f32 /
+                              options.block_size as f32,
+                control_rate_inverse: options.block_size as f32 /
+                                      options.sample_rate as f32
             },
             unit_factory: UnitFactory::new(),
             expression_store: ExpressionStore::with_capacity(
@@ -142,23 +146,25 @@ impl VmInner {
     }
 
     pub fn run(&mut self, adc_block: &[f32], dac_block: &mut [f32]) {
-        let mut busses = ChannelStack::new(&mut self.bus_data,
-                                           self.constants.block_size);
+        let mut busses = ChannelStack::new(&mut self.bus_data);
 
-        let adc_index = busses.push(self.constants.input_channels).unwrap();
-        let dac_index = busses.push(self.constants.output_channels).unwrap();
+        let input_samples = self.constants.input_channels as usize *
+                            self.constants.block_size;
+        let output_samples = self.constants.output_channels as usize *
+                             self.constants.block_size;
+        let adc_index = busses.push(input_samples).unwrap();
+        let dac_index = busses.push(output_samples).unwrap();
         self.bus_map.insert(0, adc_index);
         self.bus_map.insert(1, dac_index);
         busses.write(adc_index, adc_block).unwrap();
-        busses.zero(dac_index, self.constants.output_channels).unwrap();
+        busses.zero(dac_index, output_samples).unwrap();
 
         let mut expression_ids = Vec::with_capacity(0);
         mem::swap(&mut self.expression_ids, &mut expression_ids);
 
         for id in expression_ids.iter() {
             let expression = self.expressions.get(id).unwrap();
-            let mut stack = ChannelStack::new(&mut self.stack_data,
-                                              self.constants.block_size);
+            let mut stack = ChannelStack::new(&mut self.stack_data);
             let result = expression.tick(
                 &self.expression_store, &mut stack, &mut busses,
                 &mut self.units, &mut self.parameters, &mut self.bus_map,

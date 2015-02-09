@@ -1,7 +1,7 @@
 use std::cmp;
 
 use rustc_serialize::{Encodable, Encoder};
-use types::{ArtResult, BusMap, ParameterMap};
+use types::{ArtResult, Rate, BusMap, ParameterMap};
 use errors::ArtError;
 use constants::Constants;
 
@@ -22,26 +22,37 @@ impl Unit {
         for (pid, parameter) in
                 self.definition.parameters.iter().enumerate() {
             parameters.insert((eid, uid, pid as u32),
-                              Parameter::new(parameter.default));
+                              Parameter::new(parameter));
         }
     }
 
     pub fn tick(&mut self, stack: &mut ChannelStack, busses: &mut ChannelStack,
                 parameters: &mut ParameterMap, bus_map: &mut BusMap,
                 constants: &Constants) -> ArtResult<()> {
-        let input_channels = self.layout.input;
-        let output_channels = self.layout.output;
-        let channels = cmp::max(input_channels, output_channels);
+        let input_channels = self.layout.input as usize;
+        let output_channels = self.layout.output as usize;
 
-        let index = try!(stack.pop(input_channels));
-        try!(stack.push(output_channels));
+        let input_samples = match self.definition.input_rate {
+            Rate::Audio => input_channels * constants.block_size,
+            Rate::Control => input_channels
+        };
+
+        let output_samples = match self.definition.output_rate {
+            Rate::Audio => output_channels * constants.block_size,
+            Rate::Control => output_channels
+        };
+
+        let samples = cmp::max(input_samples, output_samples);
+
+        let index = try!(stack.pop(input_samples));
+        try!(stack.push(output_samples));
 
         // Split the stack into the unit half, and half for the parameters
         let (mut unit_stack, mut parameter_stack) = stack.split(
-            index + channels
+            index + samples
         );
 
-        let mut block = try!(unit_stack.get(index, channels));
+        let mut block = try!(unit_stack.get(index, samples));
         try!(self.tick_parameters(&mut parameter_stack, busses, parameters,
                                   constants));
 
@@ -58,8 +69,14 @@ impl Unit {
                        parameters: &mut ParameterMap,
                        constants: &Constants) -> ArtResult<()> {
         let (eid, uid) = self.id;
-        for pid in range(0, self.definition.parameters.len()) {
-            let (_, mut channel) = stack.split(pid as u32);
+        for (pid, parameter) in self.definition.parameters.iter().enumerate() {
+            let samples = match parameter.rate {
+                Rate::Audio => constants.block_size,
+                Rate::Control => 1
+            };
+
+            let index = try!(stack.push(samples));
+            let (_, mut channel) = stack.split(index);
 
             let parameter = try!(
                 parameters.get_mut(&(eid, uid, pid as u32)).ok_or(
@@ -76,6 +93,15 @@ impl Unit {
     }
 }
 
+
+#[derive(Copy, RustcEncodable)]
+pub enum UnitKind {
+    Source,
+    Processor,
+    Sink
+}
+
+
 #[derive(Copy, RustcEncodable)]
 pub struct ChannelLayout {
     pub input: u32,
@@ -90,6 +116,9 @@ pub type TickFunction = fn(
 #[derive(Copy)]
 pub struct UnitDefinition {
     pub name: &'static str,
+    pub kind: UnitKind,
+    pub input_rate: Rate,
+    pub output_rate: Rate,
     pub default_channels: ChannelLayout,
     pub parameters: &'static [ParameterDefinition],
     pub tick: TickFunction

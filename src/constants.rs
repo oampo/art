@@ -5,5 +5,7 @@ pub struct Constants {
     pub block_size: usize,
     pub block_size_inverse: f32,
     pub audio_rate: f32,
-    pub audio_rate_inverse: f32
+    pub audio_rate_inverse: f32,
+    pub control_rate: f32,
+    pub control_rate_inverse: f32
 }

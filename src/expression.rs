@@ -84,7 +84,7 @@ impl Expression {
                         )
                     );
                     try!(
-                        parameter.tick(stack, busses)
+                        parameter.tick(stack, busses, constants)
                     );
                 },
                 _ => {

@@ -6,26 +6,21 @@ use errors::ArtError;
 #[derive(Debug)]
 pub struct ChannelStack<'a> {
     data: &'a mut[f32],
-    channel_size: usize,
-    position: u32,
-    capacity: usize
+    position: usize
 }
 
 impl<'a> ChannelStack<'a> {
-    pub fn new(data: &'a mut[f32], channel_size: usize) -> ChannelStack<'a> {
-        let len = data.len();
+    pub fn new(data: &'a mut[f32]) -> ChannelStack<'a> {
         ChannelStack {
             data: data,
-            channel_size: channel_size,
-            position: 0,
-            capacity: len / channel_size,
+            position: 0
         }
     }
 
-    pub fn push(&mut self, channels: u32) -> ArtResult<u32> {
-        let mut position = self.position + channels;
+    pub fn push(&mut self, samples: usize) -> ArtResult<usize> {
+        let mut position = self.position + samples;
 
-        if position as usize > self.capacity {
+        if position > self.data.len() {
             return Err(ArtError::StackOverflow);
         }
 
@@ -33,79 +28,74 @@ impl<'a> ChannelStack<'a> {
         Ok(position)
     }
 
-    pub fn pop(&mut self, channels: u32) -> ArtResult<u32> {
-        if channels > self.position {
+    pub fn pop(&mut self, samples: usize) -> ArtResult<usize> {
+        if samples > self.position {
             return Err(ArtError::StackUnderflow);
         }
 
-        self.position -= channels;
+        self.position -= samples;
         Ok(self.position)
     }
 
-    pub fn read(&self, index: u32, values: &mut[f32]) -> ArtResult<()> {
-        if index as usize + values.len() / self.channel_size > self.capacity {
+    pub fn read(&self, index: usize, values: &mut[f32]) -> ArtResult<()> {
+        if index + values.len() > self.data.len() {
             return Err(ArtError::StackOverflow);
         }
 
-        values.clone_from_slice(&self.data[index as usize * self.channel_size..]);
+        values.clone_from_slice(&self.data[index..]);
         Ok(())
     }
 
-    pub fn write(&mut self, index: u32, values: &[f32]) -> ArtResult<()> {
-        if index as usize + values.len() / self.channel_size > self.capacity {
+    pub fn write(&mut self, index: usize, values: &[f32]) -> ArtResult<()> {
+        if index + values.len() > self.data.len() {
             return Err(ArtError::StackOverflow);
         }
 
-        (&mut self.data[index as usize * self.channel_size..]).clone_from_slice(values);
+        (&mut self.data[index..]).clone_from_slice(values);
         Ok(())
     }
 
-    pub fn add(&mut self, index: u32, values: &[f32]) -> ArtResult<()> {
-        if index as usize + values.len() / self.channel_size > self.capacity {
+    pub fn add(&mut self, index: usize, values: &[f32]) -> ArtResult<()> {
+        if index + values.len() > self.data.len() {
             return Err(ArtError::StackOverflow);
         }
 
-        let start = index as usize * self.channel_size;
         for i in range(0, values.len()) {
-            self.data[start + i] += values[i];
+            self.data[index + i] += values[i];
         }
         Ok(())
     }
 
 
-    pub fn get(&mut self, index: u32, channels: u32) -> ArtResult<&mut[f32]> {
-        if (index + channels) as usize > self.capacity {
+    pub fn get(&mut self, index: usize, samples: usize)
+            -> ArtResult<&mut[f32]> {
+        if index + samples > self.data.len() {
             return Err(ArtError::StackOverflow);
         }
 
-        let start = index as usize * self.channel_size;
-        let end = start + channels as usize * self.channel_size;
+        let end = index + samples;
 
-        Ok(&mut self.data[start..end])
+        Ok(&mut self.data[index..end])
     }
 
-    pub fn zero(&mut self, index: u32, channels: u32) -> ArtResult<()> {
-        if (index + channels) as usize > self.capacity {
+    pub fn zero(&mut self, index: usize, samples: usize) -> ArtResult<()> {
+        if index + samples > self.data.len() {
             return Err(ArtError::StackOverflow);
         }
 
-        let start = index as usize * self.channel_size;
-        let end = start + channels as usize * self.channel_size;
-        for i in range(start, end) {
+        for i in range(index, index + samples) {
             self.data[i] = 0f32;
         }
         Ok(())
     }
 
 
-    pub fn split(&mut self, index: u32)
+    pub fn split(&mut self, index: usize)
             -> (ChannelStack, ChannelStack) {
-        let (left, right) = self.data.split_at_mut(
-            index as usize * self.channel_size
-        );
+        let (left, right) = self.data.split_at_mut(index);
 
-        let left_stack = ChannelStack::new(left, self.channel_size);
-        let right_stack = ChannelStack::new(right, self.channel_size);
+        let left_stack = ChannelStack::new(left);
+        let right_stack = ChannelStack::new(right);
         return (left_stack, right_stack);
     }
 }

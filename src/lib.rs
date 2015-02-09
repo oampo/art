@@ -35,10 +35,10 @@ pub mod dsp {
     pub mod oscillators {
         pub mod sine;
     }
-    pub mod bus {
+/*    pub mod bus {
         pub mod bus_in;
         pub mod bus_out;
-    }
+    }*/
 }
 
 

@@ -7,20 +7,20 @@ use parameter::ParameterDefinition;
 use channel_stack::ChannelStack;
 use constants::Constants;
 
-pub static BUS_IN_PARAMETERS: [ParameterDefinition; 1] = [
+pub static PARAMETERS: [ParameterDefinition; 1] = [
     ParameterDefinition {
         name: "bus_id",
         default: 0.
     }
 ];
 
-pub static BUS_IN_DEFINITION: UnitDefinition = UnitDefinition {
+pub static DEFINITION: UnitDefinition = UnitDefinition {
     name: "bus_in",
     default_channels: ChannelLayout {
         input: 0,
         output: 1
     },
-    parameters: &BUS_IN_PARAMETERS,
+    parameters: &PARAMETERS,
     tick: BusIn::tick
 };
 
@@ -31,7 +31,7 @@ impl BusIn {
     pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32)
             -> Unit {
         Unit {
-            definition: &BUS_IN_DEFINITION,
+            definition: &DEFINITION,
             id: id,
             layout: ChannelLayout {
                 input: input_channels,

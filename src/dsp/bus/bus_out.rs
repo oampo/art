@@ -7,20 +7,20 @@ use parameter::ParameterDefinition;
 use channel_stack::ChannelStack;
 use constants::Constants;
 
-pub static BUS_OUT_PARAMETERS: [ParameterDefinition; 1] = [
+pub static PARAMETERS: [ParameterDefinition; 1] = [
     ParameterDefinition {
         name: "bus_id",
         default: 0.
     }
 ];
 
-pub static BUS_OUT_DEFINITION: UnitDefinition = UnitDefinition {
+pub static DEFINITION: UnitDefinition = UnitDefinition {
     name: "bus_in",
     default_channels: ChannelLayout {
         input: 1,
         output: 0
     },
-    parameters: &BUS_OUT_PARAMETERS,
+    parameters: &PARAMETERS,
     tick: BusOut::tick
 };
 
@@ -31,7 +31,7 @@ impl BusOut {
     pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32)
             -> Unit {
         Unit {
-            definition: &BUS_OUT_DEFINITION,
+            definition: &DEFINITION,
             id: id,
             layout: ChannelLayout {
                 input: input_channels,
