@@ -127,17 +127,16 @@ impl SineKr {
     fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
             _: &mut TickAdjuncts, constants: &Constants) -> ArtResult<()> {
         if let UnitData::Sine {ref mut position} = unit.data {
-            let (mut frequency_stack, mut phase_stack) = parameters.split(1);
-            let frequency = try!(frequency_stack.get(0, 1));
-            let phase = try!(phase_stack.get(0, 1));
+            let frequency = parameters.data[0];
+            let phase = parameters.data[1];
 
             let channels = unit.layout.output as usize;
 
-            let value = (*position + phase[0]).sin();
+            let value = (*position + phase).sin();
             for i in range(0, channels) {
                 block[i] = value;
             }
-            *position += frequency[0] * PI_2 * constants.control_rate_inverse;
+            *position += frequency * PI_2 * constants.control_rate_inverse;
             *position = modulo(*position, PI_2);
         }
         Ok(())
