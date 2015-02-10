@@ -55,12 +55,10 @@ impl Unit {
         let mut block = try!(unit_stack.get(index, samples));
         try!(self.tick_parameters(&mut parameter_stack, busses, parameters,
                                   constants));
-
         try!(
             (self.definition.tick)(self, block, &mut parameter_stack,
-                                   busses, bus_map, constants)
+                                   busses, bus_map, parameters, constants)
         );
-
         Ok(())
     }
 
@@ -87,7 +85,7 @@ impl Unit {
                     }
                 )
             );
-            try!(parameter.get(&mut channel, busses, constants));
+            try!(parameter.read(&mut channel, busses, constants));
         }
         Ok(())
     }
@@ -108,9 +106,15 @@ pub struct ChannelLayout {
     pub output: u32
 }
 
+pub struct TickAdjuncts<'a> {
+    busses: &'a mut ChannelStack<'a>,
+    bus_map: &'a mut BusMap,
+    parameters: &'a mut ParameterMap
+}
+
 pub type TickFunction = fn(
     unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
-    busses: &mut ChannelStack, bus_map: &mut BusMap, constants: &Constants
+    busses: &mut ChannelStack, bus_map: &mut BusMap, parameter_map: &mut ParameterMap, constants: &Constants
 ) -> ArtResult<()>;
 
 #[derive(Copy)]

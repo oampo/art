@@ -8,7 +8,6 @@ pub enum ControlOpcodeType {
 #[derive(FromPrimitive, Copy, Debug)]
 pub enum DspOpcodeType {
     Unit = 3,
-    Parameter,
     Sample
 }
 
@@ -36,11 +35,6 @@ pub enum DspOpcode {
         type_id: u32,
         input_channels: u32,
         output_channels: u32
-    },
-    Parameter {
-        expression_id: u32,
-        unit_id: u32,
-        parameter_id: u32
     },
     Sample {
         value: f32

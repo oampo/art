@@ -5,7 +5,7 @@ use errors::ArtError;
 
 #[derive(Debug)]
 pub struct ChannelStack<'a> {
-    data: &'a mut[f32],
+    pub data: &'a mut[f32],
     position: usize
 }
 

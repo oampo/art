@@ -58,9 +58,6 @@ pub trait OpcodeReader: Reader {
             DspOpcodeType::Unit => {
                 self.read_unit()
             },
-            DspOpcodeType::Parameter => {
-                self.read_parameter()
-            },
             DspOpcodeType::Sample => {
                 self.read_sample()
             }
@@ -123,19 +120,6 @@ pub trait OpcodeReader: Reader {
                 type_id: type_id,
                 input_channels: input_channels,
                 output_channels: output_channels
-            }
-        )
-    }
-
-    fn read_parameter(&mut self) -> Result<DspOpcode, IoError> {
-        let expression_id = try!(self.read_be_u32());
-        let unit_id = try!(self.read_be_u32());
-        let parameter_id = try!(self.read_be_u32());
-        Ok(
-            DspOpcode::Parameter {
-                expression_id: expression_id,
-                unit_id: unit_id,
-                parameter_id: parameter_id
             }
         )
     }

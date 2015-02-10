@@ -71,22 +71,6 @@ impl Expression {
                                   constants)
                     );
                 },
-                DspOpcode::Parameter { expression_id, unit_id,
-                                        parameter_id } => {
-                    let parameter = try!(
-                        parameters.get_mut(&(expression_id, unit_id,
-                                             parameter_id)).ok_or(
-                            ArtError::ParameterNotFound {
-                                expression_id: expression_id,
-                                unit_id: unit_id,
-                                parameter_id: parameter_id
-                            }
-                        )
-                    );
-                    try!(
-                        parameter.tick(stack, busses, constants)
-                    );
-                },
                 _ => {
                     return Err(ArtError::UnimplementedOpcode {
                         opcode: Opcode::Dsp(opcode)
