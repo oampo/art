@@ -11,6 +11,7 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
 use util;
 use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, BusMap,
             ArtResult};
+use unit::TickAdjuncts;
 use errors::ArtError;
 use options::Options;
 use opcode::{Opcode, ControlOpcode};
@@ -162,20 +163,24 @@ impl VmInner {
         let mut expression_ids = Vec::with_capacity(0);
         mem::swap(&mut self.expression_ids, &mut expression_ids);
 
+        let mut adjuncts = TickAdjuncts {
+            busses: &mut busses,
+            bus_map: &mut self.bus_map,
+            parameters: &mut self.parameters
+        };
+
         for id in expression_ids.iter() {
             let expression = self.expressions.get(id).unwrap();
             let mut stack = ChannelStack::new(&mut self.stack_data);
             let result = expression.tick(
-                &self.expression_store, &mut stack, &mut busses,
-                &mut self.units, &mut self.parameters, &mut self.bus_map,
-                &self.constants
+                &self.expression_store, &mut stack, &mut self.units,
+                &mut adjuncts, &self.constants
             );
             result.unwrap_or_else(|error| error!("{}", error));
         }
-
         mem::swap(&mut self.expression_ids, &mut expression_ids);
 
-        busses.read(dac_index, dac_block).unwrap();
+        adjuncts.busses.read(dac_index, dac_block).unwrap();
     }
 
     pub fn clean(&mut self) {

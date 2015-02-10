@@ -26,9 +26,9 @@ impl Unit {
         }
     }
 
-    pub fn tick(&mut self, stack: &mut ChannelStack, busses: &mut ChannelStack,
-                parameters: &mut ParameterMap, bus_map: &mut BusMap,
-                constants: &Constants) -> ArtResult<()> {
+    pub fn tick(&mut self, stack: &mut ChannelStack,
+                adjuncts: &mut TickAdjuncts, constants: &Constants)
+            -> ArtResult<()> {
         let input_channels = self.layout.input as usize;
         let output_channels = self.layout.output as usize;
 
@@ -53,18 +53,17 @@ impl Unit {
         );
 
         let mut block = try!(unit_stack.get(index, samples));
-        try!(self.tick_parameters(&mut parameter_stack, busses, parameters,
+        try!(self.tick_parameters(&mut parameter_stack, adjuncts,
                                   constants));
         try!(
             (self.definition.tick)(self, block, &mut parameter_stack,
-                                   busses, bus_map, parameters, constants)
+                                   adjuncts, constants)
         );
         Ok(())
     }
 
     fn tick_parameters(&self, stack: &mut ChannelStack,
-                       busses: &mut ChannelStack,
-                       parameters: &mut ParameterMap,
+                       adjuncts: &mut TickAdjuncts,
                        constants: &Constants) -> ArtResult<()> {
         let (eid, uid) = self.id;
         for (pid, parameter) in self.definition.parameters.iter().enumerate() {
@@ -77,7 +76,7 @@ impl Unit {
             let (_, mut channel) = stack.split(index);
 
             let parameter = try!(
-                parameters.get_mut(&(eid, uid, pid as u32)).ok_or(
+                adjuncts.parameters.get_mut(&(eid, uid, pid as u32)).ok_or(
                     ArtError::ParameterNotFound {
                         expression_id: eid,
                         unit_id: uid,
@@ -85,7 +84,7 @@ impl Unit {
                     }
                 )
             );
-            try!(parameter.read(&mut channel, busses, constants));
+            try!(parameter.read(&mut channel, adjuncts.busses, constants));
         }
         Ok(())
     }
@@ -107,14 +106,14 @@ pub struct ChannelLayout {
 }
 
 pub struct TickAdjuncts<'a> {
-    busses: &'a mut ChannelStack<'a>,
-    bus_map: &'a mut BusMap,
-    parameters: &'a mut ParameterMap
+    pub busses: &'a mut ChannelStack<'a>,
+    pub bus_map: &'a mut BusMap,
+    pub parameters: &'a mut ParameterMap
 }
 
 pub type TickFunction = fn(
     unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
-    busses: &mut ChannelStack, bus_map: &mut BusMap, parameter_map: &mut ParameterMap, constants: &Constants
+    adjuncts: &mut TickAdjuncts, constants: &Constants
 ) -> ArtResult<()>;
 
 #[derive(Copy)]

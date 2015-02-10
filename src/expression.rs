@@ -1,4 +1,5 @@
-use types::{ArtResult, UnitMap, ParameterMap, BusMap};
+use types::{ArtResult, UnitMap, ParameterMap};
+use unit::TickAdjuncts;
 use errors::ArtError;
 use constants::Constants;
 use opcode::{DspOpcode, Opcode};
@@ -52,8 +53,7 @@ impl Expression {
     }
 
     pub fn tick(&self, store: &ExpressionStore, stack: &mut ChannelStack,
-                busses: &mut ChannelStack, units: &mut UnitMap,
-                parameters: &mut ParameterMap, bus_map: &mut BusMap,
+                units: &mut UnitMap, adjuncts: &mut TickAdjuncts,
                 constants: &Constants) -> ArtResult<()> {
         for opcode in try!(store.iter(self.index)) {
             match opcode {
@@ -67,7 +67,7 @@ impl Expression {
                         )
                     );
                     try!(
-                        unit.tick(stack, busses, parameters, bus_map,
+                        unit.tick(stack, adjuncts,
                                   constants)
                     );
                 },

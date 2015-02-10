@@ -1,7 +1,7 @@
 use std::num::Float;
 use std::f32::consts::PI_2;
 
-use types::{ArtResult, Rate, BusMap, ParameterMap};
+use types::{ArtResult, Rate};
 
 use unit::{Unit, UnitDefinition, UnitData, ChannelLayout, UnitKind,
            TickAdjuncts};
@@ -57,8 +57,7 @@ impl SineAr {
     }
 
     fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
-            _: &mut ChannelStack, _: &mut BusMap, _: &mut ParameterMap,
-            constants: &Constants) -> ArtResult<()> {
+            _: &mut TickAdjuncts, constants: &Constants) -> ArtResult<()> {
         if let UnitData::Sine {ref mut position} = unit.data {
             let (mut frequency_stack, mut phase_stack) = parameters.split(1);
             let frequency = try!(frequency_stack.get(0, 1));
@@ -126,8 +125,7 @@ impl SineKr {
     }
 
     fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
-            _: &mut ChannelStack, _: &mut BusMap, _: &mut ParameterMap,
-            constants: &Constants) -> ArtResult<()> {
+            _: &mut TickAdjuncts, constants: &Constants) -> ArtResult<()> {
         if let UnitData::Sine {ref mut position} = unit.data {
             let (mut frequency_stack, mut phase_stack) = parameters.split(1);
             let frequency = try!(frequency_stack.get(0, 1));
