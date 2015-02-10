@@ -1,6 +1,6 @@
 use std::num::Float;
 
-use types::{ArtResult, Rate, ParameterMap, BusMap};
+use types::{ArtResult, Rate};
 use errors::ArtError;
 
 use unit::{Unit, UnitDefinition, UnitData, ChannelLayout, UnitKind,
@@ -57,16 +57,15 @@ impl ParameterWriterAr {
         }
     }
 
-    fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
-            busses: &mut ChannelStack, _: &mut BusMap,
-            parameter_map: &mut ParameterMap, constants: &Constants)
+    fn tick(_: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
+            adjuncts: &mut TickAdjuncts, constants: &Constants)
                 -> ArtResult<()> {
         let eid = parameters.data[0].round() as u32;
         let uid = parameters.data[1].round() as u32;
         let pid = parameters.data[2].round() as u32;
 
         let parameter = try!(
-            parameter_map.get_mut(&(eid, uid, pid)).ok_or(
+            adjuncts.parameters.get_mut(&(eid, uid, pid)).ok_or(
                 ArtError::ParameterNotFound {
                     expression_id: eid,
                     unit_id: uid,
@@ -78,9 +77,9 @@ impl ParameterWriterAr {
         match parameter.definition.rate {
             Rate::Audio => {
                 let bus_index = try!(
-                    busses.push(constants.block_size)
+                    adjuncts.busses.push(constants.block_size)
                 );
-                try!(busses.write(bus_index, block));
+                try!(adjuncts.busses.write(bus_index, block));
                 parameter.bus = Some(bus_index);
             },
             Rate::Control => {
@@ -121,16 +120,15 @@ impl ParameterWriterKr {
         }
     }
 
-    fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
-            _: &mut ChannelStack, _: &mut BusMap,
-            parameter_map: &mut ParameterMap, constants: &Constants)
+    fn tick(_: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
+            adjuncts: &mut TickAdjuncts, _: &Constants)
                 -> ArtResult<()> {
         let eid = parameters.data[0].round() as u32;
         let uid = parameters.data[1].round() as u32;
         let pid = parameters.data[2].round() as u32;
 
         let parameter = try!(
-            parameter_map.get_mut(&(eid, uid, pid)).ok_or(
+            adjuncts.parameters.get_mut(&(eid, uid, pid)).ok_or(
                 ArtError::ParameterNotFound {
                     expression_id: eid,
                     unit_id: uid,
