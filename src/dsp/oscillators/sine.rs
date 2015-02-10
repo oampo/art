@@ -59,9 +59,10 @@ impl SineAr {
     fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
             _: &mut TickAdjuncts, constants: &Constants) -> ArtResult<()> {
         if let UnitData::Sine {ref mut position} = unit.data {
-            let (mut frequency_stack, mut phase_stack) = parameters.split(1);
-            let frequency = try!(frequency_stack.get(0, 1));
-            let phase = try!(phase_stack.get(0, 1));
+            let (mut frequency_stack,
+                 mut phase_stack) = parameters.split(constants.block_size);
+            let frequency = try!(frequency_stack.get(0, constants.block_size));
+            let phase = try!(phase_stack.get(0, constants.block_size));
 
             let channels = unit.layout.output as usize;
 
