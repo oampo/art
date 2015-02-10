@@ -4,9 +4,9 @@ use unit::{Unit, UnitDefinition};
 use types::{ArtResult, UnitConstructor};
 use errors::ArtError;
 
-use dsp::oscillators::sine::{self, SineAr};
-/*use dsp::bus::bus_in::{self, BusIn};
-use dsp::bus::bus_out::{self, BusOut};*/
+use dsp::oscillators::sine::{self, SineAr, SineKr};
+use dsp::bus::bus_in::{self, BusInAr, BusInKr};
+use dsp::bus::bus_out::{self, BusOutAr, BusOutKr};
 
 #[derive(Copy)]
 pub struct UnitFactoryItem {
@@ -28,8 +28,11 @@ impl UnitFactory {
     pub fn new() -> UnitFactory {
         let mut factory = UnitFactory {units: Vec::new()};
         factory.register(&sine::DEFINITION_AR, SineAr::new);
-/*        factory.register(&bus_in::DEFINITION, BusIn::new);
-        factory.register(&bus_out::DEFINITION, BusOut::new);*/
+        factory.register(&sine::DEFINITION_KR, SineKr::new);
+        factory.register(&bus_in::DEFINITION_AR, BusInAr::new);
+        factory.register(&bus_in::DEFINITION_KR, BusInKr::new);
+        factory.register(&bus_out::DEFINITION_AR, BusOutAr::new);
+        factory.register(&bus_out::DEFINITION_KR, BusOutKr::new);
         factory
     }
 
