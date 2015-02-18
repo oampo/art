@@ -122,7 +122,7 @@ pub struct UnitDefinition {
     pub kind: UnitKind,
     pub input_rate: Rate,
     pub output_rate: Rate,
-    pub default_channels: ChannelLayout,
+    pub default_layout: ChannelLayout,
     pub parameters: &'static [ParameterDefinition],
     pub tick: TickFunction
 }
@@ -136,8 +136,8 @@ impl Encodable for UnitDefinition {
                 )
             );
             try!(
-                encoder.emit_struct_field("default_channels", 1, |encoder|
-                    self.default_channels.encode(encoder)
+                encoder.emit_struct_field("default_layout", 1, |encoder|
+                    self.default_layout.encode(encoder)
                 )
             );
             try!(

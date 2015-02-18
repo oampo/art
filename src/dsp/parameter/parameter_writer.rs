@@ -32,7 +32,7 @@ pub static DEFINITION_AR: UnitDefinition = UnitDefinition {
     kind: UnitKind::Sink,
     input_rate: Rate::Audio,
     output_rate: Rate::Audio,
-    default_channels: ChannelLayout {
+    default_layout: ChannelLayout {
         input: 1,
         output: 0
     },
@@ -95,7 +95,7 @@ pub static DEFINITION_KR: UnitDefinition = UnitDefinition {
     kind: UnitKind::Sink,
     input_rate: Rate::Control,
     output_rate: Rate::Control,
-    default_channels: ChannelLayout {
+    default_layout: ChannelLayout {
         input: 1,
         output: 0
     },
