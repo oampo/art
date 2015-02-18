@@ -129,19 +129,34 @@ pub struct UnitDefinition {
 
 impl Encodable for UnitDefinition {
     fn encode<S: Encoder>(&self, encoder: &mut S) -> Result<(), S::Error> {
-        encoder.emit_struct("UnitDefinition", 3, |encoder| {
+        encoder.emit_struct("UnitDefinition", 6, |encoder| {
             try!(
                 encoder.emit_struct_field("name", 0, |encoder|
                     self.name.encode(encoder)
                 )
             );
             try!(
-                encoder.emit_struct_field("default_layout", 1, |encoder|
+                encoder.emit_struct_field("kind", 1, |encoder|
+                    self.kind.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("input_rate", 2, |encoder|
+                    self.input_rate.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("output_rate", 3, |encoder|
+                    self.output_rate.encode(encoder)
+                )
+            );
+            try!(
+                encoder.emit_struct_field("default_layout", 4, |encoder|
                     self.default_layout.encode(encoder)
                 )
             );
             try!(
-                encoder.emit_struct_field("parameters", 2, |encoder|
+                encoder.emit_struct_field("parameters", 5, |encoder|
                     self.parameters.encode(encoder)
                 )
             );
