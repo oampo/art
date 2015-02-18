@@ -2,6 +2,7 @@ use portaudio;
 
 use types::ArtResult;
 use constants::Constants;
+use options::Options;
 
 pub type Stream<'a> = portaudio::stream::Stream<'a, f32, f32>;
 pub type Callback<'a> = portaudio::stream::StreamCallback<'a, f32, f32>;
@@ -18,34 +19,17 @@ impl DeviceId {
     }
 }
 
-pub struct Device<'a> {
-    input_device: DeviceId,
-    output_device: DeviceId,
-    input_channels: u32,
-    output_channels: u32,
-    stream: Option<Stream<'a>>
-}
+pub struct Device;
 
-impl<'a> Device <'a> {
-    pub fn new(input_device: DeviceId, output_device: DeviceId,
-               input_channels: u32, output_channels: u32) -> Device<'a> {
-        Device {
-            input_device: input_device,
-            output_device: output_device,
-            input_channels: input_channels,
-            output_channels: output_channels,
-            stream: None
-        }
-    }
-
+impl Device {
     pub fn init() -> ArtResult<()> {
-        info!("Initializing PortAudio");
+        debug!("Initializing PortAudio");
         try!(portaudio::initialize());
         Ok(())
     }
 
     pub fn uninit() -> ArtResult<()> {
-        info!("Terminating PortAudio");
+        debug!("Terminating PortAudio");
         try!(portaudio::terminate());
         Ok(())
     }
@@ -69,22 +53,10 @@ impl<'a> Device <'a> {
         Ok(())
     }
 
-    pub fn is_open(&self) -> bool {
-        self.stream.is_some()
-    }
-
-    pub fn start(&mut self) -> ArtResult<()> {
-        let stream = try!(
-            self.stream.as_mut().ok_or(portaudio::pa::PaError::BadStreamPtr)
-        );
-        try!(stream.start());
-        Ok(())
-    }
-
-    pub fn open(&mut self, callback: &'a mut Callback<'a>,
-                constants: Constants) -> ArtResult<()> {
+    pub fn open<'a>(options: &Options, callback: &'a mut Callback<'a>,
+                    constants: Constants) -> ArtResult<Stream<'a>> {
         // Currently pa-rs requires both input and output
-        let input_device_id = match self.input_device {
+        let input_device_id = match options.input_device {
             DeviceId::Id(id) =>  id,
             DeviceId::Default => {
                 try!(portaudio::device::get_default_input_index())
@@ -99,11 +71,11 @@ impl<'a> Device <'a> {
 
         let input_parameters = portaudio::stream::StreamParameters {
             device: input_device_id,
-            channel_count: self.input_channels,
+            channel_count: options.input_channels,
             suggested_latency: input_device_info.default_low_input_latency
         };
 
-        let output_device_id = match self.output_device {
+        let output_device_id = match options.output_device {
             DeviceId::Id(id) => id,
             DeviceId::Default => {
                 try!(portaudio::device::get_default_output_index())
@@ -116,15 +88,15 @@ impl<'a> Device <'a> {
             )
         );
 
-        info!("Creating audio stream: input_device = {}, output_device = {}, \
-               input_channels = {}, output_channels = {}",
-              input_device_info.name, output_device_info.name,
-              self.input_channels, self.output_channels);
+        debug!("Creating audio stream: input_device = {}, output_device = {}, \
+                input_channels = {}, output_channels = {}",
+                input_device_info.name, output_device_info.name,
+                options.input_channels, options.output_channels);
 
 
         let output_parameters = portaudio::stream::StreamParameters {
             device: output_device_id,
-            channel_count: self.output_channels,
+            channel_count: options.output_channels,
             suggested_latency: output_device_info.default_low_input_latency
         };
 
@@ -135,7 +107,7 @@ impl<'a> Device <'a> {
             )
         );
 
-        self.stream = Some(
+        Ok(
             try!(
                 portaudio::stream::Stream::open(
                     input_parameters,
@@ -146,8 +118,7 @@ impl<'a> Device <'a> {
                     Some(callback)
                 )
             )
-        );
-        Ok(())
+        )
     }
 }
 
