@@ -2,10 +2,11 @@ use types::{ArtResult, UnitMap, ParameterMap};
 use unit::TickAdjuncts;
 use errors::ArtError;
 use constants::Constants;
-use opcode::{DspOpcode, Opcode};
+use opcode::{DspOpcode};
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use expression_store::ExpressionStore;
+use operators;
 
 #[derive(Copy)]
 pub enum ExpressionState {
@@ -71,10 +72,8 @@ impl Expression {
                                   constants)
                     );
                 },
-                _ => {
-                    return Err(ArtError::UnimplementedOpcode {
-                        opcode: Opcode::Dsp(opcode)
-                    });
+                DspOpcode::Add { channels, rate } => {
+                    try!(operators::add(stack, channels, rate, constants))
                 }
             }
         }

@@ -58,8 +58,8 @@ pub trait OpcodeReader: Reader {
             DspOpcodeType::Unit => {
                 self.read_unit()
             },
-            DspOpcodeType::Sample => {
-                self.read_sample()
+            DspOpcodeType::Add => {
+                self.read_add()
             }
         }
     }
@@ -124,11 +124,22 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_sample(&mut self) -> Result<DspOpcode, IoError> {
-        let value = try!(self.read_be_f32());
+    fn read_add(&mut self) -> Result<DspOpcode, IoError> {
+        let channels = try!(self.read_be_u32());
+        let raw_rate = try!(self.read_be_u32());
+        let rate = try!(
+            FromPrimitive::from_u32(raw_rate).ok_or(
+                IoError {
+                    kind: IoErrorKind::InvalidInput,
+                    desc: "Unknown rate",
+                    detail: None
+                }
+            )
+        );
         Ok(
-            DspOpcode::Sample {
-                value: value
+            DspOpcode::Add {
+                channels: channels,
+                rate: rate
             }
         )
     }

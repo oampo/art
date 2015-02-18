@@ -1,3 +1,5 @@
+use types::Rate;
+
 #[derive(FromPrimitive, Copy, Debug)]
 pub enum ControlOpcodeType {
     SetParameter,
@@ -8,7 +10,7 @@ pub enum ControlOpcodeType {
 #[derive(FromPrimitive, Copy, Debug)]
 pub enum DspOpcodeType {
     Unit = 3,
-    Sample
+    Add
 }
 
 #[derive(Copy, Debug)]
@@ -36,8 +38,9 @@ pub enum DspOpcode {
         input_channels: u32,
         output_channels: u32
     },
-    Sample {
-        value: f32
+    Add {
+        channels: u32,
+        rate: Rate
     }
 }
 

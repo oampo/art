@@ -29,6 +29,8 @@ pub mod graph;
 pub mod expression_store;
 pub mod channel_stack;
 
+pub mod operators;
+
 pub mod util;
 
 pub mod dsp {

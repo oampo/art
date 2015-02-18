@@ -28,7 +28,7 @@ pub type UnitConstructor = fn((u32, u32), u32, u32) -> Unit;
 
 pub type ArtResult<T> = Result<T, ArtError>;
 
-#[derive(Copy, RustcEncodable)]
+#[derive(Copy, RustcEncodable, Debug, FromPrimitive)]
 pub enum Rate {
     Audio,
     Control
