@@ -14,7 +14,7 @@ use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, BusMap,
 use unit::TickAdjuncts;
 use errors::ArtError;
 use options::Options;
-use opcode::{Opcode, ControlOpcode};
+use opcode::{ControlOpcode};
 use opcode_reader::OpcodeReader;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
@@ -138,10 +138,9 @@ impl VmInner {
                 self.set_parameter((expression_id, unit_id, parameter_id),
                                    value)
             },
-            _ => {
-                Err(ArtError::UnimplementedOpcode {
-                    opcode: Opcode::Control(opcode)
-                })
+            ControlOpcode::AddEdge { from, to } => {
+                self.graph.add_edge(from, to);
+                Ok(())
             }
         }
     }

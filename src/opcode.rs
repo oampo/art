@@ -4,13 +4,14 @@ use types::Rate;
 pub enum ControlOpcodeType {
     SetParameter,
     AddExpression,
-    Play
+    AddEdge,
 }
 
 #[derive(FromPrimitive, Copy, Debug)]
 pub enum DspOpcodeType {
     Unit = 3,
-    Add
+    Add,
+    Multiply
 }
 
 #[derive(Copy, Debug)]
@@ -25,8 +26,9 @@ pub enum ControlOpcode {
         expression_id: u32,
         num_opcodes: u32
     },
-    Play {
-        expression_id: u32
+    AddEdge {
+        from: u32,
+        to: u32
     }
 }
 
@@ -39,6 +41,10 @@ pub enum DspOpcode {
         output_channels: u32
     },
     Add {
+        channels: u32,
+        rate: Rate
+    },
+    Multiply {
         channels: u32,
         rate: Rate
     }

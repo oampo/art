@@ -74,6 +74,9 @@ impl Expression {
                 },
                 DspOpcode::Add { channels, rate } => {
                     try!(operators::add(stack, channels, rate, constants))
+                },
+                DspOpcode::Multiply { channels, rate } => {
+                    try!(operators::multiply(stack, channels, rate, constants))
                 }
             }
         }

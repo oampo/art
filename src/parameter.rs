@@ -46,6 +46,7 @@ impl Parameter {
                     for i in range(0, constants.block_size) {
                         block[i] = self.last_value + i as f32 * delta;
                     }
+                    self.last_value = self.value;
                 }
             }
         }

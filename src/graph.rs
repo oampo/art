@@ -51,7 +51,6 @@ impl Graph {
     }
 
     pub fn clear(&mut self) {
-        self.edges.clear();
     }
 
     pub fn topological_sort(&mut self, map: &mut ExpressionMap,

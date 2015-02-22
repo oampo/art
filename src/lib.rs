@@ -38,6 +38,7 @@ pub mod dsp {
         pub mod sine;
     }
     pub mod parameter {
+        pub mod parameter;
         pub mod parameter_writer;
     }
     pub mod bus {

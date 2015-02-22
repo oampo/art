@@ -1,6 +1,7 @@
 use std::old_io::{IoError, IoErrorKind, BufReader};
 use std::num::FromPrimitive;
 
+use types::Rate;
 use opcode::{ControlOpcodeType, DspOpcodeType, ControlOpcode, DspOpcode};
 
 pub trait OpcodeReader: Reader {
@@ -46,8 +47,8 @@ pub trait OpcodeReader: Reader {
             ControlOpcodeType::AddExpression => {
                 self.read_expression()
             },
-            ControlOpcodeType::Play => {
-                self.read_play()
+            ControlOpcodeType::AddEdge => {
+                self.read_add_edge()
             }
         }
     }
@@ -60,7 +61,10 @@ pub trait OpcodeReader: Reader {
             },
             DspOpcodeType::Add => {
                 self.read_add()
-            }
+            },
+            DspOpcodeType::Multiply=> {
+                self.read_multiply()
+            },
         }
     }
 
@@ -83,15 +87,6 @@ pub trait OpcodeReader: Reader {
         let expression_id = try!(self.read_be_u32());
         let num_opcodes = try!(self.read_be_u32());
 
-        /*
-        let mut opcodes = Vec::with_capacity(num_opcodes as usize);
-
-        for _ in range(0, num_opcodes) {
-            let opcode = try!(self.read_dsp_opcode());
-            opcodes.push(opcode);
-        }
-        */
-
         Ok(
             ControlOpcode::AddExpression {
                 expression_id: expression_id,
@@ -100,11 +95,14 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_play(&mut self) -> Result<ControlOpcode, IoError> {
-        let expression_id = try!(self.read_be_u32());
+    fn read_add_edge(&mut self) -> Result<ControlOpcode, IoError> {
+        let from = try!(self.read_be_u32());
+        let to = try!(self.read_be_u32());
+
         Ok(
-            ControlOpcode::Play {
-                expression_id: expression_id
+            ControlOpcode::AddEdge {
+                from: from,
+                to: to
             }
         )
     }
@@ -124,7 +122,7 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_add(&mut self) -> Result<DspOpcode, IoError> {
+    fn read_operator(&mut self) -> Result<(u32, Rate), IoError> {
         let channels = try!(self.read_be_u32());
         let raw_rate = try!(self.read_be_u32());
         let rate = try!(
@@ -136,8 +134,23 @@ pub trait OpcodeReader: Reader {
                 }
             )
         );
+        Ok((channels, rate))
+    }
+
+    fn read_add(&mut self) -> Result<DspOpcode, IoError> {
+        let (channels, rate) = try!(self.read_operator());
         Ok(
             DspOpcode::Add {
+                channels: channels,
+                rate: rate
+            }
+        )
+    }
+
+    fn read_multiply(&mut self) -> Result<DspOpcode, IoError> {
+        let (channels, rate) = try!(self.read_operator());
+        Ok(
+            DspOpcode::Multiply {
                 channels: channels,
                 rate: rate
             }

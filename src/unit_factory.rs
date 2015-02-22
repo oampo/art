@@ -7,6 +7,9 @@ use errors::ArtError;
 use dsp::oscillators::sine::{self, SineAr, SineKr};
 use dsp::bus::bus_in::{self, BusInAr, BusInKr};
 use dsp::bus::bus_out::{self, BusOutAr, BusOutKr};
+use dsp::parameter::parameter::{self, ParameterAr, ParameterKr};
+use dsp::parameter::parameter_writer::{self, ParameterWriterAr,
+                                       ParameterWriterKr};
 
 #[derive(Copy)]
 pub struct UnitFactoryItem {
@@ -33,6 +36,12 @@ impl UnitFactory {
         factory.register(&bus_in::DEFINITION_KR, BusInKr::new);
         factory.register(&bus_out::DEFINITION_AR, BusOutAr::new);
         factory.register(&bus_out::DEFINITION_KR, BusOutKr::new);
+        factory.register(&parameter::DEFINITION_AR, ParameterAr::new);
+        factory.register(&parameter::DEFINITION_KR, ParameterKr::new);
+        factory.register(&parameter_writer::DEFINITION_AR,
+                         ParameterWriterAr::new);
+        factory.register(&parameter_writer::DEFINITION_KR,
+                         ParameterWriterKr::new);
         factory
     }
 
