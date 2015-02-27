@@ -43,10 +43,8 @@ impl Expression {
         for opcode in try!(store.iter(self.index)) {
             if let &DspOpcode::Unit { unit_id, type_id, input_channels,
                                       output_channels } = opcode {
-                let unit = try!(
-                    factory.create((self.id, unit_id), type_id, input_channels,
-                                   output_channels)
-                );
+                let unit = factory.create((self.id, unit_id), type_id,
+                                          input_channels, output_channels);
                 unit.construct_parameters(parameters);
                 units.insert((self.id, unit_id), unit);
             }
@@ -93,9 +91,14 @@ impl Expression {
             match opcode {
                 &DspOpcode::Unit { type_id, input_channels,
                                    output_channels, .. } => {
-                    let definition = try!(
-                        unit_factory.get_definition(type_id)
-                    );
+                    if !unit_factory.is_registered(type_id) {
+                        return Err(
+                            ArtError::UndefinedUnit { type_id: type_id }
+                        );
+                    }
+
+                    let definition = unit_factory.get_definition(type_id);
+
                     if input_channels != 0 {
                         if stack_pointer == 0 {
                             return Err(ArtError::StackUnderflow);

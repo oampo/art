@@ -1,8 +1,7 @@
 use rustc_serialize::{Encoder, Encodable};
 
 use unit::{Unit, UnitDefinition};
-use types::{ArtResult, UnitConstructor};
-use errors::ArtError;
+use types::{UnitConstructor};
 
 use dsp::oscillators::sine::{self, SineAr, SineKr};
 use dsp::bus::bus_in::{self, BusInAr, BusInKr};
@@ -55,30 +54,20 @@ impl UnitFactory {
         );
     }
 
-    pub fn create(&mut self, id: (u32, u32), type_id: u32,
-                  input_channels: u32, output_channels: u32)
-            -> ArtResult<Unit> {
-        if type_id as usize >= self.units.len() {
-            return Err(
-                ArtError::UndefinedUnit {
-                    type_id: type_id
-                }
-            );
-        }
-
-        Ok((self.units[type_id as usize].constructor)(id, input_channels,
-                                                      output_channels))
+    pub fn is_registered(&self, type_id: u32) -> bool {
+        return (type_id as usize) < self.units.len();
     }
 
-    pub fn get_definition(&self, type_id: u32) -> ArtResult<&UnitDefinition> {
-        if type_id as usize >= self.units.len() {
-            return Err(
-                ArtError::UndefinedUnit {
-                    type_id: type_id
-                }
-            );
-        }
-        Ok(self.units[type_id as usize].definition)
+    pub fn create(&mut self, id: (u32, u32), type_id: u32,
+                  input_channels: u32, output_channels: u32) -> Unit {
+        debug_assert!(self.is_registered(type_id));
+        (self.units[type_id as usize].constructor)(id, input_channels,
+                                                    output_channels)
+    }
+
+    pub fn get_definition(&self, type_id: u32) -> &UnitDefinition {
+        debug_assert!(self.is_registered(type_id));
+        self.units[type_id as usize].definition
     }
 }
 
