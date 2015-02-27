@@ -26,6 +26,7 @@ pub mod unit;
 pub mod parameter;
 
 pub mod graph;
+pub mod leap;
 pub mod expression_store;
 pub mod channel_stack;
 

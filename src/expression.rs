@@ -5,7 +5,7 @@ use constants::Constants;
 use opcode::{DspOpcode};
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
-use expression_store::ExpressionStore;
+use leap::Leap;
 use operators;
 
 #[derive(Copy)]
@@ -35,13 +35,13 @@ impl Expression {
         }
     }
 
-    pub fn construct_units(&self, store: &ExpressionStore,
+    pub fn construct_units(&self, store: &Leap<DspOpcode>,
                            factory: &mut UnitFactory, units: &mut UnitMap,
                            parameters: &mut ParameterMap)
             -> ArtResult<()> {
         for opcode in try!(store.iter(self.index)) {
-            if let DspOpcode::Unit { unit_id, type_id, input_channels,
-                                     output_channels } = opcode {
+            if let &DspOpcode::Unit { unit_id, type_id, input_channels,
+                                      output_channels } = opcode {
                 let unit = try!(
                     factory.create((self.id, unit_id), type_id, input_channels,
                                    output_channels)
@@ -53,12 +53,12 @@ impl Expression {
         Ok(())
     }
 
-    pub fn tick(&self, store: &ExpressionStore, stack: &mut ChannelStack,
+    pub fn tick(&self, store: &Leap<DspOpcode>, stack: &mut ChannelStack,
                 units: &mut UnitMap, adjuncts: &mut TickAdjuncts,
                 constants: &Constants) -> ArtResult<()> {
         for opcode in try!(store.iter(self.index)) {
             match opcode {
-                DspOpcode::Unit { unit_id, .. } => {
+                &DspOpcode::Unit { unit_id, .. } => {
                     let mut unit = try!(
                         units.get_mut(&(self.id, unit_id)).ok_or(
                             ArtError::UnitNotFound {
@@ -72,10 +72,10 @@ impl Expression {
                                   constants)
                     );
                 },
-                DspOpcode::Add { channels, rate } => {
+                &DspOpcode::Add { channels, rate } => {
                     try!(operators::add(stack, channels, rate, constants))
                 },
-                DspOpcode::Multiply { channels, rate } => {
+                &DspOpcode::Multiply { channels, rate } => {
                     try!(operators::multiply(stack, channels, rate, constants))
                 }
             }
@@ -83,14 +83,14 @@ impl Expression {
         Ok(())
     }
 
-    pub fn validate(&self, store: &ExpressionStore,
+    pub fn validate(&self, store: &Leap<DspOpcode>,
                 stack_record: &mut Vec<StackRecord>,
                 unit_factory: &UnitFactory) -> ArtResult<()> {
         let mut stack_pointer = 0us;
         for opcode in try!(store.iter(self.index)) {
             match opcode {
-                DspOpcode::Unit { type_id, input_channels,
-                                  output_channels, .. } => {
+                &DspOpcode::Unit { type_id, input_channels,
+                                   output_channels, .. } => {
                     let definition = try!(
                         unit_factory.get_definition(type_id)
                     );
@@ -132,8 +132,8 @@ impl Expression {
                         stack_pointer += 1;
                     }
                 },
-                DspOpcode::Add { channels, rate } |
-                DspOpcode::Multiply { channels, rate } => {
+                &DspOpcode::Add { channels, rate } |
+                &DspOpcode::Multiply { channels, rate } => {
                     if channels != 0 {
                         if stack_pointer < 2 {
                             return Err(ArtError::StackUnderflow);

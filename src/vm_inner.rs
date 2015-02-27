@@ -14,12 +14,13 @@ use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, BusMap,
 use unit::TickAdjuncts;
 use errors::ArtError;
 use options::Options;
-use opcode::{ControlOpcode};
+use opcode::{ControlOpcode, DspOpcode};
 use opcode_reader::OpcodeReader;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
 use expression::Expression;
+use leap::Leap;
 use expression_store::ExpressionStore;
 use constants::Constants;
 
@@ -28,7 +29,7 @@ pub struct VmInner {
     pub constants: Constants,
     pub unit_factory: UnitFactory,
     pub expressions: ExpressionMap,
-    pub expression_store: ExpressionStore,
+    pub expression_store: Leap<DspOpcode>,
     pub units: UnitMap,
     pub parameters: ParameterMap,
     pub bus_map: BusMap,
@@ -71,7 +72,7 @@ impl VmInner {
                                       options.sample_rate as f32
             },
             unit_factory: UnitFactory::new(),
-            expression_store: ExpressionStore::with_capacity(
+            expression_store: Leap::with_capacity(
                 options.max_opcodes as usize
             ),
             expressions: HashMap::with_capacity(
