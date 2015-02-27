@@ -4,6 +4,7 @@ use std::fmt;
 
 use portaudio::pa::PaError;
 
+use types::Rate;
 use opcode::Opcode;
 
 #[derive(Debug)]
@@ -14,7 +15,8 @@ pub enum ArtError {
     ExpressionNotFound { expression_id: u32 },
     UnitNotFound { expression_id: u32, unit_id: u32 },
     ParameterNotFound { expression_id: u32, unit_id: u32, parameter_id: u32 },
-    InvalidChannelCount,
+    ChannelMismatch { expected: u32, actual: u32 },
+    RateMismatch { expected: Rate, actual: Rate },
     InvalidByteCode { error: Option<IoError> },
     StackOverflow,
     StackUnderflow,
@@ -45,6 +47,12 @@ impl ArtError {
                 Some(format!("expression_id={}, unit_id={}, parameter_id={}",
                              expression_id, unit_id, parameter_id))
             },
+            ArtError::ChannelMismatch{ expected, actual } => {
+                Some(format!("expected={}, actual={}", expected, actual))
+            },
+            ArtError::RateMismatch{ expected, actual } => {
+                Some(format!("expected={:?}, actual={:?}", expected, actual))
+            },
             ArtError::InvalidByteCode { ref error } => {
                 match error {
                     &Some(ref e) => Some(format!("error={}", e)),
@@ -69,7 +77,8 @@ impl Error for ArtError {
             ArtError::UnitNotFound { .. } => "Unit not found",
             ArtError::ParameterNotFound { .. } => "Parameter not found",
             ArtError::ExpressionNotFound { .. } => "Expression not found",
-            ArtError::InvalidChannelCount => "Invalid channel count",
+            ArtError::ChannelMismatch { .. } => "Channel mismatch",
+            ArtError::RateMismatch { .. } => "Rate mismatch",
             ArtError::InvalidByteCode { .. } => "Invalid byte code",
             ArtError::StackOverflow => "Stack overflow",
             ArtError::StackUnderflow => "Stack underflow",

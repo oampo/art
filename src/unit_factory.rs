@@ -69,6 +69,17 @@ impl UnitFactory {
         Ok((self.units[type_id as usize].constructor)(id, input_channels,
                                                       output_channels))
     }
+
+    pub fn get_definition(&self, type_id: u32) -> ArtResult<&UnitDefinition> {
+        if type_id as usize >= self.units.len() {
+            return Err(
+                ArtError::UndefinedUnit {
+                    type_id: type_id
+                }
+            );
+        }
+        Ok(self.units[type_id as usize].definition)
+    }
 }
 
 

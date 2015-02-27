@@ -10,7 +10,7 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
 
 use util;
 use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, BusMap,
-            ArtResult};
+            StackRecord, Rate, ArtResult};
 use unit::TickAdjuncts;
 use errors::ArtError;
 use options::Options;
@@ -36,22 +36,25 @@ pub struct VmInner {
     pub expression_ids: Vec<u32>,
     pub stack_data: Vec<f32>,
     pub bus_data: Vec<f32>,
+    pub stack_record: Vec<StackRecord>
 }
 
 impl VmInner {
     pub fn new(options: &Options, input_channel: ByteCodeReceiver)
             -> VmInner {
-        let stack_data_size = (
-            options.num_stack_channels * options.block_size
-        ) as usize;
-        let mut stack_data = Vec::with_capacity(stack_data_size);
-        stack_data.resize(stack_data_size, 0f32);
+        let mut stack_data = Vec::with_capacity(options.stack_size);
+        stack_data.resize(options.stack_size, 0f32);
 
-        let bus_data_size = (
-            options.num_bus_channels * options.block_size
-        ) as usize;
-        let mut bus_data = Vec::with_capacity(bus_data_size);
-        bus_data.resize(bus_data_size, 0f32);
+        let mut bus_data = Vec::with_capacity(options.bus_stack_size);
+        bus_data.resize(options.bus_stack_size, 0f32);
+
+        let mut stack_record = Vec::with_capacity(
+            options.max_stack_depth as usize
+        );
+        stack_record.resize(options.max_stack_depth as usize, StackRecord {
+            channels: 0,
+            rate: Rate::Control
+        });
 
         VmInner {
             input_channel: input_channel,
@@ -81,14 +84,17 @@ impl VmInner {
                 options.max_parameters as usize
             ),
             bus_map: HashMap::with_capacity(
-                options.num_bus_channels as usize
+                options.max_bus_depth as usize
             ),
             graph: Graph::with_capacity(options.max_edges),
             expression_ids: Vec::with_capacity(
                 options.max_expressions as usize
             ),
             stack_data: stack_data,
-            bus_data: bus_data
+            bus_data: bus_data,
+            stack_record: Vec::with_capacity(
+                options.max_stack_depth as usize
+            )
         }
     }
 
@@ -197,7 +203,9 @@ impl VmInner {
         debug!("Adding expression: id={:?}, index={:?}", id, index);
         let expression = Expression::new(id, index);
 
-        // TODO: Verify expression
+        let result = expression.validate(&self.expression_store,
+                                         &mut self.stack_record,
+                                         &self.unit_factory);
 
         let result = expression.construct_units(
             &self.expression_store, &mut self.unit_factory, &mut self.units,

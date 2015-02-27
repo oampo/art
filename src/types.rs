@@ -28,9 +28,14 @@ pub type UnitConstructor = fn((u32, u32), u32, u32) -> Unit;
 
 pub type ArtResult<T> = Result<T, ArtError>;
 
-#[derive(Copy, RustcEncodable, Debug, FromPrimitive)]
+#[derive(Copy, Clone, RustcEncodable, Debug, FromPrimitive, PartialEq)]
 pub enum Rate {
     Audio,
     Control
 }
 
+#[derive(Copy, Clone)]
+pub struct StackRecord {
+    pub channels: u32,
+    pub rate: Rate
+}
