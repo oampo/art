@@ -59,10 +59,9 @@ impl ArtError {
                     &None => None
                 }
             },
-            // FIXME: Make PaError impl String
-//            ArtError::PortAudio { error } => {
-//                Some(format!("error={}", error))
-//            },
+            ArtError::PortAudio { error } => {
+                Some(format!("error={}", error))
+            },
             _ => None
         }
     }
