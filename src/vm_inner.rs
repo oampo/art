@@ -207,16 +207,16 @@ impl VmInner {
         let result = expression.validate(&self.expression_store,
                                          &mut self.stack_record,
                                          &self.unit_factory);
+        if result.is_err() {
+            let _ = self.expression_store.free(expression.index);
+            return result;
+        }
 
-        let result = expression.construct_units(
+        let _ = expression.construct_units(
             &self.expression_store, &mut self.unit_factory, &mut self.units,
             &mut self.parameters
         );
-
-        // Insert even if construction fails so we free up any units and
-        // parameters which were sucessfully constructed
-        self.expressions.insert(id, expression);
-        result
+        Ok(())
     }
 
     pub fn set_parameter(&mut self, id: (u32, u32, u32), value: f32)

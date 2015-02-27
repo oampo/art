@@ -35,6 +35,7 @@ impl Expression {
         }
     }
 
+    // FIXME: This should never fail if validation is doing its job
     pub fn construct_units(&self, store: &Leap<DspOpcode>,
                            factory: &mut UnitFactory, units: &mut UnitMap,
                            parameters: &mut ParameterMap)
@@ -86,6 +87,7 @@ impl Expression {
     pub fn validate(&self, store: &Leap<DspOpcode>,
                 stack_record: &mut Vec<StackRecord>,
                 unit_factory: &UnitFactory) -> ArtResult<()> {
+        // TODO: Validate space for units and parameters
         let mut stack_pointer = 0us;
         for opcode in try!(store.iter(self.index)) {
             match opcode {
