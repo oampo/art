@@ -21,6 +21,8 @@ pub mod opcode_reader;
 pub mod device;
 pub mod unit_factory;
 
+pub mod validator;
+
 pub mod expression;
 pub mod unit;
 pub mod parameter;

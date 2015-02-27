@@ -216,12 +216,14 @@ impl VmInner {
             &self.expression_store, &mut self.unit_factory, &mut self.units,
             &mut self.parameters
         );
+
+        self.expressions.insert(id, expression);
         Ok(())
     }
 
     pub fn set_parameter(&mut self, id: (u32, u32, u32), value: f32)
             -> ArtResult<()> {
-        let (uid, eid, pid) = id;
+        let (eid, uid, pid) = id;
         debug!("Setting parameter: expression_id={}, unit_id={},
                 parameter_id={}, value={}", eid, uid, pid, value);
 
