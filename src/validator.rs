@@ -8,7 +8,7 @@ use leap::Leap;
 pub struct ExpressionValidator;
 
 impl ExpressionValidator {
-    pub fn validate(index: usize, store: &Leap<DspOpcode>,
+    pub fn validate(index: usize, num_opcodes: usize, store: &Leap<DspOpcode>,
                     stack_record: &mut Vec<StackRecord>,
                     unit_factory: &UnitFactory, expression_map: &ExpressionMap,
                     unit_map: &UnitMap, parameter_map: &ParameterMap)
@@ -20,7 +20,7 @@ impl ExpressionValidator {
         let mut unit_count = 0;
         let mut parameter_count = 0;
 
-        for opcode in try!(store.iter(index)) {
+        for opcode in store.iter(index).take(num_opcodes) {
             match opcode {
                 &DspOpcode::Unit { type_id, input_channels,
                                    output_channels, .. } => {

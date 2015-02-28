@@ -3,32 +3,8 @@ use types::ArtResult;
 
 #[derive(Copy)]
 enum Content<T> {
-    Start,
     Full(T),
     Empty
-}
-
-impl<T> Content<T> {
-    pub fn is_start(&self) -> bool {
-        match *self {
-            Content::Start => true,
-            _ => false
-        }
-    }
-
-    pub fn is_full(&self) -> bool {
-        match *self {
-            Content::Full(_) => true,
-            _ => false
-        }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        match *self {
-            Content::Empty => true,
-            _ => false
-        }
-    }
 }
 
 #[derive(Copy)]
@@ -39,7 +15,7 @@ struct Node<T> {
 
 pub struct Leap<T> {
     nodes: Vec<Node<T>>,
-    tail: usize,
+    pub tail: usize,
     length: usize
 }
 
@@ -68,81 +44,42 @@ impl<T> Leap<T> {
         }
     }
 
-    pub fn alloc(&mut self, size: usize) -> ArtResult<usize> {
-        if self.length + size + 1 > self.nodes.len() {
-            return Err(
-                ArtError::BufferOverflow
-            );
-        }
-
-        let index = try!(self.do_push(Content::Start));
-        Ok(index)
-    }
-
-    pub fn free(&mut self, mut index: usize) -> ArtResult<()> {
-        let mut start = true;
-        let mut last_index = index;
-        let old_tail = self.tail;
-        loop {
-            let node = &mut self.nodes[index];
-            if start {
-                if !node.content.is_start() {
-                    return Err(ArtError::IndexError);
-                }
-                self.tail = index;
-            }
-            else if !node.content.is_full() {
-                break;
-            }
-
-            node.content = Content::Empty;
-            self.length -= 1;
-
-            last_index = index;
-            index = node.next;
-            start = false;
-        }
-
-        self.nodes[last_index].next = old_tail;
-        Ok(())
-    }
-
     pub fn push(&mut self, value: T) -> ArtResult<usize> {
-        if self.length == self.nodes.len() {
+        if self.length + 1 > self.nodes.len() {
             return Err(
                 ArtError::BufferOverflow
             );
         }
-        self.do_push(Content::Full(value))
+
+        let tail = self.tail;
+        self.tail = self.set(tail, value);
+        Ok(self.tail)
     }
 
-
-    fn do_push(&mut self, content: Content<T>) -> ArtResult<usize> {
-        let index = self.tail;
+    pub fn set(&mut self, index: usize, value: T) -> usize {
         let node = &mut self.nodes[index];
-        if !node.content.is_empty() {
-            return Err(
-                ArtError::BufferOverflow
-            );
-        }
-        node.content = content;
-        self.tail = node.next;
-        self.length += 1;
-        Ok((index))
+        node.content = Content::Full(value);
+        node.next
     }
 
-    pub fn iter(&self, index: usize) -> ArtResult<Iter<T>> {
-        let node = &self.nodes[index];
-        match &node.content {
-            &Content::Start => Ok(
-                Iter {
-                    nodes: &self.nodes,
-                    index: node.next
-                }
-            ),
-            _ => Err(
-                ArtError::IndexError
-            )
+    pub fn free(&mut self, mut index: usize, count: usize) {
+        let old_tail = self.tail;
+        self.tail = index;
+        for i in range(0, count) {
+            let node = &mut self.nodes[index];
+            node.content = Content::Empty;
+            index = node.next;
+
+            if i == count - 1 {
+                node.next = old_tail;
+            }
+        }
+    }
+
+    pub fn iter(&self, index: usize) -> Iter<T> {
+        Iter {
+            nodes: &self.nodes,
+            index: index
         }
     }
 }
@@ -160,7 +97,8 @@ impl<'a, T: 'a> Iterator for Iter<'a, T> {
 
         match node.content {
             Content::Full(ref value) => Some(value),
-            _ => None
+            Content::Empty => None
         }
     }
 }
+

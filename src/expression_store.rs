@@ -7,7 +7,7 @@ use opcode_reader::OpcodeReader;
 use opcode::DspOpcode;
 
 pub trait ExpressionStore {
-    fn push_from_reader(&mut self, num_opcodes: u32,
+    fn push_from_reader(&mut self, num_opcodes: usize,
                             reader: &mut BufReader) -> ArtResult<usize>;
 
     fn push_opcode_from_reader(&mut self, reader: &mut BufReader)
@@ -15,14 +15,14 @@ pub trait ExpressionStore {
 }
 
 impl ExpressionStore for Leap<DspOpcode> {
-    fn push_from_reader(&mut self, num_opcodes: u32,
-                            reader: &mut BufReader) -> ArtResult<usize> {
-        let start = try!(self.alloc(num_opcodes as usize));
-        for _ in range(0, num_opcodes) {
+    fn push_from_reader(&mut self, num_opcodes: usize,
+                        reader: &mut BufReader) -> ArtResult<usize> {
+        let start = self.tail;
+        for i in range(0, num_opcodes) {
             let result = self.push_opcode_from_reader(reader);
 
             if result.is_err() {
-                let _ = self.free(start);
+                let _ = self.free(start, i);
                 return Err(result.err().unwrap());
             }
         }

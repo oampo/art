@@ -127,11 +127,12 @@ impl VmInner {
                       reader: &mut BufReader) -> ArtResult<()> {
         match opcode {
             ControlOpcode::AddExpression { expression_id, num_opcodes } => {
+                let num_opcodes = num_opcodes as usize;
                 let start = try!(
                     self.expression_store.push_from_reader(num_opcodes,
                                                            reader)
                 );
-                self.add_expression(expression_id, start)
+                self.add_expression(expression_id, start, num_opcodes)
             },
             ControlOpcode::SetParameter { expression_id, unit_id,
                                           parameter_id, value } => {
@@ -192,21 +193,21 @@ impl VmInner {
     }
 
     /* Control instructions */
-    pub fn add_expression(&mut self, id: u32, index: usize)
+    pub fn add_expression(&mut self, id: u32, index: usize, num_opcodes: usize)
             -> ArtResult<()> {
         debug!("Adding expression: id={:?}, index={:?}", id, index);
         let result = ExpressionValidator::validate(
-            index, &self.expression_store, &mut self.stack_record,
+            index, num_opcodes, &self.expression_store, &mut self.stack_record,
             &self.unit_factory, &self.expressions, &self.units,
             &self.parameters
         );
 
         if result.is_err() {
-            let _ = self.expression_store.free(index);
+            let _ = self.expression_store.free(index, num_opcodes);
             return result;
         }
 
-        let expression = Expression::new(id, index);
+        let expression = Expression::new(id, index, num_opcodes );
 
         let _ = expression.construct_units(
             &self.expression_store, &mut self.unit_factory, &mut self.units,
