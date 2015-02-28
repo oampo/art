@@ -10,7 +10,7 @@ use portaudio::stream::{StreamCallbackResult, StreamTimeInfo,
 
 use util;
 use types::{ByteCodeReceiver, UnitMap, ExpressionMap, ParameterMap, BusMap,
-            StackRecord, Rate, ArtResult};
+            StackRecord, ArtResult};
 use unit::TickAdjuncts;
 use errors::ArtError;
 use options::Options;
@@ -49,14 +49,6 @@ impl VmInner {
 
         let mut bus_data = Vec::with_capacity(options.bus_stack_size);
         bus_data.resize(options.bus_stack_size, 0f32);
-
-        let mut stack_record = Vec::with_capacity(
-            options.max_stack_depth as usize
-        );
-        stack_record.resize(options.max_stack_depth as usize, StackRecord {
-            channels: 0,
-            rate: Rate::Control
-        });
 
         VmInner {
             input_channel: input_channel,
