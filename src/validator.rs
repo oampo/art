@@ -1,4 +1,4 @@
-use types::{ArtResult, StackRecord, Rate};
+use types::{ArtResult, StackRecord, Rate, ExpressionMap, UnitMap, ParameterMap};
 use errors::ArtError;
 use opcode::DspOpcode;
 use unit::UnitDefinition;
@@ -10,7 +10,16 @@ pub struct ExpressionValidator;
 impl ExpressionValidator {
     pub fn validate(index: usize, store: &Leap<DspOpcode>,
                     stack_record: &mut Vec<StackRecord>,
-                    unit_factory: &UnitFactory) -> ArtResult<()> {
+                    unit_factory: &UnitFactory, expression_map: &ExpressionMap,
+                    unit_map: &UnitMap, parameter_map: &ParameterMap)
+            -> ArtResult<()> {
+        try!(
+            ExpressionValidator::validate_expression_count(1, expression_map)
+        );
+
+        let mut unit_count = 0;
+        let mut parameter_count = 0;
+
         for opcode in try!(store.iter(index)) {
             match opcode {
                 &DspOpcode::Unit { type_id, input_channels,
@@ -26,6 +35,8 @@ impl ExpressionValidator {
                             stack_record
                         )
                     );
+                    unit_count += 1;
+                    parameter_count += definition.parameters.len();
                 },
                 &DspOpcode::Add { channels, rate } |
                 &DspOpcode::Multiply { channels, rate } => {
@@ -35,6 +46,49 @@ impl ExpressionValidator {
                     );
                 }
             }
+        }
+
+        try!(
+            ExpressionValidator::validate_unit_count(unit_count, unit_map)
+        );
+        try!(
+            ExpressionValidator::validate_parameter_count(parameter_count,
+                                                          parameter_map)
+        );
+        Ok(())
+    }
+}
+
+impl ExpressionValidator {
+    // Should be generic
+    fn validate_expression_count(expression_count: usize,
+                                 expression_map: &ExpressionMap)
+           -> ArtResult<()> {
+        if expression_map.len() + expression_count > expression_map.capacity() {
+            return Err(
+                ArtError::BufferOverflow
+            );
+        }
+        Ok(())
+    }
+
+    fn validate_unit_count(unit_count: usize, unit_map: &UnitMap)
+           -> ArtResult<()> {
+        if unit_map.len() + unit_count > unit_map.capacity() {
+            return Err(
+                ArtError::BufferOverflow
+            );
+        }
+        Ok(())
+    }
+
+    fn validate_parameter_count(parameter_count: usize,
+                                parameter_map: &ParameterMap)
+            -> ArtResult<()> {
+        if parameter_map.len() + parameter_count > parameter_map.capacity() {
+            return Err(
+                ArtError::BufferOverflow
+            );
         }
         Ok(())
     }

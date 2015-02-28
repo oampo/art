@@ -22,6 +22,7 @@ use graph::Graph;
 use expression::Expression;
 use leap::Leap;
 use expression_store::ExpressionStore;
+use validator::ExpressionValidator;
 use constants::Constants;
 
 pub struct VmInner {
@@ -202,15 +203,18 @@ impl VmInner {
     pub fn add_expression(&mut self, id: u32, index: usize)
             -> ArtResult<()> {
         debug!("Adding expression: id={:?}, index={:?}", id, index);
-        let expression = Expression::new(id, index);
+        let result = ExpressionValidator::validate(
+            index, &self.expression_store, &mut self.stack_record,
+            &self.unit_factory, &self.expressions, &self.units,
+            &self.parameters
+        );
 
-        let result = expression.validate(&self.expression_store,
-                                         &mut self.stack_record,
-                                         &self.unit_factory);
         if result.is_err() {
-            let _ = self.expression_store.free(expression.index);
+            let _ = self.expression_store.free(index);
             return result;
         }
+
+        let expression = Expression::new(id, index);
 
         let _ = expression.construct_units(
             &self.expression_store, &mut self.unit_factory, &mut self.units,

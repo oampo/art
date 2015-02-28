@@ -1,4 +1,4 @@
-use types::{ArtResult, UnitMap, ParameterMap, StackRecord};
+use types::{ArtResult, UnitMap, ParameterMap};
 use unit::TickAdjuncts;
 use errors::ArtError;
 use constants::Constants;
@@ -6,7 +6,6 @@ use opcode::{DspOpcode};
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use leap::Leap;
-use validator::ExpressionValidator;
 use operators;
 
 #[derive(Copy)]
@@ -81,13 +80,6 @@ impl Expression {
             }
         }
         Ok(())
-    }
-
-    pub fn validate(&self, store: &Leap<DspOpcode>,
-                stack_record: &mut Vec<StackRecord>,
-                unit_factory: &UnitFactory) -> ArtResult<()> {
-        ExpressionValidator::validate(self.index, store, stack_record,
-                                      unit_factory)
     }
 }
 
