@@ -29,7 +29,7 @@ impl Parameter {
             Rate::Control => 1
         };
         let index = try!(stack.push(samples));
-        let block = try!(stack.get(index, samples));
+        let block = stack.get(index, samples);
 
         match self.definition.rate {
             Rate::Control => {
@@ -37,7 +37,7 @@ impl Parameter {
             },
             Rate::Audio => {
                 if let Some(index) = self.bus {
-                    try!(busses.read(index, block));
+                    busses.read(index, block);
                     self.last_value = block[samples - 1];
                 }
                 else {

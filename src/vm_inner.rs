@@ -146,19 +146,25 @@ impl VmInner {
         }
     }
 
+    pub fn prepare_io_busses(busses: &mut ChannelStack,
+                             adc_block: &[f32], dac_block: &mut [f32])
+            -> ArtResult<(usize, usize)> {
+        let adc_index = try!(busses.push(adc_block.len()));
+        let dac_index = try!(busses.push(dac_block.len()));
+        busses.write(adc_index, adc_block);
+        busses.zero(dac_index, dac_block.len());
+        Ok((adc_index, dac_index))
+    }
+
     pub fn run(&mut self, adc_block: &[f32], dac_block: &mut [f32]) {
         let mut busses = ChannelStack::new(&mut self.bus_data);
-
-        let input_samples = self.constants.input_channels as usize *
-                            self.constants.block_size;
-        let output_samples = self.constants.output_channels as usize *
-                             self.constants.block_size;
-        let adc_index = busses.push(input_samples).unwrap();
-        let dac_index = busses.push(output_samples).unwrap();
+        // TODO: Nicer error message when there are not enough busses for the
+        // ADC/DAC
+        let (adc_index, dac_index) = VmInner::prepare_io_busses(
+            &mut busses, adc_block, dac_block
+        ).unwrap();
         self.bus_map.insert(0, adc_index);
         self.bus_map.insert(1, dac_index);
-        busses.write(adc_index, adc_block).unwrap();
-        busses.zero(dac_index, output_samples).unwrap();
 
         let expression_ids = mem::replace(&mut self.expression_ids,
                                           Vec::with_capacity(0));
@@ -179,7 +185,7 @@ impl VmInner {
             result.unwrap_or_else(|error| error!("{}", error));
         }
         self.expression_ids = expression_ids;
-        adjuncts.busses.read(dac_index, dac_block).unwrap();
+        adjuncts.busses.read(dac_index, dac_block);
     }
 
     pub fn clean(&mut self) {

@@ -37,61 +37,42 @@ impl<'a> ChannelStack<'a> {
         Ok(self.position)
     }
 
-    pub fn read(&self, index: usize, values: &mut[f32]) -> ArtResult<()> {
-        if index + values.len() > self.data.len() {
-            return Err(ArtError::StackOverflow);
-        }
-
+    pub fn read(&self, index: usize, values: &mut[f32]) {
+        debug_assert!(index + values.len() <= self.data.len());
         values.clone_from_slice(&self.data[index..]);
-        Ok(())
     }
 
-    pub fn write(&mut self, index: usize, values: &[f32]) -> ArtResult<()> {
-        if index + values.len() > self.data.len() {
-            return Err(ArtError::StackOverflow);
-        }
-
+    pub fn write(&mut self, index: usize, values: &[f32]) {
+        debug_assert!(index + values.len() <= self.data.len());
         (&mut self.data[index..]).clone_from_slice(values);
-        Ok(())
     }
 
-    pub fn add(&mut self, index: usize, values: &[f32]) -> ArtResult<()> {
-        if index + values.len() > self.data.len() {
-            return Err(ArtError::StackOverflow);
-        }
+    pub fn add(&mut self, index: usize, values: &[f32]) {
+        debug_assert!(index + values.len() <= self.data.len());
 
         for i in range(0, values.len()) {
             self.data[index + i] += values[i];
         }
-        Ok(())
     }
 
 
-    pub fn get(&mut self, index: usize, samples: usize)
-            -> ArtResult<&mut[f32]> {
-        if index + samples > self.data.len() {
-            return Err(ArtError::StackOverflow);
-        }
-
+    pub fn get(&mut self, index: usize, samples: usize) -> &mut [f32] {
+        debug_assert!(index + samples <= self.data.len());
         let end = index + samples;
-
-        Ok(&mut self.data[index..end])
+        &mut self.data[index..end]
     }
 
-    pub fn zero(&mut self, index: usize, samples: usize) -> ArtResult<()> {
-        if index + samples > self.data.len() {
-            return Err(ArtError::StackOverflow);
-        }
-
+    pub fn zero(&mut self, index: usize, samples: usize) {
+        debug_assert!(index + samples <= self.data.len());
         for i in range(index, index + samples) {
             self.data[i] = 0f32;
         }
-        Ok(())
     }
 
 
     pub fn split(&mut self, index: usize)
             -> (ChannelStack, ChannelStack) {
+        debug_assert!(index <= self.data.len());
         let (left, right) = self.data.split_at_mut(index);
 
         let left_stack = ChannelStack::new(left);

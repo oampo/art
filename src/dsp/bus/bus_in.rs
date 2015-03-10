@@ -26,7 +26,7 @@ impl BusIn {
         let bus_id = parameters.data[0].round() as u32;
 
         if let Some(&bus_index) = adjuncts.bus_map.get(&bus_id) {
-            try!(adjuncts.busses.read(bus_index, block));
+            adjuncts.busses.read(bus_index, block);
         }
         else {
             for i in block {

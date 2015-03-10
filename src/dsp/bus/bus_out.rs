@@ -26,7 +26,7 @@ impl BusOut {
         let bus_id = parameters.data[0].round() as u32;
 
         if let Some(&bus_index) = adjuncts.bus_map.get(&bus_id) {
-            try!(adjuncts.busses.add(bus_index, block));
+            adjuncts.busses.add(bus_index, block);
         }
         else {
             let channels = unit.layout.input as usize;
@@ -35,7 +35,7 @@ impl BusOut {
                 Rate::Control => channels
             };
             let bus_index = try!(adjuncts.busses.push(samples));
-            try!(adjuncts.busses.write(bus_index, block));
+            adjuncts.busses.write(bus_index, block);
             adjuncts.bus_map.insert(bus_id, bus_index);
         }
 

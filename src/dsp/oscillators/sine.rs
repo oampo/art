@@ -61,8 +61,8 @@ impl SineAr {
         if let UnitData::Sine {ref mut position} = unit.data {
             let (mut frequency_stack,
                  mut phase_stack) = parameters.split(constants.block_size);
-            let frequency = try!(frequency_stack.get(0, constants.block_size));
-            let phase = try!(phase_stack.get(0, constants.block_size));
+            let frequency = frequency_stack.get(0, constants.block_size);
+            let phase = phase_stack.get(0, constants.block_size);
 
             let channels = unit.layout.output as usize;
 

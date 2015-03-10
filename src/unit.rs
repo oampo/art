@@ -51,7 +51,7 @@ impl Unit {
             index + samples
         );
 
-        let mut block = try!(unit_stack.get(index, samples));
+        let mut block = unit_stack.get(index, samples);
         try!(self.tick_parameters(&mut parameter_stack, adjuncts,
                                   constants));
         try!(

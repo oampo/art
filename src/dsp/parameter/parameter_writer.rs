@@ -79,7 +79,7 @@ impl ParameterWriterAr {
                 let bus_index = try!(
                     adjuncts.busses.push(constants.block_size)
                 );
-                try!(adjuncts.busses.write(bus_index, block));
+                adjuncts.busses.write(bus_index, block);
                 parameter.bus = Some(bus_index);
             },
             Rate::Control => {
