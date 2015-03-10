@@ -160,8 +160,8 @@ impl VmInner {
         busses.write(adc_index, adc_block).unwrap();
         busses.zero(dac_index, output_samples).unwrap();
 
-        let mut expression_ids = Vec::with_capacity(0);
-        mem::swap(&mut self.expression_ids, &mut expression_ids);
+        let expression_ids = mem::replace(&mut self.expression_ids,
+                                          Vec::with_capacity(0));
 
         let mut adjuncts = TickAdjuncts {
             busses: &mut busses,
@@ -178,8 +178,7 @@ impl VmInner {
             );
             result.unwrap_or_else(|error| error!("{}", error));
         }
-        mem::swap(&mut self.expression_ids, &mut expression_ids);
-
+        self.expression_ids = expression_ids;
         adjuncts.busses.read(dac_index, dac_block).unwrap();
     }
 
