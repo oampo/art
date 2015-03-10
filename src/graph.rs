@@ -55,7 +55,7 @@ impl Graph {
 
     pub fn topological_sort(&mut self, map: &mut ExpressionMap,
                             nodes: &mut [u32]) {
-        assert!(nodes.len() == map.len());
+        debug_assert!(nodes.len() == map.len());
         self.update_edge_counts(map);
 
         let len = nodes.len();
