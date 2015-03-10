@@ -22,6 +22,7 @@ pub trait NodeList {
 impl NodeList for [u32] {
     fn find_zero_order(&self, map: &ExpressionMap) -> Option<(usize, u32)> {
         self.iter().enumerate().find(|&: &(_, id) | {
+            debug_assert!(map.contains_key(id));
             let node = map.get(id).unwrap();
             node.incoming_edges == 0
         }).map(|(index, &id)| (index, id))
@@ -73,6 +74,7 @@ impl Graph {
 
             for edge in self.edges.iter() {
                 if edge.from == node {
+                    debug_assert!(map.contains_key(&edge.to));
                     let node = map.get_mut(&edge.to).unwrap();
                     node.incoming_edges -= 1;
                 }
@@ -85,6 +87,7 @@ impl Graph {
 
     fn update_edge_counts(&self, map: &mut ExpressionMap) {
         for edge in self.edges.iter() {
+            debug_assert!(map.contains_key(&edge.to));
             let node = map.get_mut(&edge.to).unwrap();
             node.incoming_edges += 1;
         }
