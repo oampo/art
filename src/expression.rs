@@ -1,6 +1,5 @@
 use types::{ArtResult, UnitMap, ParameterMap};
 use unit::TickAdjuncts;
-use errors::ArtError;
 use constants::Constants;
 use opcode::{DspOpcode};
 use unit_factory::UnitFactory;
@@ -46,6 +45,7 @@ impl Expression {
                 let unit = factory.create((self.id, unit_id), type_id,
                                           input_channels, output_channels);
                 unit.construct_parameters(parameters);
+                debug_assert!(units.len() < units.capacity());
                 units.insert((self.id, unit_id), unit);
             }
         }
@@ -57,14 +57,8 @@ impl Expression {
         for opcode in store.iter(self.index).take(self.num_opcodes) {
             match opcode {
                 &DspOpcode::Unit { unit_id, .. } => {
-                    let mut unit = try!(
-                        units.get_mut(&(self.id, unit_id)).ok_or(
-                            ArtError::UnitNotFound {
-                                expression_id: self.id,
-                                unit_id: unit_id
-                            }
-                        )
-                    );
+                    debug_assert!(units.contains_key(&(self.id, unit_id)));
+                    let mut unit = units.get_mut(&(self.id, unit_id)).unwrap();
                     try!(
                         unit.tick(stack, adjuncts,
                                   constants)

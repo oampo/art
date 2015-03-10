@@ -2,7 +2,6 @@ use std::cmp;
 
 use rustc_serialize::{Encodable, Encoder};
 use types::{ArtResult, Rate, BusMap, ParameterMap};
-use errors::ArtError;
 use constants::Constants;
 
 use channel_stack::ChannelStack;
@@ -75,15 +74,13 @@ impl Unit {
             let index = try!(stack.push(samples));
             let (_, mut channel) = stack.split(index);
 
-            let parameter = try!(
-                adjuncts.parameters.get_mut(&(eid, uid, pid as u32)).ok_or(
-                    ArtError::ParameterNotFound {
-                        expression_id: eid,
-                        unit_id: uid,
-                        parameter_id: pid as u32
-                    }
-                )
+            debug_assert!(
+                adjuncts.parameters.contains_key(&(eid, uid, pid as u32))
             );
+
+            let parameter = adjuncts.parameters.get_mut(
+                &(eid, uid, pid as u32)
+            ).unwrap();
             try!(parameter.read(&mut channel, adjuncts.busses, constants));
         }
         Ok(())
