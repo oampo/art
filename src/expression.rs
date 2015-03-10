@@ -9,9 +9,6 @@ use operators;
 
 #[derive(Copy)]
 pub enum ExpressionState {
-    Verify,
-    Construct,
-    Link,
     Run,
     Free
 }
@@ -32,7 +29,7 @@ impl Expression {
             index: index,
             num_opcodes: num_opcodes,
             incoming_edges: 0,
-            state: ExpressionState::Verify
+            state: ExpressionState::Run
         }
     }
 
