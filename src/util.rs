@@ -11,13 +11,13 @@ pub fn user_data_dir() -> Option<Path> {
 }
 
 #[cfg(target_os="mac_os")]
-pub fn user_data_dir() -> Path {
+pub fn user_data_dir() -> Option<Path> {
     env::home_dir().map(|dir| dir.join_many(&["Library", "Application Support",
                                             "art"]))
 }
 
 #[cfg(target_os="windows")]
-pub fn user_data_dir() -> Path {
+pub fn user_data_dir() -> Option<Path> {
     env::home_dir().map(|dir| dir.join_many(&["AppData", "Local", "art",
                                             "User Data"]))
 }

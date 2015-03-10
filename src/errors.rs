@@ -2,6 +2,7 @@ use std::error::{Error, FromError};
 use std::old_io::IoError;
 use std::fmt;
 
+use rustc_serialize::json::EncoderError;
 use portaudio::pa::PaError;
 
 use types::Rate;
@@ -22,6 +23,7 @@ pub enum ArtError {
     StackUnderflow,
     BufferOverflow,
     InvalidStack,
+    EncoderError { error:EncoderError },
     PortAudio { error: PaError }
 }
 
@@ -59,6 +61,9 @@ impl ArtError {
                     &None => None
                 }
             },
+            ArtError::EncoderError { error } => {
+                Some(format!("error={}", error))
+            },
             ArtError::PortAudio { error } => {
                 Some(format!("error={}", error))
             },
@@ -83,6 +88,7 @@ impl Error for ArtError {
             ArtError::StackUnderflow => "Stack underflow",
             ArtError::BufferOverflow => "Buffer overflow",
             ArtError::InvalidStack => "Invalid stack",
+            ArtError::EncoderError { .. } => "Encoder error",
             ArtError::PortAudio { .. } => "PortAudio error"
         }
     }
@@ -111,6 +117,12 @@ impl FromError<PaError> for ArtError {
 impl FromError<IoError> for ArtError {
     fn from_error(error: IoError) -> ArtError {
         ArtError::InvalidByteCode { error: Some(error) }
+    }
+}
+
+impl FromError<EncoderError> for ArtError {
+    fn from_error(error: EncoderError) -> ArtError {
+        ArtError::EncoderError { error: error }
     }
 }
 

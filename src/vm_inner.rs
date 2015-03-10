@@ -1,5 +1,5 @@
 use std::mem;
-use std::old_io::{self, BufReader};
+use std::old_io::{self, BufReader, IoError, IoErrorKind};
 use std::old_io::fs::{mkdir_recursive, File, PathExtensions};
 use std::collections::HashMap;
 
@@ -245,7 +245,15 @@ impl VmInner {
     }
 
     pub fn write_info_file(&self) -> ArtResult<()> {
-        let mut path = util::user_data_dir().unwrap();
+        let json = try!(json::encode(self));
+
+        let mut path = try!(util::user_data_dir().ok_or(
+            IoError {
+                kind: IoErrorKind::OtherIoError,
+                desc: "Could not determine user data directory",
+                detail: None
+            }
+        ));
         if !path.exists() {
             try!(mkdir_recursive(&path, old_io::USER_DIR));
         }
@@ -255,7 +263,7 @@ impl VmInner {
         let mut file = File::create(&path);
         try!(
             file.write_all(
-                json::encode(self).unwrap().into_bytes().as_slice()
+                json.into_bytes().as_slice()
             )
         );
         Ok(())
