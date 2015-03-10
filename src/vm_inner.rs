@@ -176,6 +176,7 @@ impl VmInner {
         };
 
         for id in expression_ids.iter() {
+            debug_assert!(self.expressions.contains_key(id));
             let expression = self.expressions.get(id).unwrap();
             let mut stack = ChannelStack::new(&mut self.stack_data);
             let result = expression.tick(
