@@ -45,7 +45,10 @@ pub trait OpcodeReader: Reader {
                 self.read_set_parameter()
             },
             ControlOpcodeType::AddExpression => {
-                self.read_expression()
+                self.read_add_expression()
+            },
+            ControlOpcodeType::RemoveExpression => {
+                self.read_remove_expression()
             },
             ControlOpcodeType::AddEdge => {
                 self.read_add_edge()
@@ -83,7 +86,7 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_expression(&mut self) -> Result<ControlOpcode, IoError> {
+    fn read_add_expression(&mut self) -> Result<ControlOpcode, IoError> {
         let expression_id = try!(self.read_be_u32());
         let num_opcodes = try!(self.read_be_u32());
 
@@ -91,6 +94,16 @@ pub trait OpcodeReader: Reader {
             ControlOpcode::AddExpression {
                 expression_id: expression_id,
                 num_opcodes: num_opcodes
+            }
+        )
+    }
+
+    fn read_remove_expression(&mut self) -> Result<ControlOpcode, IoError> {
+        let expression_id = try!(self.read_be_u32());
+
+        Ok(
+            ControlOpcode::RemoveExpression {
+                expression_id: expression_id
             }
         )
     }

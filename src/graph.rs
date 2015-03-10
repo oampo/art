@@ -51,7 +51,16 @@ impl Graph {
         self.edges.push(Edge::new(from, to));
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear(&mut self, freed_expression_ids: &[u32]) {
+        self.edges.retain(|edge| {
+            let from = freed_expression_ids.iter().position(
+                |&id| id == edge.from
+            );
+            let to = freed_expression_ids.iter().position(
+                |&id| id == edge.to
+            );
+            from.is_none() && to.is_none()
+        });
     }
 
     pub fn topological_sort(&mut self, map: &mut ExpressionMap,

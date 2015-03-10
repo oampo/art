@@ -19,7 +19,7 @@ use opcode_reader::OpcodeReader;
 use unit_factory::UnitFactory;
 use channel_stack::ChannelStack;
 use graph::Graph;
-use expression::Expression;
+use expression::{Expression, ExpressionState};
 use leap::Leap;
 use expression_store::ExpressionStore;
 use validator::ExpressionValidator;
@@ -98,6 +98,8 @@ impl VmInner {
         for id in self.expressions.keys() {
             self.expression_ids.push(*id);
         }
+        // TODO: We should be able to do a dirty check, and only regenerate
+        // the graph when something has changed
         self.graph.topological_sort(&mut self.expressions,
                                     &mut self.expression_ids);
         self.run(adc_block, dac_block);
@@ -133,6 +135,9 @@ impl VmInner {
                                                            reader)
                 );
                 self.add_expression(expression_id, start, num_opcodes)
+            },
+            ControlOpcode::RemoveExpression { expression_id } => {
+                self.remove_expression(expression_id)
             },
             ControlOpcode::SetParameter { expression_id, unit_id,
                                           parameter_id, value } => {
@@ -177,25 +182,50 @@ impl VmInner {
 
         for id in expression_ids.iter() {
             debug_assert!(self.expressions.contains_key(id));
-            let expression = self.expressions.get(id).unwrap();
+            let expression = self.expressions.get_mut(id).unwrap();
             let mut stack = ChannelStack::new(&mut self.stack_data);
             let result = expression.tick(
                 &self.expression_store, &mut stack, &mut self.units,
                 &mut adjuncts, &self.constants
             );
-            result.unwrap_or_else(|error| error!("{}", error));
+
+            if result.is_err() {
+                expression.state = ExpressionState::Free;
+                debug!("Expression tick failed: reason={}",
+                       result.err().unwrap());
+            }
         }
         self.expression_ids = expression_ids;
         adjuncts.busses.read(dac_index, dac_block);
     }
 
     pub fn clean(&mut self) {
-        self.graph.clear();
+        // Remove failed and freed expressions
+        self.expression_ids.clear();
+        for (&id, expression) in self.expressions.iter() {
+            if expression.state == ExpressionState::Free {
+                self.expression_ids.push(id);
+            }
+        };
+
+        for id in self.expression_ids.iter() {
+            debug_assert!(self.expressions.contains_key(id));
+            let expression = self.expressions.remove(id).unwrap();
+            expression.free_units(&self.expression_store, &mut self.units,
+                                  &mut self.parameters);
+        }
+
+        // Remove freed nodes from the edge list
+        self.graph.clear(&self.expression_ids);
+
+
+        // Reset things which are rebuilt on each tick
+        self.bus_map.clear();
+
         for (_, expression) in self.expressions.iter_mut() {
             expression.incoming_edges = 0;
         }
         self.expression_ids.clear();
-        self.bus_map.clear();
     }
 
     /* Control instructions */
@@ -221,6 +251,19 @@ impl VmInner {
         );
 
         self.expressions.insert(id, expression);
+        Ok(())
+    }
+
+    pub fn remove_expression(&mut self, expression_id: u32) -> ArtResult<()> {
+        let expression = try!(
+            self.expressions.get_mut(&expression_id).ok_or(
+                ArtError::ExpressionNotFound {
+                    expression_id: expression_id
+                }
+            )
+        );
+
+        expression.state = ExpressionState::Free;
         Ok(())
     }
 

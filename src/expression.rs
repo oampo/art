@@ -7,7 +7,7 @@ use channel_stack::ChannelStack;
 use leap::Leap;
 use operators;
 
-#[derive(Copy)]
+#[derive(Copy, PartialEq)]
 pub enum ExpressionState {
     Run,
     Free
@@ -48,9 +48,24 @@ impl Expression {
         }
     }
 
+    pub fn free_units(&self, store: &Leap<DspOpcode>,
+                      units: &mut UnitMap, parameters: &mut ParameterMap) {
+        for opcode in store.iter(self.index).take(self.num_opcodes) {
+            if let &DspOpcode::Unit { unit_id, .. } = opcode {
+                debug_assert!(units.contains_key(&(self.id, unit_id)));
+                let unit = units.remove(&(self.id, unit_id)).unwrap();
+                unit.free_parameters(parameters);
+            }
+        }
+    }
+
     pub fn tick(&self, store: &Leap<DspOpcode>, stack: &mut ChannelStack,
                 units: &mut UnitMap, adjuncts: &mut TickAdjuncts,
                 constants: &Constants) -> ArtResult<()> {
+        if self.state != ExpressionState::Run {
+            return Ok(())
+        }
+
         for opcode in store.iter(self.index).take(self.num_opcodes) {
             match opcode {
                 &DspOpcode::Unit { unit_id, .. } => {

@@ -25,6 +25,14 @@ impl Unit {
         }
     }
 
+    pub fn free_parameters(&self, parameters: &mut ParameterMap) {
+        let (eid, uid) = self.id;
+        for pid in range(0, self.definition.parameters.len()) {
+            parameters.remove(&(eid, uid, pid as u32));
+        }
+    }
+
+
     pub fn tick(&mut self, stack: &mut ChannelStack,
                 adjuncts: &mut TickAdjuncts, constants: &Constants)
             -> ArtResult<()> {
