@@ -17,6 +17,8 @@ pub struct Unit {
 
 impl Unit {
     pub fn construct_parameters(&self, parameters: &mut ParameterMap) {
+        debug_assert!(parameters.len() + self.definition.parameters.len() <=
+                      parameters.capacity());
         let (eid, uid) = self.id;
         for (pid, parameter) in
                 self.definition.parameters.iter().enumerate() {

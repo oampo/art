@@ -1,6 +1,7 @@
 use std::num::Float;
 
 use types::{ArtResult, Rate};
+use errors::ArtError;
 
 use unit::{Unit, UnitDefinition, UnitData, UnitKind, ChannelLayout,
            TickAdjuncts};
@@ -29,6 +30,10 @@ impl BusOut {
             adjuncts.busses.add(bus_index, block);
         }
         else {
+            if adjuncts.bus_map.len() >= adjuncts.bus_map.capacity() {
+                return Err(ArtError::BufferOverflow);
+            }
+
             let channels = unit.layout.input as usize;
             let samples = match unit.definition.input_rate {
                 Rate::Audio => channels * constants.block_size,
@@ -36,6 +41,8 @@ impl BusOut {
             };
             let bus_index = try!(adjuncts.busses.push(samples));
             adjuncts.busses.write(bus_index, block);
+
+            debug_assert!(adjuncts.bus_map.len() < adjuncts.bus_map.capacity());
             adjuncts.bus_map.insert(bus_id, bus_index);
         }
 

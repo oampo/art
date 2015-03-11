@@ -250,6 +250,7 @@ impl VmInner {
             &mut self.parameters
         );
 
+        debug_assert!(self.expressions.len() < self.expressions.capacity());
         self.expressions.insert(id, expression);
         Ok(())
     }
