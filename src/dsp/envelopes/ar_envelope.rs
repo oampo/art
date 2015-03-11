@@ -111,3 +111,101 @@ impl ArEnvelopeAr {
     }
 }
 
+pub static PARAMETERS_KR: [ParameterDefinition; 3] = [
+    ParameterDefinition {
+        name: "gate",
+        default: 1f32,
+        rate: Rate::Control
+    },
+    ParameterDefinition {
+        name: "attack",
+        default: 1f32,
+        rate: Rate::Control
+    },
+    ParameterDefinition {
+        name: "release",
+        default: 1f32,
+        rate: Rate::Control
+    }
+];
+
+pub static DEFINITION_KR: UnitDefinition = UnitDefinition {
+    name: "ar_envelope_kr",
+    kind: UnitKind::Source,
+    input_rate: None,
+    output_rate: Some(Rate::Control),
+    default_layout: ChannelLayout {
+        input: 0,
+        output: 1
+    },
+    parameters: &PARAMETERS_KR,
+    tick: ArEnvelopeKr::tick
+};
+
+#[derive(Copy)]
+pub struct ArEnvelopeKr;
+
+impl ArEnvelopeKr {
+    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32)
+            -> Unit {
+        Unit {
+            definition: &DEFINITION_KR,
+            id: id,
+            layout: ChannelLayout {
+                input: input_channels,
+                output: output_channels
+            },
+            data: UnitData::ArEnvelope {
+                value: 0.0,
+                delta: 0.0,
+                last_gate: 0.0
+            }
+        }
+    }
+
+    fn tick(unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
+            _: &mut TickAdjuncts, constants: &Constants) -> ArtResult<()> {
+        if let UnitData::ArEnvelope {ref mut value, ref mut delta, 
+                                     ref mut last_gate} = unit.data {
+            let gate = parameters.data[0];
+            let attack = parameters.data[1];
+            let release = parameters.data[2];
+
+            let channels = unit.layout.output as usize;
+
+            if gate > 0.0 && *last_gate <= 0.0 {
+                if attack == 0.0 {
+                    *delta = 1.0 - *value;
+                }
+                else {
+                    *delta = (1.0 - *value) /
+                            (attack * constants.control_rate);
+                }
+            }
+
+            *value += *delta;
+
+            if *value >= 1.0 {
+                *value = 1.0;
+                if release == 0.0 {
+                    *delta = -*value;
+                }
+                else {
+                    *delta = -*value / (attack * constants.control_rate);
+                }
+            }
+
+            if *value <= 0.0 {
+                *value = 0.0;
+                *delta = 0.0;
+            }
+
+            *last_gate = gate;
+
+            for i in range(0, channels) {
+                block[i] = *value;
+            }
+        }
+        Ok(())
+    }
+}

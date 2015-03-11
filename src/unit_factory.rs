@@ -9,7 +9,7 @@ use dsp::bus::bus_out::{self, BusOutAr, BusOutKr};
 use dsp::parameter::parameter::{self, ParameterAr, ParameterKr};
 use dsp::parameter::parameter_writer::{self, ParameterWriterAr,
                                        ParameterWriterKr};
-use dsp::envelopes::ar_envelope::{self, ArEnvelopeAr};
+use dsp::envelopes::ar_envelope::{self, ArEnvelopeAr, ArEnvelopeKr};
 
 #[derive(Copy)]
 pub struct UnitFactoryItem {
@@ -42,8 +42,8 @@ impl UnitFactory {
                          ParameterWriterAr::new);
         factory.register(&parameter_writer::DEFINITION_KR,
                          ParameterWriterKr::new);
-        factory.register(&ar_envelope::DEFINITION_AR,
-                         ArEnvelopeAr::new);
+        factory.register(&ar_envelope::DEFINITION_AR, ArEnvelopeAr::new);
+        factory.register(&ar_envelope::DEFINITION_KR, ArEnvelopeKr::new);
         factory
     }
 
