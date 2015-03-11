@@ -48,6 +48,9 @@ pub mod dsp {
         pub mod bus_in;
         pub mod bus_out;
     }
+    pub mod envelopes {
+        pub mod ar_envelope;
+    }
 }
 
 

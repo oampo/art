@@ -57,11 +57,11 @@ impl Unit {
         try!(stack.push(output_samples));
 
         // Split the stack into the unit half, and half for the parameters
-        let (mut unit_stack, mut parameter_stack) = stack.split(
+        let (mut unit_stack, mut parameter_stack) = stack.split_at_mut(
             index + samples
         );
 
-        let mut block = unit_stack.get(index, samples);
+        let mut block = unit_stack.get_mut(index, samples);
         try!(self.tick_parameters(&mut parameter_stack, adjuncts,
                                   constants));
         try!(
@@ -82,7 +82,7 @@ impl Unit {
             };
 
             let index = try!(stack.push(samples));
-            let (_, mut channel) = stack.split(index);
+            let (_, mut channel) = stack.split_at_mut(index);
 
             debug_assert!(
                 adjuncts.parameters.contains_key(&(eid, uid, pid as u32))
@@ -176,6 +176,11 @@ impl Encodable for UnitDefinition {
 pub enum UnitData {
     Sine {
         position: f32,
+    },
+    ArEnvelope {
+        value: f32,
+        delta: f32,
+        last_gate: f32
     },
     None
 }

@@ -29,7 +29,7 @@ impl Parameter {
             Rate::Control => 1
         };
         let index = try!(stack.push(samples));
-        let block = stack.get(index, samples);
+        let block = stack.get_mut(index, samples);
 
         match self.definition.rate {
             Rate::Control => {

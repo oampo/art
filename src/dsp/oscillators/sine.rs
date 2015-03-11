@@ -60,9 +60,11 @@ impl SineAr {
             _: &mut TickAdjuncts, constants: &Constants) -> ArtResult<()> {
         if let UnitData::Sine {ref mut position} = unit.data {
             let (mut frequency_stack,
-                 mut phase_stack) = parameters.split(constants.block_size);
-            let frequency = frequency_stack.get(0, constants.block_size);
-            let phase = phase_stack.get(0, constants.block_size);
+                 mut phase_stack) = parameters.split_at_mut(
+               constants.block_size
+            );
+            let frequency = frequency_stack.get_mut(0, constants.block_size);
+            let phase = phase_stack.get_mut(0, constants.block_size);
 
             let channels = unit.layout.output as usize;
 

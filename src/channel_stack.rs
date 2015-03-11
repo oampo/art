@@ -56,7 +56,7 @@ impl<'a> ChannelStack<'a> {
     }
 
 
-    pub fn get(&mut self, index: usize, samples: usize) -> &mut [f32] {
+    pub fn get_mut(&mut self, index: usize, samples: usize) -> &mut [f32] {
         debug_assert!(index + samples <= self.data.len());
         let end = index + samples;
         &mut self.data[index..end]
@@ -69,8 +69,7 @@ impl<'a> ChannelStack<'a> {
         }
     }
 
-
-    pub fn split(&mut self, index: usize)
+    pub fn split_at_mut(&mut self, index: usize)
             -> (ChannelStack, ChannelStack) {
         debug_assert!(index <= self.data.len());
         let (left, right) = self.data.split_at_mut(index);
