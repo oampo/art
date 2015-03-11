@@ -213,6 +213,8 @@ impl VmInner {
             let expression = self.expressions.remove(id).unwrap();
             expression.free_units(&self.expression_store, &mut self.units,
                                   &mut self.parameters);
+            self.expression_store.free(expression.index,
+                                       expression.num_opcodes);
         }
 
         // Remove freed nodes from the edge list
