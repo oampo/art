@@ -27,8 +27,8 @@ pub static PARAMETERS_AR: [ParameterDefinition; 3] = [
 pub static DEFINITION_AR: UnitDefinition = UnitDefinition {
     name: "ar_envelope_ar",
     kind: UnitKind::Source,
-    input_rate: Rate::Audio,
-    output_rate: Rate::Audio,
+    input_rate: None,
+    output_rate: Some(Rate::Audio),
     default_layout: ChannelLayout {
         input: 0,
         output: 1

@@ -36,8 +36,9 @@ impl BusOut {
 
             let channels = unit.layout.input as usize;
             let samples = match unit.definition.input_rate {
-                Rate::Audio => channels * constants.block_size,
-                Rate::Control => channels
+                Some(Rate::Audio) => channels * constants.block_size,
+                Some(Rate::Control) => channels,
+                None => 0
             };
             let bus_index = try!(adjuncts.busses.push(samples));
             adjuncts.busses.write(bus_index, block);
@@ -53,8 +54,8 @@ impl BusOut {
 pub static DEFINITION_AR: UnitDefinition = UnitDefinition {
     name: "bus_out_ar",
     kind: UnitKind::Sink,
-    input_rate: Rate::Audio,
-    output_rate: Rate::Audio,
+    input_rate: Some(Rate::Audio),
+    output_rate: None,
     default_layout: ChannelLayout {
         input: 1,
         output: 0
@@ -84,8 +85,8 @@ impl BusOutAr {
 pub static DEFINITION_KR: UnitDefinition = UnitDefinition {
     name: "bus_out_kr",
     kind: UnitKind::Sink,
-    input_rate: Rate::Control,
-    output_rate: Rate::Control,
+    input_rate: Some(Rate::Control),
+    output_rate: None,
     default_layout: ChannelLayout {
         input: 1,
         output: 0

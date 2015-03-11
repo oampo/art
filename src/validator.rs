@@ -110,34 +110,38 @@ impl UnitValidator {
     fn validate_stack(input_channels: u32, output_channels: u32,
                       definition: &UnitDefinition,
                       stack_record: &mut Vec<StackRecord>) -> ArtResult<()> {
-        if input_channels != 0 {
-            if stack_record.len() == 0 {
-                return Err(ArtError::StackUnderflow);
+        if let Some(input_rate) = definition.input_rate {
+            if input_channels != 0 {
+                if stack_record.len() == 0 {
+                    return Err(ArtError::StackUnderflow);
+                }
+
+                let record = stack_record.pop().unwrap();
+
+                try!(
+                    UnitValidator::validate_channels(input_channels,
+                                                     record.channels)
+                );
+                try!(
+                    UnitValidator::validate_rate(input_rate,
+                                                 record.rate)
+                );
             }
-
-            let record = stack_record.pop().unwrap();
-
-            try!(
-                UnitValidator::validate_channels(input_channels,
-                                                 record.channels)
-            );
-            try!(
-                UnitValidator::validate_rate(definition.input_rate,
-                                             record.rate)
-            );
         }
 
-        if output_channels != 0 {
-            if stack_record.len() == stack_record.capacity() {
-                return Err(ArtError::StackOverflow);
-            }
-
-            stack_record.push(
-                StackRecord {
-                    channels: output_channels,
-                    rate: definition.output_rate
+        if let Some(output_rate) = definition.output_rate {
+            if output_channels != 0 {
+                if stack_record.len() == stack_record.capacity() {
+                    return Err(ArtError::StackOverflow);
                 }
-            );
+
+                stack_record.push(
+                    StackRecord {
+                        channels: output_channels,
+                        rate: output_rate
+                    }
+                );
+            }
         }
         Ok(())
     }

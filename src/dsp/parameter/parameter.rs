@@ -17,8 +17,8 @@ pub static PARAMETERS_AR: [ParameterDefinition; 1] = [
 pub static DEFINITION_AR: UnitDefinition = UnitDefinition {
     name: "parameter_ar",
     kind: UnitKind::Source,
-    input_rate: Rate::Audio,
-    output_rate: Rate::Audio,
+    input_rate: None,
+    output_rate: Some(Rate::Audio),
     default_layout: ChannelLayout {
         input: 0,
         output: 1
@@ -71,8 +71,8 @@ pub static PARAMETERS_KR: [ParameterDefinition; 1] = [
 pub static DEFINITION_KR: UnitDefinition = UnitDefinition {
     name: "parameter_kr",
     kind: UnitKind::Source,
-    input_rate: Rate::Control,
-    output_rate: Rate::Control,
+    input_rate: None,
+    output_rate: Some(Rate::Control),
     default_layout: ChannelLayout {
         input: 0,
         output: 1

@@ -41,8 +41,8 @@ impl BusIn {
 pub static DEFINITION_AR: UnitDefinition = UnitDefinition {
     name: "bus_in_ar",
     kind: UnitKind::Source,
-    input_rate: Rate::Audio,
-    output_rate: Rate::Audio,
+    input_rate: None,
+    output_rate: Some(Rate::Audio),
     default_layout: ChannelLayout {
         input: 0,
         output: 1
@@ -72,8 +72,8 @@ impl BusInAr {
 pub static DEFINITION_KR: UnitDefinition = UnitDefinition {
     name: "bus_in_kr",
     kind: UnitKind::Source,
-    input_rate: Rate::Control,
-    output_rate: Rate::Control,
+    input_rate: None,
+    output_rate: Some(Rate::Control),
     default_layout: ChannelLayout {
         input: 0,
         output: 1

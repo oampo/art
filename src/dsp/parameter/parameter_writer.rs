@@ -30,8 +30,8 @@ pub static PARAMETERS: [ParameterDefinition; 3] = [
 pub static DEFINITION_AR: UnitDefinition = UnitDefinition {
     name: "parameter_writer_ar",
     kind: UnitKind::Sink,
-    input_rate: Rate::Audio,
-    output_rate: Rate::Audio,
+    input_rate: Some(Rate::Audio),
+    output_rate: None,
     default_layout: ChannelLayout {
         input: 1,
         output: 0
@@ -93,8 +93,8 @@ impl ParameterWriterAr {
 pub static DEFINITION_KR: UnitDefinition = UnitDefinition {
     name: "parameter_writer_kr",
     kind: UnitKind::Sink,
-    input_rate: Rate::Control,
-    output_rate: Rate::Control,
+    input_rate: Some(Rate::Control),
+    output_rate: None,
     default_layout: ChannelLayout {
         input: 1,
         output: 0

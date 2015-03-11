@@ -42,13 +42,15 @@ impl Unit {
         let output_channels = self.layout.output as usize;
 
         let input_samples = match self.definition.input_rate {
-            Rate::Audio => input_channels * constants.block_size,
-            Rate::Control => input_channels
+            Some(Rate::Audio) => input_channels * constants.block_size,
+            Some(Rate::Control) => input_channels,
+            None => 0
         };
 
         let output_samples = match self.definition.output_rate {
-            Rate::Audio => output_channels * constants.block_size,
-            Rate::Control => output_channels
+            Some(Rate::Audio) => output_channels * constants.block_size,
+            Some(Rate::Control) => output_channels,
+            None => 0
         };
 
         let samples = cmp::max(input_samples, output_samples);
@@ -127,8 +129,8 @@ pub type TickFunction = fn(
 pub struct UnitDefinition {
     pub name: &'static str,
     pub kind: UnitKind,
-    pub input_rate: Rate,
-    pub output_rate: Rate,
+    pub input_rate: Option<Rate>,
+    pub output_rate: Option<Rate>,
     pub default_layout: ChannelLayout,
     pub parameters: &'static [ParameterDefinition],
     pub tick: TickFunction
