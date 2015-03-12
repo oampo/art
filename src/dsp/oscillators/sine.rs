@@ -5,7 +5,7 @@ use types::{ArtResult, Rate};
 
 use unit::{Unit, UnitDefinition, UnitData, ChannelLayout, UnitKind,
            TickAdjuncts};
-use parameter::ParameterDefinition;
+use parameter::{ParameterDefinition, ParameterMode};
 use channel_stack::ChannelStack;
 use constants::Constants;
 
@@ -15,12 +15,14 @@ pub static PARAMETERS_AR: [ParameterDefinition; 2] = [
     ParameterDefinition {
         name: "frequency",
         default: 440f32,
-        rate: Rate::Audio
+        rate: Rate::Audio,
+        mode: ParameterMode::Interpolate
     },
     ParameterDefinition {
         name: "phase",
         default: 0f32,
-        rate: Rate::Audio
+        rate: Rate::Audio,
+        mode: ParameterMode::Interpolate
     }
 ];
 
@@ -86,12 +88,14 @@ pub static PARAMETERS_KR: [ParameterDefinition; 2] = [
     ParameterDefinition {
         name: "frequency",
         default: 440f32,
-        rate: Rate::Control
+        rate: Rate::Control,
+        mode: ParameterMode::Normal
     },
     ParameterDefinition {
         name: "phase",
         default: 0f32,
-        rate: Rate::Control
+        rate: Rate::Control,
+        mode: ParameterMode::Normal
     }
 ];
 

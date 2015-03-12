@@ -2,7 +2,7 @@ use types::{ArtResult, Rate};
 
 use unit::{Unit, UnitDefinition, UnitData, ChannelLayout, UnitKind,
            TickAdjuncts};
-use parameter::ParameterDefinition;
+use parameter::{ParameterDefinition, ParameterMode};
 use channel_stack::ChannelStack;
 use constants::Constants;
 
@@ -10,17 +10,20 @@ pub static PARAMETERS_AR: [ParameterDefinition; 3] = [
     ParameterDefinition {
         name: "gate",
         default: 1f32,
-        rate: Rate::Audio
+        rate: Rate::Audio,
+        mode: ParameterMode::Trigger
     },
     ParameterDefinition {
         name: "attack",
         default: 1f32,
-        rate: Rate::Control
+        rate: Rate::Control,
+        mode: ParameterMode::Normal
     },
     ParameterDefinition {
         name: "release",
         default: 1f32,
-        rate: Rate::Control
+        rate: Rate::Control,
+        mode: ParameterMode::Normal
     }
 ];
 
@@ -115,17 +118,20 @@ pub static PARAMETERS_KR: [ParameterDefinition; 3] = [
     ParameterDefinition {
         name: "gate",
         default: 1f32,
-        rate: Rate::Control
+        rate: Rate::Control,
+        mode: ParameterMode::Trigger
     },
     ParameterDefinition {
         name: "attack",
         default: 1f32,
-        rate: Rate::Control
+        rate: Rate::Control,
+        mode: ParameterMode::Normal
     },
     ParameterDefinition {
         name: "release",
         default: 1f32,
-        rate: Rate::Control
+        rate: Rate::Control,
+        mode: ParameterMode::Normal
     }
 ];
 

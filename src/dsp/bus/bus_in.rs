@@ -4,7 +4,7 @@ use types::{ArtResult, Rate};
 
 use unit::{Unit, UnitDefinition, UnitData, UnitKind, ChannelLayout,
            TickAdjuncts};
-use parameter::ParameterDefinition;
+use parameter::{ParameterDefinition, ParameterMode};
 use channel_stack::ChannelStack;
 use constants::Constants;
 
@@ -12,7 +12,8 @@ pub static PARAMETERS: [ParameterDefinition; 1] = [
     ParameterDefinition {
         name: "bus_id",
         default: 0f32,
-        rate: Rate::Control
+        rate: Rate::Control,
+        mode: ParameterMode::Normal
     }
 ];
 
