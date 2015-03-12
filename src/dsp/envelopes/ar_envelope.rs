@@ -94,7 +94,7 @@ impl ArEnvelopeAr {
                         *delta = -*value;
                     }
                     else {
-                        *delta = -*value / (attack * constants.audio_rate);
+                        *delta = -*value / (release * constants.audio_rate);
                     }
                 }
 
@@ -197,7 +197,7 @@ impl ArEnvelopeKr {
                     *delta = -*value;
                 }
                 else {
-                    *delta = -*value / (attack * constants.control_rate);
+                    *delta = -*value / (release * constants.control_rate);
                 }
             }
 
