@@ -44,6 +44,9 @@ pub mod dsp {
         pub mod parameter;
         pub mod parameter_writer;
     }
+    pub mod rate {
+        pub mod kr_to_ar;
+    }
     pub mod bus {
         pub mod bus_in;
         pub mod bus_out;

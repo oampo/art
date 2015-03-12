@@ -10,6 +10,7 @@ use dsp::parameter::parameter::{self, ParameterAr, ParameterKr};
 use dsp::parameter::parameter_writer::{self, ParameterWriterAr,
                                        ParameterWriterKr};
 use dsp::envelopes::ar_envelope::{self, ArEnvelopeAr, ArEnvelopeKr};
+use dsp::rate::kr_to_ar::{self, KrToAr};
 
 #[derive(Copy)]
 pub struct UnitFactoryItem {
@@ -44,6 +45,7 @@ impl UnitFactory {
                          ParameterWriterKr::new);
         factory.register(&ar_envelope::DEFINITION_AR, ArEnvelopeAr::new);
         factory.register(&ar_envelope::DEFINITION_KR, ArEnvelopeKr::new);
+        factory.register(&kr_to_ar::DEFINITION, KrToAr::new);
         factory
     }
 
