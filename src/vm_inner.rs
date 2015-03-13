@@ -208,14 +208,13 @@ impl VmInner {
             }
         };
 
-        for id in self.expression_ids.iter() {
+        let expression_ids = mem::replace(&mut self.expression_ids,
+                                          Vec::with_capacity(0));
+        for id in expression_ids.iter() {
             debug_assert!(self.expressions.contains_key(id));
-            let expression = self.expressions.remove(id).unwrap();
-            expression.free_units(&self.expression_store, &mut self.units,
-                                  &mut self.parameters);
-            self.expression_store.free(expression.index,
-                                       expression.num_opcodes);
+            self.remove_expression(*id).unwrap();
         }
+        self.expression_ids = expression_ids;
 
         // Remove freed nodes from the edge list
         self.graph.clear(&self.expression_ids);
@@ -245,6 +244,10 @@ impl VmInner {
             return result;
         }
 
+        if self.expressions.contains_key(&id) {
+            self.remove_expression(id).unwrap();
+        }
+
         let expression = Expression::new(id, index, num_opcodes );
 
         let _ = expression.construct_units(
@@ -259,14 +262,14 @@ impl VmInner {
 
     pub fn remove_expression(&mut self, expression_id: u32) -> ArtResult<()> {
         let expression = try!(
-            self.expressions.get_mut(&expression_id).ok_or(
+            self.expressions.remove(&expression_id).ok_or(
                 ArtError::ExpressionNotFound {
                     expression_id: expression_id
                 }
             )
         );
-
-        expression.state = ExpressionState::Free;
+        expression.free(&mut self.expression_store, &mut self.units,
+                        &mut self.parameters);
         Ok(())
     }
 

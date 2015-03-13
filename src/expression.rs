@@ -86,5 +86,12 @@ impl Expression {
         }
         Ok(())
     }
+
+    pub fn free(&self, store: &mut Leap<DspOpcode>, units: &mut UnitMap,
+                parameters: &mut ParameterMap) {
+        self.free_units(store, units, parameters);
+        store.free(self.index, self.num_opcodes);
+    }
+
 }
 
