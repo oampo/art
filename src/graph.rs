@@ -21,7 +21,7 @@ pub trait NodeList {
 
 impl NodeList for [u32] {
     fn find_zero_order(&self, map: &ExpressionMap) -> Option<(usize, u32)> {
-        self.iter().enumerate().find(|&: &(_, id) | {
+        self.iter().enumerate().find(|&(_, id) | {
             debug_assert!(map.contains_key(id));
             let node = map.get(id).unwrap();
             node.incoming_edges == 0

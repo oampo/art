@@ -72,7 +72,8 @@ impl Device {
         let input_parameters = portaudio::stream::StreamParameters {
             device: input_device_id,
             channel_count: options.input_channels,
-            suggested_latency: input_device_info.default_low_input_latency
+            suggested_latency: input_device_info.default_low_input_latency,
+            data: 0f32
         };
 
         let output_device_id = match options.output_device {
@@ -97,7 +98,8 @@ impl Device {
         let output_parameters = portaudio::stream::StreamParameters {
             device: output_device_id,
             channel_count: options.output_channels,
-            suggested_latency: output_device_info.default_low_input_latency
+            suggested_latency: output_device_info.default_low_input_latency,
+            data: 0f32
         };
 
         try!(

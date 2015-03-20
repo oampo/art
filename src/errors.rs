@@ -1,5 +1,6 @@
 use std::error::{Error, FromError};
 use std::old_io::IoError;
+use std::io;
 use std::fmt;
 
 use rustc_serialize::json::EncoderError;
@@ -19,6 +20,7 @@ pub enum ArtError {
     ChannelMismatch { expected: u32, actual: u32 },
     RateMismatch { expected: Rate, actual: Rate },
     InvalidByteCode { error: Option<IoError> },
+    IoError { error: io::Error },
     StackOverflow,
     StackUnderflow,
     BufferOverflow,
@@ -61,6 +63,9 @@ impl ArtError {
                     &None => None
                 }
             },
+            ArtError::IoError { ref error } => {
+                Some(format!("error={}", error))
+            },
             ArtError::EncoderError { error } => {
                 Some(format!("error={}", error))
             },
@@ -88,6 +93,7 @@ impl Error for ArtError {
             ArtError::StackUnderflow => "Stack underflow",
             ArtError::BufferOverflow => "Buffer overflow",
             ArtError::InvalidStack => "Invalid stack",
+            ArtError::IoError { .. } => "IO Error",
             ArtError::EncoderError { .. } => "Encoder error",
             ArtError::PortAudio { .. } => "PortAudio error"
         }
@@ -117,6 +123,12 @@ impl FromError<PaError> for ArtError {
 impl FromError<IoError> for ArtError {
     fn from_error(error: IoError) -> ArtError {
         ArtError::InvalidByteCode { error: Some(error) }
+    }
+}
+
+impl FromError<io::Error> for ArtError {
+    fn from_error(error: io::Error) -> ArtError {
+        ArtError::IoError { error: error }
     }
 }
 

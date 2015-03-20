@@ -1,6 +1,7 @@
 use std::mem;
 use std::old_io::{self, BufReader, IoError, IoErrorKind};
-use std::old_io::fs::{mkdir_recursive, File, PathExtensions};
+use std::io::{self, Write};
+use std::fs::{create_dir_all, File, PathExt};
 use std::collections::HashMap;
 
 use rustc_serialize::{Encoder, Encodable, json};
@@ -298,19 +299,16 @@ impl VmInner {
         let json = try!(json::encode(self));
 
         let mut path = try!(util::user_data_dir().ok_or(
-            IoError {
-                kind: IoErrorKind::OtherIoError,
-                desc: "Could not determine user data directory",
-                detail: None
-            }
+            io::Error::new(io::ErrorKind::Other,
+                           "Could not determine user data directory", None)
         ));
         if !path.exists() {
-            try!(mkdir_recursive(&path, old_io::USER_DIR));
+            try!(create_dir_all(&path));
         }
 
         path.push("art_info.json");
 
-        let mut file = File::create(&path);
+        let mut file = try!(File::create(&path));
         try!(
             file.write_all(
                 json.into_bytes().as_slice()
