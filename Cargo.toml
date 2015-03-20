@@ -13,5 +13,6 @@ git = "https://github.com/mvdnes/portaudio-rs"
 log = "*"
 env_logger = "*"
 rustc-serialize = "*"
+byteorder = "*"
 
 

@@ -1,6 +1,5 @@
 use std::mem;
-use std::old_io::{self, BufReader, IoError, IoErrorKind};
-use std::io::{self, Write};
+use std::io::{self, Cursor, Write};
 use std::fs::{create_dir_all, File, PathExt};
 use std::collections::HashMap;
 
@@ -118,8 +117,8 @@ impl VmInner {
     }
 
     fn process(&mut self, byte_code: &[u8]) -> ArtResult<()> {
-        let mut reader = BufReader::new(byte_code);
-        while !reader.eof() {
+        let mut reader = Cursor::new(byte_code);
+        while reader.position() != byte_code.len() as u64 {
             let opcode = try!(reader.read_control_opcode());
             try!(self.process_opcode(opcode, &mut reader));
         }
@@ -127,7 +126,7 @@ impl VmInner {
     }
 
     fn process_opcode(&mut self, opcode: ControlOpcode,
-                      reader: &mut BufReader) -> ArtResult<()> {
+                      reader: &mut Cursor<&[u8]>) -> ArtResult<()> {
         match opcode {
             ControlOpcode::AddExpression { expression_id, num_opcodes } => {
                 let num_opcodes = num_opcodes as usize;

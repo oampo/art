@@ -1,5 +1,4 @@
 use std::error::{Error, FromError};
-use std::old_io::IoError;
 use std::io;
 use std::fmt;
 
@@ -19,7 +18,7 @@ pub enum ArtError {
     ParameterNotFound { expression_id: u32, unit_id: u32, parameter_id: u32 },
     ChannelMismatch { expected: u32, actual: u32 },
     RateMismatch { expected: Rate, actual: Rate },
-    InvalidByteCode { error: Option<IoError> },
+    InvalidByteCode,
     IoError { error: io::Error },
     StackOverflow,
     StackUnderflow,
@@ -57,12 +56,6 @@ impl ArtError {
             ArtError::RateMismatch{ expected, actual } => {
                 Some(format!("expected={:?}, actual={:?}", expected, actual))
             },
-            ArtError::InvalidByteCode { ref error } => {
-                match error {
-                    &Some(ref e) => Some(format!("error={}", e)),
-                    &None => None
-                }
-            },
             ArtError::IoError { ref error } => {
                 Some(format!("error={}", error))
             },
@@ -88,7 +81,7 @@ impl Error for ArtError {
             ArtError::ExpressionNotFound { .. } => "Expression not found",
             ArtError::ChannelMismatch { .. } => "Channel mismatch",
             ArtError::RateMismatch { .. } => "Rate mismatch",
-            ArtError::InvalidByteCode { .. } => "Invalid byte code",
+            ArtError::InvalidByteCode => "Invalid byte code",
             ArtError::StackOverflow => "Stack overflow",
             ArtError::StackUnderflow => "Stack underflow",
             ArtError::BufferOverflow => "Buffer overflow",
@@ -98,31 +91,11 @@ impl Error for ArtError {
             ArtError::PortAudio { .. } => "PortAudio error"
         }
     }
-
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            ArtError::InvalidByteCode { ref error } => {
-                match error {
-                    &Some(ref e) => Some(e as &Error),
-                    &None => None
-                }
-            },
-            // FIXME: Make PaError impl Error
-            //ArtError::PortAudio { error } => Some(&error as &Error),
-            _ => None
-        }
-    }
 }
 
 impl FromError<PaError> for ArtError {
     fn from_error(error: PaError) -> ArtError {
         ArtError::PortAudio { error: error }
-    }
-}
-
-impl FromError<IoError> for ArtError {
-    fn from_error(error: IoError) -> ArtError {
-        ArtError::InvalidByteCode { error: Some(error) }
     }
 }
 

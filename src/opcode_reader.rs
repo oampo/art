@@ -1,45 +1,41 @@
-use std::old_io::{IoError, IoErrorKind, BufReader};
+use std::io::{self, Read, Cursor};
 use std::num::FromPrimitive;
+
+use byteorder::{ReadBytesExt, BigEndian};
 
 use types::Rate;
 use opcode::{ControlOpcodeType, DspOpcodeType, ControlOpcode, DspOpcode};
 
-pub trait OpcodeReader: Reader {
-    fn read_control_opcode(&mut self) -> Result<ControlOpcode, IoError> {
+pub trait OpcodeReader: Read {
+    fn read_control_opcode(&mut self) -> Result<ControlOpcode, io::Error> {
         let opcode_type = try!(self.read_control_opcode_type());
         self.read_control_opcode_parameters(opcode_type)
     }
 
-    fn read_dsp_opcode(&mut self) -> Result<DspOpcode, IoError> {
+    fn read_dsp_opcode(&mut self) -> Result<DspOpcode, io::Error> {
         let opcode_type = try!(self.read_dsp_opcode_type());
         self.read_dsp_opcode_parameters(opcode_type)
     }
 
     fn read_control_opcode_type(&mut self)
-            -> Result<ControlOpcodeType, IoError> {
-        let opcode_value = try!(self.read_be_u32());
+            -> Result<ControlOpcodeType, io::Error> {
+        let opcode_value = try!(self.read_u32::<BigEndian>());
         FromPrimitive::from_u32(opcode_value).ok_or(
-            IoError {
-                kind: IoErrorKind::InvalidInput,
-                desc: "Unknown opcode",
-                detail: None
-            }
+            io::Error::new(io::ErrorKind::InvalidInput, "Unknown opcode",
+                           None)
         )
     }
-    fn read_dsp_opcode_type(&mut self) -> Result<DspOpcodeType, IoError> {
-        let opcode_value = try!(self.read_be_u32());
+    fn read_dsp_opcode_type(&mut self) -> Result<DspOpcodeType, io::Error> {
+        let opcode_value = try!(self.read_u32::<BigEndian>());
         FromPrimitive::from_u32(opcode_value).ok_or(
-            IoError {
-                kind: IoErrorKind::InvalidInput,
-                desc: "Unknown opcode",
-                detail: None
-            }
+            io::Error::new(io::ErrorKind::InvalidInput, "Unknown opcode",
+                           None)
         )
     }
 
     fn read_control_opcode_parameters(&mut self,
                                       opcode_type: ControlOpcodeType)
-            -> Result<ControlOpcode, IoError> {
+            -> Result<ControlOpcode, io::Error> {
         match opcode_type {
             ControlOpcodeType::SetParameter => {
                 self.read_set_parameter()
@@ -57,7 +53,7 @@ pub trait OpcodeReader: Reader {
     }
 
     fn read_dsp_opcode_parameters(&mut self, opcode_type: DspOpcodeType)
-            -> Result<DspOpcode, IoError> {
+            -> Result<DspOpcode, io::Error> {
         match opcode_type {
             DspOpcodeType::Unit => {
                 self.read_unit()
@@ -71,11 +67,11 @@ pub trait OpcodeReader: Reader {
         }
     }
 
-    fn read_set_parameter(&mut self) -> Result<ControlOpcode, IoError> {
-        let expression_id = try!(self.read_be_u32());
-        let unit_id = try!(self.read_be_u32());
-        let parameter_id = try!(self.read_be_u32());
-        let value = try!(self.read_be_f32());
+    fn read_set_parameter(&mut self) -> Result<ControlOpcode, io::Error> {
+        let expression_id = try!(self.read_u32::<BigEndian>());
+        let unit_id = try!(self.read_u32::<BigEndian>());
+        let parameter_id = try!(self.read_u32::<BigEndian>());
+        let value = try!(self.read_f32::<BigEndian>());
         Ok(
             ControlOpcode::SetParameter {
                 expression_id: expression_id,
@@ -86,9 +82,9 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_add_expression(&mut self) -> Result<ControlOpcode, IoError> {
-        let expression_id = try!(self.read_be_u32());
-        let num_opcodes = try!(self.read_be_u32());
+    fn read_add_expression(&mut self) -> Result<ControlOpcode, io::Error> {
+        let expression_id = try!(self.read_u32::<BigEndian>());
+        let num_opcodes = try!(self.read_u32::<BigEndian>());
 
         Ok(
             ControlOpcode::AddExpression {
@@ -98,8 +94,8 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_remove_expression(&mut self) -> Result<ControlOpcode, IoError> {
-        let expression_id = try!(self.read_be_u32());
+    fn read_remove_expression(&mut self) -> Result<ControlOpcode, io::Error> {
+        let expression_id = try!(self.read_u32::<BigEndian>());
 
         Ok(
             ControlOpcode::RemoveExpression {
@@ -108,9 +104,9 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_add_edge(&mut self) -> Result<ControlOpcode, IoError> {
-        let from = try!(self.read_be_u32());
-        let to = try!(self.read_be_u32());
+    fn read_add_edge(&mut self) -> Result<ControlOpcode, io::Error> {
+        let from = try!(self.read_u32::<BigEndian>());
+        let to = try!(self.read_u32::<BigEndian>());
 
         Ok(
             ControlOpcode::AddEdge {
@@ -120,11 +116,11 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_unit(&mut self) -> Result<DspOpcode, IoError> {
-        let unit_id = try!(self.read_be_u32());
-        let type_id = try!(self.read_be_u32());
-        let input_channels = try!(self.read_be_u32());
-        let output_channels = try!(self.read_be_u32());
+    fn read_unit(&mut self) -> Result<DspOpcode, io::Error> {
+        let unit_id = try!(self.read_u32::<BigEndian>());
+        let type_id = try!(self.read_u32::<BigEndian>());
+        let input_channels = try!(self.read_u32::<BigEndian>());
+        let output_channels = try!(self.read_u32::<BigEndian>());
         Ok(
             DspOpcode::Unit {
                 unit_id: unit_id,
@@ -135,22 +131,19 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_operator(&mut self) -> Result<(u32, Rate), IoError> {
-        let channels = try!(self.read_be_u32());
-        let raw_rate = try!(self.read_be_u32());
+    fn read_operator(&mut self) -> Result<(u32, Rate), io::Error> {
+        let channels = try!(self.read_u32::<BigEndian>());
+        let raw_rate = try!(self.read_u32::<BigEndian>());
         let rate = try!(
             FromPrimitive::from_u32(raw_rate).ok_or(
-                IoError {
-                    kind: IoErrorKind::InvalidInput,
-                    desc: "Unknown rate",
-                    detail: None
-                }
+                io::Error::new(io::ErrorKind::InvalidInput, "Unknown rate",
+                               None)
             )
         );
         Ok((channels, rate))
     }
 
-    fn read_add(&mut self) -> Result<DspOpcode, IoError> {
+    fn read_add(&mut self) -> Result<DspOpcode, io::Error> {
         let (channels, rate) = try!(self.read_operator());
         Ok(
             DspOpcode::Add {
@@ -160,7 +153,7 @@ pub trait OpcodeReader: Reader {
         )
     }
 
-    fn read_multiply(&mut self) -> Result<DspOpcode, IoError> {
+    fn read_multiply(&mut self) -> Result<DspOpcode, io::Error> {
         let (channels, rate) = try!(self.read_operator());
         Ok(
             DspOpcode::Multiply {
@@ -171,5 +164,8 @@ pub trait OpcodeReader: Reader {
     }
 }
 
-impl<'a> OpcodeReader for BufReader<'a> {
+impl<'a> OpcodeReader for Cursor<&'a [u8]> {
+}
+
+impl<'a> OpcodeReader for Cursor<&'a mut [u8]> {
 }
