@@ -1,9 +1,10 @@
 use types::{ArtResult, Rate};
 
-use unit::{Unit, UnitDefinition, UnitData, ChannelLayout, UnitKind,
+use unit::{Unit, UnitDefinition, ChannelLayout, UnitKind, DataSize,
            TickAdjuncts};
 use parameter::{ParameterDefinition};
 use channel_stack::ChannelStack;
+use leap::Leap;
 use constants::Constants;
 
 pub static PARAMETERS: [ParameterDefinition; 0] = [
@@ -19,14 +20,16 @@ pub static DEFINITION: UnitDefinition = UnitDefinition {
         output: 1
     },
     parameters: &PARAMETERS,
-    tick: KrToAr::tick
+    tick: KrToAr::tick,
+    data_size: DataSize::None
 };
 
 #[derive(Copy)]
 pub struct KrToAr;
 
 impl KrToAr {
-    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32)
+    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32,
+               _: &mut Leap<f32>)
             -> Unit {
         Unit {
             definition: &DEFINITION,
@@ -35,7 +38,7 @@ impl KrToAr {
                 input: input_channels,
                 output: output_channels
             },
-            data: UnitData::None
+            data_index: None
         }
     }
 

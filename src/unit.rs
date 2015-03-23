@@ -6,13 +6,14 @@ use constants::Constants;
 
 use channel_stack::ChannelStack;
 use parameter::{Parameter, ParameterDefinition};
+use leap::Leap;
 
 #[derive(Copy)]
 pub struct Unit {
     pub id: (u32, u32),
     pub definition: &'static UnitDefinition,
     pub layout: ChannelLayout,
-    pub data: UnitData
+    pub data_index: Option<usize>
 }
 
 impl Unit {
@@ -34,6 +35,15 @@ impl Unit {
         }
     }
 
+    pub fn free_data(&self, data: &mut Leap<f32>) {
+        let data_size = match self.definition.data_size {
+            DataSize::Fixed(size) => size,
+            DataSize::None => 0
+        };
+        if let Some(data_index) = self.data_index {
+            data.free(data_index, data_size);
+        }
+    }
 
     pub fn tick(&mut self, stack: &mut ChannelStack,
                 adjuncts: &mut TickAdjuncts, constants: &Constants)
@@ -117,13 +127,20 @@ pub struct ChannelLayout {
 pub struct TickAdjuncts<'a> {
     pub busses: &'a mut ChannelStack<'a>,
     pub bus_map: &'a mut BusMap,
-    pub parameters: &'a mut ParameterMap
+    pub parameters: &'a mut ParameterMap,
+    pub data: &'a mut Leap<f32>
 }
 
 pub type TickFunction = fn(
     unit: &mut Unit, block: &mut[f32], parameters: &mut ChannelStack,
     adjuncts: &mut TickAdjuncts, constants: &Constants
 ) -> ArtResult<()>;
+
+#[derive(Copy)]
+pub enum DataSize {
+    Fixed(usize),
+    None
+}
 
 #[derive(Copy)]
 pub struct UnitDefinition {
@@ -133,7 +150,8 @@ pub struct UnitDefinition {
     pub output_rate: Option<Rate>,
     pub default_layout: ChannelLayout,
     pub parameters: &'static [ParameterDefinition],
-    pub tick: TickFunction
+    pub tick: TickFunction,
+    pub data_size: DataSize
 }
 
 impl Encodable for UnitDefinition {
@@ -172,19 +190,6 @@ impl Encodable for UnitDefinition {
             Ok(())
         })
     }
-}
-
-#[derive(Copy)]
-pub enum UnitData {
-    Sine {
-        position: f32,
-    },
-    ArEnvelope {
-        value: f32,
-        delta: f32,
-        last_gate: f32
-    },
-    None
 }
 
 

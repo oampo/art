@@ -38,6 +38,7 @@ pub struct VmInner {
     pub expression_ids: Vec<u32>,
     pub stack_data: Vec<f32>,
     pub bus_data: Vec<f32>,
+    pub unit_data: Leap<f32>,
     pub stack_record: Vec<StackRecord>
 }
 
@@ -86,6 +87,7 @@ impl VmInner {
             ),
             stack_data: stack_data,
             bus_data: bus_data,
+            unit_data: Leap::with_capacity(1024),
             stack_record: Vec::with_capacity(
                 options.max_stack_depth as usize
             )
@@ -177,7 +179,8 @@ impl VmInner {
         let mut adjuncts = TickAdjuncts {
             busses: &mut busses,
             bus_map: &mut self.bus_map,
-            parameters: &mut self.parameters
+            parameters: &mut self.parameters,
+            data: &mut self.unit_data
         };
 
         for id in expression_ids.iter() {
@@ -236,7 +239,7 @@ impl VmInner {
         let result = ExpressionValidator::validate(
             index, num_opcodes, &self.expression_store, &mut self.stack_record,
             &self.unit_factory, &self.expressions, &self.units,
-            &self.parameters
+            &self.parameters, &self.unit_data
         );
 
         if result.is_err() {
@@ -252,7 +255,7 @@ impl VmInner {
 
         let _ = expression.construct_units(
             &self.expression_store, &mut self.unit_factory, &mut self.units,
-            &mut self.parameters
+            &mut self.parameters, &mut self.unit_data
         );
 
         debug_assert!(self.expressions.len() < self.expressions.capacity());
@@ -269,7 +272,7 @@ impl VmInner {
             )
         );
         expression.free(&mut self.expression_store, &mut self.units,
-                        &mut self.parameters);
+                        &mut self.parameters, &mut self.unit_data);
         Ok(())
     }
 

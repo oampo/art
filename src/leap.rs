@@ -76,9 +76,24 @@ impl<T> Leap<T> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.length
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.nodes.capacity()
+    }
+
     pub fn iter(&self, index: usize) -> Iter<T> {
         Iter {
             nodes: &self.nodes,
+            index: index
+        }
+    }
+
+    pub fn iter_mut(&mut self, index: usize) -> IterMut<T> {
+        IterMut {
+            nodes: &mut self.nodes,
             index: index
         }
     }
@@ -86,7 +101,7 @@ impl<T> Leap<T> {
 
 pub struct Iter<'a, T: 'a> {
     index: usize,
-    nodes: &'a Vec<Node<T>>
+    nodes: &'a [Node<T>]
 }
 
 impl<'a, T: 'a> Iterator for Iter<'a, T> {
@@ -102,3 +117,22 @@ impl<'a, T: 'a> Iterator for Iter<'a, T> {
     }
 }
 
+pub struct IterMut<'a, T: 'a> {
+    index: usize,
+    nodes: &'a mut [Node<T>]
+}
+
+impl<'a, T: 'a> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+    fn next(&mut self) -> Option<&'a mut T> {
+        let node = &mut self.nodes[self.index];
+        self.index = node.next;
+
+        match node.content {
+            Content::Full(ref mut value) => unsafe {
+                Some(&mut *(value as *mut _))
+            },
+            Content::Empty => None
+        }
+    }
+}

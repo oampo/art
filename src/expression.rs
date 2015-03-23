@@ -35,12 +35,14 @@ impl Expression {
 
     pub fn construct_units(&self, store: &Leap<DspOpcode>,
                            factory: &mut UnitFactory, units: &mut UnitMap,
-                           parameters: &mut ParameterMap) {
+                           parameters: &mut ParameterMap,
+                           data: &mut Leap<f32>) {
         for opcode in store.iter(self.index).take(self.num_opcodes) {
             if let &DspOpcode::Unit { unit_id, type_id, input_channels,
                                       output_channels } = opcode {
                 let unit = factory.create((self.id, unit_id), type_id,
-                                          input_channels, output_channels);
+                                          input_channels, output_channels,
+                                          data);
                 unit.construct_parameters(parameters);
                 debug_assert!(units.len() < units.capacity());
                 units.insert((self.id, unit_id), unit);
@@ -49,12 +51,14 @@ impl Expression {
     }
 
     pub fn free_units(&self, store: &Leap<DspOpcode>,
-                      units: &mut UnitMap, parameters: &mut ParameterMap) {
+                      units: &mut UnitMap, parameters: &mut ParameterMap,
+                      data: &mut Leap<f32>) {
         for opcode in store.iter(self.index).take(self.num_opcodes) {
             if let &DspOpcode::Unit { unit_id, .. } = opcode {
                 debug_assert!(units.contains_key(&(self.id, unit_id)));
                 let unit = units.remove(&(self.id, unit_id)).unwrap();
                 unit.free_parameters(parameters);
+                unit.free_data(data);
             }
         }
     }
@@ -88,8 +92,8 @@ impl Expression {
     }
 
     pub fn free(&self, store: &mut Leap<DspOpcode>, units: &mut UnitMap,
-                parameters: &mut ParameterMap) {
-        self.free_units(store, units, parameters);
+                parameters: &mut ParameterMap, data: &mut Leap<f32>) {
+        self.free_units(store, units, parameters, data);
         store.free(self.index, self.num_opcodes);
     }
 

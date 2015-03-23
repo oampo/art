@@ -3,10 +3,11 @@ use std::num::Float;
 use types::{ArtResult, Rate};
 use errors::ArtError;
 
-use unit::{Unit, UnitDefinition, UnitData, UnitKind, ChannelLayout,
+use unit::{Unit, UnitDefinition, UnitKind, ChannelLayout, DataSize,
            TickAdjuncts};
 use parameter::{ParameterDefinition, ParameterMode};
 use channel_stack::ChannelStack;
+use leap::Leap;
 use constants::Constants;
 
 pub static PARAMETERS: [ParameterDefinition; 1] = [
@@ -62,14 +63,16 @@ pub static DEFINITION_AR: UnitDefinition = UnitDefinition {
         output: 0
     },
     parameters: &PARAMETERS,
-    tick: BusOut::tick
+    tick: BusOut::tick,
+    data_size: DataSize::None
 };
 
 #[derive(Copy)]
 pub struct BusOutAr;
 
 impl BusOutAr {
-    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32)
+    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32,
+               _: &mut Leap<f32>)
             -> Unit {
         Unit {
             definition: &DEFINITION_AR,
@@ -78,7 +81,7 @@ impl BusOutAr {
                 input: input_channels,
                 output: output_channels
             },
-            data: UnitData::None
+            data_index: None
         }
     }
 }
@@ -93,14 +96,16 @@ pub static DEFINITION_KR: UnitDefinition = UnitDefinition {
         output: 0
     },
     parameters: &PARAMETERS,
-    tick: BusOut::tick
+    tick: BusOut::tick,
+    data_size: DataSize::None
 };
 
 #[derive(Copy)]
 pub struct BusOutKr;
 
 impl BusOutKr {
-    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32)
+    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32,
+               _: &mut Leap<f32>)
             -> Unit {
         Unit {
             definition: &DEFINITION_KR,
@@ -109,7 +114,7 @@ impl BusOutKr {
                 input: input_channels,
                 output: output_channels
             },
-            data: UnitData::None
+            data_index: None
         }
     }
 }

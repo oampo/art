@@ -1,9 +1,10 @@
 use types::{ArtResult, Rate};
 
-use unit::{Unit, UnitDefinition, UnitData, ChannelLayout, UnitKind,
+use unit::{Unit, UnitDefinition, ChannelLayout, UnitKind, DataSize,
            TickAdjuncts};
 use parameter::{ParameterDefinition, ParameterMode};
 use channel_stack::ChannelStack;
+use leap::Leap;
 use constants::Constants;
 
 pub static PARAMETERS_AR: [ParameterDefinition; 1] = [
@@ -25,14 +26,16 @@ pub static DEFINITION_AR: UnitDefinition = UnitDefinition {
         output: 1
     },
     parameters: &PARAMETERS_AR,
-    tick: ParameterAr::tick
+    tick: ParameterAr::tick,
+    data_size: DataSize::None
 };
 
 #[derive(Copy)]
 pub struct ParameterAr;
 
 impl ParameterAr {
-    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32)
+    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32,
+               _: &mut Leap<f32>)
             -> Unit {
         Unit {
             definition: &DEFINITION_AR,
@@ -41,7 +44,7 @@ impl ParameterAr {
                 input: input_channels,
                 output: output_channels
             },
-            data: UnitData::None
+            data_index: None
         }
     }
 
@@ -80,14 +83,16 @@ pub static DEFINITION_KR: UnitDefinition = UnitDefinition {
         output: 1
     },
     parameters: &PARAMETERS_KR,
-    tick: ParameterKr::tick
+    tick: ParameterKr::tick,
+    data_size: DataSize::None
 };
 
 #[derive(Copy)]
 pub struct ParameterKr;
 
 impl ParameterKr {
-    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32)
+    pub fn new(id: (u32, u32), input_channels: u32, output_channels: u32,
+               _: &mut Leap<f32>)
             -> Unit {
         Unit {
             definition: &DEFINITION_KR,
@@ -96,7 +101,7 @@ impl ParameterKr {
                 input: input_channels,
                 output: output_channels
             },
-            data: UnitData::None
+            data_index: None
         }
     }
 

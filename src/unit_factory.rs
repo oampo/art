@@ -2,8 +2,10 @@ use rustc_serialize::{Encoder, Encodable};
 
 use unit::{Unit, UnitDefinition};
 use types::{UnitConstructor};
+use leap::Leap;
 
 use dsp::oscillators::sine::{self, SineAr, SineKr};
+use dsp::oscillators::saw::{self, SawAr, SawKr};
 use dsp::bus::bus_in::{self, BusInAr, BusInKr};
 use dsp::bus::bus_out::{self, BusOutAr, BusOutKr};
 use dsp::parameter::parameter::{self, ParameterAr, ParameterKr};
@@ -33,6 +35,8 @@ impl UnitFactory {
         let mut factory = UnitFactory {units: Vec::new()};
         factory.register(&sine::DEFINITION_AR, SineAr::new);
         factory.register(&sine::DEFINITION_KR, SineKr::new);
+        factory.register(&saw::DEFINITION_AR, SawAr::new);
+        factory.register(&saw::DEFINITION_KR, SawKr::new);
         factory.register(&bus_in::DEFINITION_AR, BusInAr::new);
         factory.register(&bus_in::DEFINITION_KR, BusInKr::new);
         factory.register(&bus_out::DEFINITION_AR, BusOutAr::new);
@@ -64,10 +68,12 @@ impl UnitFactory {
     }
 
     pub fn create(&mut self, id: (u32, u32), type_id: u32,
-                  input_channels: u32, output_channels: u32) -> Unit {
+                  input_channels: u32, output_channels: u32,
+                  data: &mut Leap<f32>) -> Unit {
         debug_assert!(self.is_registered(type_id));
         (self.units[type_id as usize].constructor)(id, input_channels,
-                                                    output_channels)
+                                                   output_channels,
+                                                   data)
     }
 
     pub fn get_definition(&self, type_id: u32) -> &UnitDefinition {

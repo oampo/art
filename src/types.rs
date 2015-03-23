@@ -6,6 +6,7 @@ use errors::ArtError;
 use expression::Expression;
 use unit::Unit;
 use parameter::Parameter;
+use leap::Leap;
 
 #[derive(Copy)]
 pub struct ByteCode {
@@ -24,7 +25,7 @@ pub type UnitMap = HashMap<(ExpressionId, UnitId), Unit>;
 pub type ParameterMap = HashMap<(ExpressionId, UnitId, ParameterId), Parameter>;
 pub type BusMap = HashMap<u32, usize>;
 
-pub type UnitConstructor = fn((u32, u32), u32, u32) -> Unit;
+pub type UnitConstructor = fn((u32, u32), u32, u32, &mut Leap<f32>) -> Unit;
 
 pub type ArtResult<T> = Result<T, ArtError>;
 

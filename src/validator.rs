@@ -1,7 +1,7 @@
 use types::{ArtResult, StackRecord, Rate, ExpressionMap, UnitMap, ParameterMap};
 use errors::ArtError;
 use opcode::DspOpcode;
-use unit::UnitDefinition;
+use unit::{UnitDefinition, DataSize};
 use unit_factory::UnitFactory;
 use leap::Leap;
 
@@ -11,7 +11,8 @@ impl ExpressionValidator {
     pub fn validate(index: usize, num_opcodes: usize, store: &Leap<DspOpcode>,
                     stack_record: &mut Vec<StackRecord>,
                     unit_factory: &UnitFactory, expression_map: &ExpressionMap,
-                    unit_map: &UnitMap, parameter_map: &ParameterMap)
+                    unit_map: &UnitMap, parameter_map: &ParameterMap,
+                    data: &Leap<f32>)
             -> ArtResult<()> {
         try!(
             ExpressionValidator::validate_expression_count(1, expression_map)
@@ -29,6 +30,11 @@ impl ExpressionValidator {
                     );
 
                     let definition = unit_factory.get_definition(type_id);
+                    try!(
+                        UnitValidator::validate_data(
+                            definition, data
+                        )
+                    );
                     try!(
                         UnitValidator::validate_stack(
                             input_channels, output_channels, definition,
@@ -105,6 +111,21 @@ impl UnitValidator {
             );
         }
         Ok(())
+    }
+
+    fn validate_data(definition: &UnitDefinition, data: &Leap<f32>)
+            -> ArtResult<()> {
+        match definition.data_size {
+            DataSize::Fixed(size) => {
+                if data.len() + size <= data.capacity() {
+                    Ok(())
+                }
+                else {
+                    Err(ArtError::BufferOverflow)
+                }
+            },
+            DataSize::None => Ok(())
+        }
     }
 
     fn validate_stack(input_channels: u32, output_channels: u32,

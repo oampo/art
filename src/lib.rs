@@ -40,6 +40,7 @@ pub mod util;
 pub mod dsp {
     pub mod oscillators {
         pub mod sine;
+        pub mod saw;
     }
     pub mod parameter {
         pub mod parameter;
